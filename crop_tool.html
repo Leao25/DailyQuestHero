@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crop Tool — DailyQuestHero</title>
+  <style>
+    body { background: #1a1a2e; color: #eee; font-family: monospace; padding: 20px; }
+    h2   { color: #70b8e8; }
+    #canvas-wrap { position: relative; display: inline-block; margin-top: 16px; }
+    canvas { display: block; border: 1px solid #444; cursor: crosshair; }
+    .guide { position: absolute; top: 0; width: 2px; background: #ff4; opacity: 0.7; pointer-events: none; }
+    .label { position: absolute; top: 4px; color: #ff4; font-size: 12px; font-weight: bold; pointer-events: none; background: rgba(0,0,0,0.6); padding: 2px 4px; }
+    button { margin: 6px 6px 6px 0; padding: 10px 18px; background: #2d5a8a; color: #fff;
+             border: none; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 14px; }
+    button:hover { background: #3a7ab8; }
+    #btn-crop { background: #2a7a3a; font-size: 16px; padding: 12px 28px; }
+    #btn-crop:hover { background: #38a04a; }
+    #info { margin-top: 12px; color: #aaa; font-size: 13px; line-height: 1.8; }
+    #lines-ui { margin-top: 16px; }
+    .line-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+    .line-row label { width: 160px; color: #ccc; }
+    .line-row input[type=range] { width: 300px; }
+    .line-row span { width: 50px; color: #ff4; }
+    #previews { margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .preview-box { background: #252540; padding: 10px; border-radius: 6px; text-align: center; }
+    .preview-box canvas { border: 1px solid #555; background: #333; }
+    .preview-box p { margin: 6px 0 0; font-size: 12px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <h2>🔪 Crop Tool — Heroes</h2>
+  <p>Ajuste as linhas de corte arrastando os sliders abaixo, depois clique em <strong>Cortar e Baixar</strong>.</p>
+
+  <div id="canvas-wrap">
+    <canvas id="main-canvas"></canvas>
+  </div>
+
+  <div id="lines-ui"></div>
+
+  <br>
+  <button id="btn-crop">⬇ Cortar e Baixar os 5 PNGs</button>
+  <button id="btn-reset">↺ Resetar linhas</button>
+
+  <div id="info"></div>
+  <div id="previews"></div>
+
+  <script>
+    const HEROES = ['darknight','warrior','hunter','mage','cleric'];
+    const IMG_SRC = 'assets/sprites/heroes_all.png';
+
+    const mainCanvas = document.getElementById('main-canvas');
+    const ctx = mainCanvas.getContext('2d');
+    const img = new Image();
+
+    // linhas verticais de corte (6 linhas = 5 colunas)
+    // valores em proporção 0..1 da largura da imagem
+    let lines = [0, 0.18, 0.36, 0.54, 0.73, 1.0];
+
+    const DISPLAY_W = 960; // largura de exibição no canvas
+    let DISPLAY_H = 400;
+    let scaleX = 1, scaleY = 1;
+
+    img.onload = () => {
+      // calcula proporção pra caber em 960px de largura
+      scaleX = DISPLAY_W / img.naturalWidth;
+      DISPLAY_H = Math.round(img.naturalHeight * scaleX);
+      scaleY = scaleX;
+
+      mainCanvas.width  = DISPLAY_W;
+      mainCanvas.height = DISPLAY_H;
+
+      // estima linhas automáticas detectando espaços em branco
+      autoDetectLines();
+      buildSliders();
+      render();
+    };
+    img.src = IMG_SRC;
+
+    // ── Auto-detecção básica por análise de colunas brancas ──────────
+    function autoDetectLines() {
+      // desenha numa canvas temporária pra ler pixels
+      const tmp = document.createElement('canvas');
+      tmp.width  = img.naturalWidth;
+      tmp.height = img.naturalHeight;
+      const tc = tmp.getContext('2d');
+      tc.drawImage(img, 0, 0);
+      const data = tc.getImageData(0, 0, img.naturalWidth, img.naturalHeight).data;
+      const W = img.naturalWidth, H = img.naturalHeight;
+
+      // para cada coluna, calcula "quanto de não-branco" tem
+      const density = new Float32Array(W);
+      for (let x = 0; x < W; x++) {
+        let count = 0;
+        for (let y = 0; y < H; y++) {
+          const i = (y * W + x) * 4;
+          const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+          // pixel não-branco e não-transparente
+          if (a > 30 && !(r > 240 && g > 240 && b > 240)) count++;
+        }
+        density[x] = count / H;
+      }
+
+      // encontra 4 "vales" de densidade baixa entre os heróis
+      // (ignora as bordas: 10% do início e 10% do fim)
+      const margin = Math.floor(W * 0.05);
+      const valleys = [];
+      const windowSize = Math.floor(W * 0.02);
+
+      for (let x = margin; x < W - margin; x++) {
+        let avg = 0;
+        for (let dx = -windowSize; dx <= windowSize; dx++) {
+          avg += density[Math.max(0, Math.min(W-1, x+dx))];
+        }
+        avg /= (windowSize * 2 + 1);
+        density[x] = avg; // suaviza
+      }
+
+      // encontra mínimos locais em 4 regiões esperadas
+      // (divide em 4 intervalos entre os heróis)
+      const regionW = Math.floor((W - margin * 2) / 4);
+      for (let i = 0; i < 4; i++) {
+        const start = margin + i * regionW;
+        const end   = start + regionW;
+        let minVal = Infinity, minX = Math.floor((start + end) / 2);
+        for (let x = start; x < end; x++) {
+          if (density[x] < minVal) { minVal = density[x]; minX = x; }
+        }
+        valleys.push(minX);
+      }
+
+      // monta as 6 linhas: 0, valley1, valley2, valley3, valley4, W
+      lines = [0, ...valleys.map(v => v / W), 1.0];
+    }
+
+    // ── Sliders ──────────────────────────────────────────────────────
+    function buildSliders() {
+      const container = document.getElementById('lines-ui');
+      container.innerHTML = '<p style="color:#aaa;margin:12px 0 6px">Ajuste as divisões entre os heróis:</p>';
+
+      for (let i = 1; i <= 4; i++) {
+        const row = document.createElement('div');
+        row.className = 'line-row';
+        const label = document.createElement('label');
+        label.textContent = `Divisão ${i} (${HEROES[i-1]} | ${HEROES[i]})`;
+        const slider = document.createElement('input');
+        slider.type = 'range'; slider.min = 0; slider.max = 1000;
+        slider.value = Math.round(lines[i] * 1000);
+        slider.dataset.idx = i;
+        const val = document.createElement('span');
+        val.id = `line-val-${i}`;
+        val.textContent = Math.round(lines[i] * img.naturalWidth) + 'px';
+        slider.addEventListener('input', () => {
+          lines[parseInt(slider.dataset.idx)] = slider.value / 1000;
+          val.textContent = Math.round(lines[parseInt(slider.dataset.idx)] * img.naturalWidth) + 'px';
+          render();
+        });
+        row.append(label, slider, val);
+        container.appendChild(row);
+      }
+    }
+
+    // ── Render ───────────────────────────────────────────────────────
+    function render() {
+      ctx.clearRect(0, 0, DISPLAY_W, DISPLAY_H);
+      ctx.drawImage(img, 0, 0, DISPLAY_W, DISPLAY_H);
+
+      // remove guias antigas e labels
+      document.querySelectorAll('.guide,.label').forEach(el => el.remove());
+      const wrap = document.getElementById('canvas-wrap');
+      wrap.style.height = DISPLAY_H + 'px';
+
+      for (let i = 1; i <= 4; i++) {
+        const x = Math.round(lines[i] * DISPLAY_W);
+
+        const guide = document.createElement('div');
+        guide.className = 'guide';
+        guide.style.left   = x + 'px';
+        guide.style.height = DISPLAY_H + 'px';
+        wrap.appendChild(guide);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'label';
+        lbl.style.left = (x + 4) + 'px';
+        lbl.textContent = `÷${i}`;
+        wrap.appendChild(lbl);
+      }
+
+      // nomes dos heróis em cada coluna
+      for (let i = 0; i < 5; i++) {
+        const x1 = lines[i]   * DISPLAY_W;
+        const x2 = lines[i+1] * DISPLAY_W;
+        const cx = (x1 + x2) / 2;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(cx - 42, DISPLAY_H - 22, 84, 20);
+        ctx.fillStyle = '#ffe840';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(HEROES[i], cx, DISPLAY_H - 7);
+      }
+    }
+
+    // ── Cortar e baixar ──────────────────────────────────────────────
+    document.getElementById('btn-crop').addEventListener('click', () => {
+      const W = img.naturalWidth, H = img.naturalHeight;
+      const previews = document.getElementById('previews');
+      previews.innerHTML = '';
+
+      HEROES.forEach((name, i) => {
+        const x1 = Math.round(lines[i]   * W);
+        const x2 = Math.round(lines[i+1] * W);
+        const cw = x2 - x1;
+
+        // canvas de corte
+        const tmp = document.createElement('canvas');
+        tmp.width  = cw;
+        tmp.height = H;
+        const tc = tmp.getContext('2d');
+
+        // remove fundo branco convertendo pra transparência
+        tc.drawImage(img, x1, 0, cw, H, 0, 0, cw, H);
+        const imgData = tc.getImageData(0, 0, cw, H);
+        const d = imgData.data;
+        for (let j = 0; j < d.length; j += 4) {
+          if (d[j] > 235 && d[j+1] > 235 && d[j+2] > 235) {
+            d[j+3] = 0; // torna branco transparente
+          }
+        }
+        tc.putImageData(imgData, 0, 0);
+
+        // download automático
+        const filename = `hero_${name}.png`;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = tmp.toDataURL('image/png');
+        link.click();
+
+        // preview
+        const box = document.createElement('div');
+        box.className = 'preview-box';
+        const prev = document.createElement('canvas');
+        const ph = 120;
+        const pw = Math.round(cw * (ph / H));
+        prev.width = pw; prev.height = ph;
+        const pc = prev.getContext('2d');
+        pc.fillStyle = '#444';
+        pc.fillRect(0,0,pw,ph);
+        pc.drawImage(tmp, 0, 0, pw, ph);
+        const p = document.createElement('p');
+        p.textContent = filename;
+        box.append(prev, p);
+        previews.appendChild(box);
+      });
+
+      document.getElementById('info').innerHTML =
+        '✅ <strong>5 arquivos baixados!</strong> Mova-os para <code>assets/sprites/</code> e me avise.';
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      autoDetectLines();
+      buildSliders();
+      render();
+    });
+  </script>
+</body>
+</html>

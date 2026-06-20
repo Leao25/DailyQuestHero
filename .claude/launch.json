@@ -1,0 +1,11 @@
+﻿{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dailyquesthero",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "5600", "."],
+      "port": 5600
+    }
+  ]
+}

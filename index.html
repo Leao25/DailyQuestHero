@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DailyQuestHero — Protótipo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="game-canvas" width="960" height="540"></canvas>
+
+    <!-- HUD sobreposto ao canvas -->
+    <div id="hud">
+      <div id="hero-stats">
+        <div class="stat-row">
+          <span class="stat-label">Hero — Lv. <span id="hero-level">1</span></span>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-bg">
+            <div id="hp-bar" class="bar-fill hp"></div>
+          </div>
+          <span class="bar-text" id="hp-text">100/100</span>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-bg">
+            <div id="xp-bar" class="bar-fill xp"></div>
+          </div>
+          <span class="bar-text" id="xp-text">0/100 XP</span>
+        </div>
+      </div>
+
+      <div id="clock-display">
+        <div id="clock-top">
+          <span id="period-icon">🌅</span>
+          <span id="period-name">--</span>
+        </div>
+        <div id="clock-time">--:--</div>
+        <div id="clock-arc-wrap">
+          <div id="clock-arc-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log de eventos (drops, level up etc) -->
+    <div id="event-log"></div>
+  </div>
+
+  <!-- Scripts do jogo, em ordem de dependência -->
+  <script src="js/config.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/dayCycle.js"></script>
+  <script src="js/items.js"></script>
+  <script src="js/hero.js"></script>
+  <script src="js/mob.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
