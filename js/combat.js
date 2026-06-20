@@ -40,7 +40,7 @@ const Combat = {
 
   handleMobDeath(hero, mob, callbacks) {
     const leveledUp = hero.gainXp(mob.xpReward);
-    const drops = Items.rollDrops();
+    const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
 
     if (drops.length > 0) {
       hero.addItems(drops);
