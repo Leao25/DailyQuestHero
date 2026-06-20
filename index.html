@@ -47,6 +47,42 @@
 
     <!-- Log de eventos (drops, level up etc) -->
     <div id="event-log"></div>
+
+    <!-- Botão da mochila -->
+    <button id="bag-btn" title="Mochila (B)">🎒</button>
+
+    <!-- Painel da mochila -->
+    <div id="bag-panel" class="hidden">
+      <div id="bag-header">
+        <span>🎒 Mochila</span>
+        <button id="bag-close">✕</button>
+      </div>
+
+      <!-- Slots de equipamento -->
+      <div id="equip-section">
+        <div class="equip-label">Equipamento</div>
+        <div id="equip-slots">
+          <div class="equip-slot" data-slot="weapon"  title="Arma">⚔️</div>
+          <div class="equip-slot" data-slot="armor"   title="Armadura">🛡️</div>
+          <div class="equip-slot" data-slot="accessory" title="Acessório">📿</div>
+        </div>
+      </div>
+
+      <div class="bag-divider"></div>
+
+      <!-- Grid de itens -->
+      <div id="bag-grid"></div>
+
+      <!-- Detalhe do item selecionado -->
+      <div id="item-detail" class="hidden">
+        <div id="detail-name"></div>
+        <div id="detail-desc"></div>
+        <div id="detail-bonus"></div>
+        <div id="detail-value"></div>
+        <button id="detail-equip" class="hidden">Equipar</button>
+        <button id="detail-unequip" class="hidden">Desequipar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Scripts do jogo, em ordem de dependência -->
@@ -59,6 +95,7 @@
   <script src="js/mob.js"></script>
   <script src="js/combat.js"></script>
   <script src="js/hud.js"></script>
+  <script src="js/bag.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/game.js"></script>
   <script>

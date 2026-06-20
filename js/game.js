@@ -393,8 +393,9 @@
         Hud.logEvent(`🎉 Subiu para o nível ${level}!`, 'levelup');
       });
 
-      // salva progresso automaticamente
+      // salva progresso e atualiza bag
       SaveSystem.save(hero);
+      Bag.refresh();
     },
     onHeroDeath() {
       Effects.triggerShake(10, 400);
@@ -936,6 +937,7 @@
     Hud.init();
     loadBackgrounds();
     requestAnimationFrame(loop);
+    Bag.init(() => hero);
     Sprites.load(() => {
       MobSprites.load(() => {
         gameState = 'classSelect';
