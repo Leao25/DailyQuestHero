@@ -256,8 +256,16 @@
   });
 
   function startGame() {
-    hero        = new Hero(selectedClass);
-    gameState   = 'playing';
+    hero = new Hero(selectedClass);
+
+    // carrega save se existir para a mesma classe
+    const saved = SaveSystem.load();
+    if (saved && saved.heroClass === selectedClass) {
+      SaveSystem.applyToHero(hero, saved);
+      Hud.logEvent(`Bem-vindo de volta, Lv.${hero.level}!`, 'info');
+    }
+
+    gameState = 'playing';
     canvas.style.cursor = 'default';
     scheduleNextSpawn(Date.now());
     Hud.showStats();
@@ -384,6 +392,9 @@
         );
         Hud.logEvent(`🎉 Subiu para o nível ${level}!`, 'levelup');
       });
+
+      // salva progresso automaticamente
+      SaveSystem.save(hero);
     },
     onHeroDeath() {
       Effects.triggerShake(10, 400);
