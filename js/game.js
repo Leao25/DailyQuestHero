@@ -405,8 +405,16 @@
     },
     onHeroDeath() {
       Effects.triggerShake(10, 400);
-      Hud.logEvent('Você foi derrotado... reiniciando.', 'damage');
-      setTimeout(() => hero.respawn(), 1200);
+
+      setTimeout(() => {
+        // perde todos os itens da bag (mantém nível e equipamentos)
+        hero.inventory = [];
+        SaveSystem.save(hero);
+        Bag.refresh();
+
+        // mostra popup
+        document.getElementById('death-overlay').classList.remove('hidden');
+      }, 800);
     }
   };
 
@@ -944,6 +952,14 @@
     loadBackgrounds();
     requestAnimationFrame(loop);
     Bag.init(() => hero);
+
+    document.getElementById('death-btn').addEventListener('click', () => {
+      document.getElementById('death-overlay').classList.add('hidden');
+      hero.respawn();
+      mobs = [];
+      scheduleNextSpawn(Date.now());
+      Hud.logEvent('O herói voltou à luta!', 'info');
+    });
     Sprites.load(() => {
       MobSprites.load(() => {
         gameState = 'classSelect';

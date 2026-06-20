@@ -80,7 +80,7 @@ class Hero {
       this.level       += 1;
       this.maxHp        = Math.round(this.maxHp  * 1.12);
       this.attack       = Math.round(this.attack * 1.10);
-      this.hp           = this.maxHp;
+      this.hp           = Math.min(this.hp + Math.round(this.maxHp * 0.30), this.maxHp);
       this.xpToNextLevel = Math.round(this.xpToNextLevel * CONFIG.hero.xpToLevelGrowth);
       leveledUp.push(this.level);
     }

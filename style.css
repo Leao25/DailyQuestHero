@@ -317,6 +317,58 @@ body {
 #detail-unequip:hover { background: rgba(180,60,60,0.4); }
 #detail-equip.hidden, #detail-unequip.hidden { display: none; }
 
+/* ---------- Popup de morte ---------- */
+#death-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+}
+#death-overlay.hidden { display: none; }
+
+#death-box {
+  background: #0e0a0a;
+  border: 2px solid #8b0000;
+  border-radius: 10px;
+  padding: 32px 40px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 40px rgba(180,0,0,0.4);
+}
+#death-title {
+  font-size: 28px;
+  color: #cc2222;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+}
+#death-msg {
+  font-size: 13px;
+  color: #cc8888;
+  margin-bottom: 6px;
+}
+#death-sub {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 24px;
+}
+#death-btn {
+  background: #8b0000;
+  border: 1px solid #cc2222;
+  color: #ffaaaa;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 8px 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+}
+#death-btn:hover { background: #aa0000; }
+
 /* ---------- Log de eventos ---------- */
 #event-log {
   position: absolute;
