@@ -15,7 +15,7 @@ const Combat = {
 
     const distance = hero.distanceTo(mob);
     const heroInRange = distance <= hero.attackRange;
-    const mobInRange = distance <= CONFIG.mob.attackRange;
+    const mobInRange = distance <= mob.attackRange;
 
     if (heroInRange && hero.canAttack(now)) {
       const damage = hero.performAttack(now);

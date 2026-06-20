@@ -274,7 +274,7 @@
   function spawnMobIfNeeded(now) {
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
     if (now >= nextSpawnAt && aliveMobs < 1) {
-      mobs.push(new Mob(hero));
+      mobs.push(new Mob(hero, DayCycle.getCurrentPeriod().name));
       scheduleNextSpawn(now);
     }
   }
@@ -911,7 +911,9 @@
     loadBackgrounds();
     requestAnimationFrame(loop);
     Sprites.load(() => {
-      gameState = 'classSelect';
+      MobSprites.load(() => {
+        gameState = 'classSelect';
+      });
     });
   }
 
