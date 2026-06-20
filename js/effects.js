@@ -217,26 +217,27 @@ const Effects = {
       } else if (p.type === 'fireball') {
         // rastro de fogo
         for (const t of p.trail) {
-          const a = Math.max(0, t.life) * 0.6;
-          ctx.globalAlpha = a;
+          ctx.globalAlpha = Math.max(0, t.life) * 0.5;
           ctx.fillStyle = '#ff6600';
           ctx.beginPath();
-          ctx.arc(t.x, t.y, 5 * t.life, 0, Math.PI * 2);
+          ctx.arc(t.x, t.y, 4 * t.life, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.globalAlpha = 1;
-        // núcleo amarelo
-        ctx.shadowColor = '#ffaa00';
-        ctx.shadowBlur  = 14;
-        ctx.fillStyle = '#ffee00';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-        ctx.fill();
-        // camada laranja
-        ctx.shadowBlur = 8;
+        // camada externa laranja
         ctx.fillStyle = '#ff5500';
         ctx.beginPath();
         ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+        ctx.fill();
+        // núcleo amarelo
+        ctx.fillStyle = '#ffee00';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // brilho central branco
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
         ctx.fill();
       }
 
