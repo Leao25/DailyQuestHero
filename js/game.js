@@ -271,10 +271,25 @@
     nextSpawnAt = now + min + Math.random() * (max - min);
   }
 
+  function pickWaveSize(heroLevel) {
+    const roll = Math.random();
+    if (heroLevel >= 6 && roll < 0.15) return 3; // onda de 3: 15% a partir do nível 6
+    if (heroLevel >= 3 && roll < 0.35) return 2; // dupla:   35% a partir do nível 3
+    return 1;
+  }
+
   function spawnMobIfNeeded(now) {
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
     if (now >= nextSpawnAt && aliveMobs < 1) {
-      mobs.push(new Mob(hero, DayCycle.getCurrentPeriod().name));
+      const period  = DayCycle.getCurrentPeriod().name;
+      const count   = pickWaveSize(hero.level);
+      // espaçamento entre mobs da mesma onda (em unidades de mundo)
+      const spacing = 120;
+      for (let i = 0; i < count; i++) {
+        const mob = new Mob(hero, period);
+        mob.worldX += i * spacing; // cada mob um pouco mais à direita
+        mobs.push(mob);
+      }
       scheduleNextSpawn(now);
     }
   }
