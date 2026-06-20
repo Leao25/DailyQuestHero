@@ -7,7 +7,7 @@ const CONFIG = {
   canvas: {
     width: 960,
     height: 540,
-    groundY: 430, // linha onde os "pés" do hero/mob ficam (ajustado ao chão do BG)
+    groundY: 450, // linha onde os "pés" do hero/mob ficam (ajustado ao chão do BG)
   },
 
   hero: {
