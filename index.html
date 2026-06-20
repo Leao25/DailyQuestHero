@@ -61,23 +61,42 @@
   <script src="js/effects.js"></script>
   <script src="js/game.js"></script>
   <script>
-    const btn = document.getElementById('fullscreen-btn');
+    const btn       = document.getElementById('fullscreen-btn');
+    const container = document.getElementById('game-container');
+    let isScaled    = false;
+
+    function applyScale() {
+      const scaleX = window.innerWidth  / 960;
+      const scaleY = window.innerHeight / 540;
+      const scale  = Math.min(scaleX, scaleY); // mantém proporção
+      container.style.transform = `scale(${scale})`;
+    }
+
+    function enterFullscreen() {
+      isScaled = true;
+      document.body.style.overflow = 'hidden';
+      applyScale();
+      window.addEventListener('resize', applyScale);
+      btn.textContent = '✕';
+      btn.title = 'Sair da tela cheia';
+    }
+
+    function exitFullscreen() {
+      isScaled = false;
+      document.body.style.overflow = '';
+      container.style.transform = '';
+      window.removeEventListener('resize', applyScale);
+      btn.textContent = '⛶';
+      btn.title = 'Tela cheia';
+    }
+
     btn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-        btn.textContent = '✕';
-        btn.title = 'Sair da tela cheia';
-      } else {
-        document.exitFullscreen();
-        btn.textContent = '⛶';
-        btn.title = 'Tela cheia';
-      }
+      isScaled ? exitFullscreen() : enterFullscreen();
     });
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        btn.textContent = '⛶';
-        btn.title = 'Tela cheia';
-      }
+
+    // ESC para sair
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && isScaled) exitFullscreen();
     });
   </script>
 </body>
