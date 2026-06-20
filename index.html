@@ -8,6 +8,8 @@
 </head>
 <body>
 
+  <button id="fullscreen-btn" title="Tela cheia">⛶</button>
+
   <div id="game-container">
     <canvas id="game-canvas" width="960" height="540"></canvas>
 
@@ -58,5 +60,25 @@
   <script src="js/hud.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/game.js"></script>
+  <script>
+    const btn = document.getElementById('fullscreen-btn');
+    btn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        btn.textContent = '✕';
+        btn.title = 'Sair da tela cheia';
+      } else {
+        document.exitFullscreen();
+        btn.textContent = '⛶';
+        btn.title = 'Tela cheia';
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        btn.textContent = '⛶';
+        btn.title = 'Tela cheia';
+      }
+    });
+  </script>
 </body>
 </html>

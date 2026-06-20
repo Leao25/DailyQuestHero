@@ -4,6 +4,29 @@
   box-sizing: border-box;
 }
 
+#fullscreen-btn {
+  position: fixed;
+  bottom: 12px;
+  right: 14px;
+  z-index: 9999;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.55);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+#fullscreen-btn:hover {
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+}
+
 body {
   background: #111;
   display: flex;
