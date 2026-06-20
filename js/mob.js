@@ -173,10 +173,7 @@ const MobSprites = {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
-    // mobs enfrentam o hero (esquerda) — flipX
-    ctx.translate(cx, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, -drawW / 2, drawY, drawW, drawH);
+    ctx.drawImage(img, cx - drawW / 2, drawY, drawW, drawH);
     ctx.restore();
     return true;
   },
