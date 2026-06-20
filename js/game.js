@@ -287,15 +287,21 @@
   }
 
   function spawnMobIfNeeded(now) {
+    // limpa mobs presos (dead mas não removidos por algum motivo)
+    mobs = mobs.filter(m => !m.markedForRemoval);
+
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
-    if (now >= nextSpawnAt && aliveMobs < 1) {
+
+    // safety-net: força spawn se ficou mais de 6s sem mob
+    const forceSpawn = (now - nextSpawnAt) > 6000 && aliveMobs < 1;
+
+    if ((now >= nextSpawnAt && aliveMobs < 1) || forceSpawn) {
       const period  = DayCycle.getCurrentPeriod().name;
       const count   = pickWaveSize(hero.level);
-      // espaçamento entre mobs da mesma onda (em unidades de mundo)
       const spacing = 120;
       for (let i = 0; i < count; i++) {
         const mob = new Mob(hero, period);
-        mob.worldX += i * spacing; // cada mob um pouco mais à direita
+        mob.worldX += i * spacing;
         mobs.push(mob);
       }
       scheduleNextSpawn(now);
