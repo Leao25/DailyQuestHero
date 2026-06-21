@@ -18,7 +18,9 @@
       "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/sprites.js\")",
       "Bash(node -e ' *)",
       "Bash(npm install *)",
-      "Bash(rm \"C:/Users/Pichau/DailyQuestHero/assets/backgrounds/\"*.png && echo \"Deletados\")"
+      "Bash(rm \"C:/Users/Pichau/DailyQuestHero/assets/backgrounds/\"*.png && echo \"Deletados\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/dayCycle.js\")",
+      "Bash(ls \"C:/Users/Pichau/Downloads/\" | grep -i hunter 2>/dev/null || ls \"C:/Users/Pichau/Desktop/\" | grep -i hunter 2>/dev/null)"
     ]
   }
 }
