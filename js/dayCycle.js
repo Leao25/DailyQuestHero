@@ -9,15 +9,8 @@ const DayCycle = {
   // Para versão final, comente o bloco TEST e descomente REAL
   // ----------------------------------------------------------
 
-  // TEST — 10 minutos por ciclo completo (~2,5 min por BG)
-  _getSimulatedHour() {
-    const CYCLE_MS = 10 * 60 * 1000;
-    const t = Date.now() % CYCLE_MS;
-    return Math.floor((t / CYCLE_MS) * 24);
-  },
-
-  // REAL — hora do relógio do PC (usar na versão final)
-  // _getSimulatedHour() { return new Date().getHours(); },
+  // REAL — hora do relógio do PC
+  _getSimulatedHour() { return new Date().getHours(); },
 
   // REAL — descomente para versão final
   // _getRealHour() { return new Date().getHours(); },
@@ -39,12 +32,7 @@ const DayCycle = {
   },
 
   getFormattedTime() {
-    // TEST — mostra hora simulada
-    const hour = this._getSimulatedHour();
-    return `${String(hour).padStart(2,'0')}:00`;
-
-    // REAL — descomente para versão final
-    // const now = new Date();
-    // return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   }
 };

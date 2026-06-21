@@ -26,7 +26,6 @@ const Hud = {
     this.els.xpBar         = document.getElementById('xp-bar');
     this.els.xpText        = document.getElementById('xp-text');
     this.els.clockTime     = document.getElementById('clock-time');
-    this.els.periodIcon    = document.getElementById('period-icon');
     this.els.periodName    = document.getElementById('period-name');
     this.els.arcFill       = document.getElementById('clock-arc-fill');
     this.els.heroStats     = document.getElementById('hero-stats');
@@ -143,7 +142,7 @@ const Hud = {
       ? DayCycle._forcedHour
       : new Date().getHours() + new Date().getMinutes() / 60;
     this.els.clockTime.textContent  = DayCycle.getFormattedTime();
-    this.els.periodIcon.textContent = period.icon;
+
     this.els.periodName.textContent = period.name;
 
     // Progresso dentro do período atual (0–1)
