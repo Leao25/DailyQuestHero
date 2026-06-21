@@ -576,7 +576,8 @@
 
     // Avança o offset pelo movimento do herói nesse frame
     const sf = 0.06;
-    const advance = hero.walkSpeed * (deltaMs / 16.67) * sf;
+    const speed = (hero && hero.walkSpeed) ? hero.walkSpeed : CONFIG.hero.walkSpeed;
+    const advance = speed * (deltaMs / 16.67) * sf;
     if (!BG_STATE.crossfading) BG_STATE.offset += advance;
 
     // Dispara crossfade quando perto da borda
