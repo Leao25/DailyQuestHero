@@ -130,7 +130,7 @@ class Hero {
     const frameDur = def.fps[this.animFrame] ?? 100;
     if (this.animTimer >= frameDur) {
       this.animTimer -= frameDur;
-      const isLooping = (anim === 'walk');
+      const isLooping = (anim === 'walk' || anim === 'attack');
       if (isLooping) {
         this.animFrame = (this.animFrame + 1) % def.count;
       } else {
