@@ -209,9 +209,9 @@ class Hero {
     ctx.fillRect(sx - 18, fy,     36, 4);
 
     const anim      = this._animName();
-    const hasSheet  = !!Sprites.sheets[this.heroClass];
+    const hasAnims  = !!Sprites.animSheets[this.heroClass];
     const drawSprite = (opts = {}) => {
-      if (hasSheet) {
+      if (hasAnims) {
         Sprites.drawFrame(ctx, this.heroClass, anim, this.animFrame, sx, baseY, this.height, opts);
       } else {
         Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height, opts);
