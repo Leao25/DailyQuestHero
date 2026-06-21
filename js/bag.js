@@ -202,6 +202,23 @@ var Bag = {
     }
     document.getElementById('ip-value').textContent = item.value ? `Valor: ${item.value} ouro` : '';
 
+    // botão craft (herb x10 → minor_potion)
+    let craftBtn = document.getElementById('ip-craft');
+    if (!craftBtn) {
+      craftBtn = document.createElement('button');
+      craftBtn.id = 'ip-craft';
+      craftBtn.textContent = '⚗ Craft (x10)';
+      craftBtn.style.cssText = 'margin-top:6px;padding:3px 10px;font-size:11px;background:#2a4a2a;color:#88ffaa;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;font-family:inherit;width:100%;';
+      document.getElementById('ip-value').insertAdjacentElement('afterend', craftBtn);
+      craftBtn.addEventListener('click', () => this._craftHerb());
+    }
+    if (item.id === 'forest_herb' && hero) {
+      const herbQty = hero.inventory.filter(i => i.id === 'forest_herb').length;
+      craftBtn.style.display = herbQty >= 10 ? '' : 'none';
+    } else {
+      craftBtn.style.display = 'none';
+    }
+
     // botões
     const equipBtn   = document.getElementById('ip-equip');
     const unequipBtn = document.getElementById('ip-unequip');
@@ -404,6 +421,24 @@ var Bag = {
     if (allDone && typeof window._onAllGemsConsumed === 'function') {
       window._onAllGemsConsumed();
     }
+  },
+
+  // ── Craft: 10 forest_herb → 1 minor_potion ──────────────────
+  _craftHerb() {
+    const hero = this._getHero();
+    if (!hero) return;
+    const herbs = hero.inventory.filter(i => i.id === 'forest_herb');
+    if (herbs.length < 10) return;
+    for (let i = 0; i < 10; i++) {
+      const idx = hero.inventory.findIndex(i => i.id === 'forest_herb');
+      hero.inventory.splice(idx, 1);
+    }
+    const potion = { ...Items.get('minor_potion') };
+    hero.inventory.push(potion);
+    SaveSystem.save(hero);
+    this._hideItemPopup();
+    this._renderGrid();
+    Hud.logEvent('Craft: 10 Ervas → Poção Menor de Vida', 'info');
   },
 
   // ── Helper: cria <img> para item ────────────────────────────
