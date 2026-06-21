@@ -527,7 +527,32 @@
     onPassiveTrigger(cls, value) {
       const hx = CONFIG.hero.screenX;
       const hy = hero.y - hero.height - 28;
-      if (cls === 'warrior') {
+      if (cls === 'hunter' && value === 'bonus_arrow') {
+        // flecha bônus disparada ~350ms depois
+        const targetMob = mobs.find(m => m.state !== 'dead');
+        if (targetMob) {
+          Effects.spawnDamageNumber(hx, hy, '✦ FOCO!',
+            { color: '#88ffaa', outline: '#226633', size: 12, bold: true, prefix: '' });
+          Hud.logEvent('Foco! Flecha bônus disparada', 'info');
+          setTimeout(() => {
+            if (targetMob.state === 'dead') return;
+            const bx = targetMob.getScreenX(hero);
+            const by = targetMob.y - targetMob.height / 2;
+            const arrowY = hero.y - hero.height * 0.48;
+            Effects.spawnProjectile('arrow',
+              CONFIG.hero.screenX + 20, arrowY, bx, arrowY,
+              () => {
+                if (targetMob.state === 'dead') return;
+                const dmg = Math.round(hero.attack * 0.8);
+                targetMob.takeDamage(dmg);
+                Effects.spawnDamageNumber(bx, by - 8, dmg,
+                  { color: '#88ffaa', outline: '#226633', size: 13 });
+                Effects.spawnHitSparks(bx, by);
+              }
+            );
+          }, 350);
+        }
+      } else if (cls === 'warrior') {
         Effects.spawnDamageNumber(hx, hy, `FÚRIA! ATK+1 (${value}/10)`,
           { color: '#ff6622', outline: '#661100', size: 11, bold: true, prefix: '' });
         Hud.logEvent(`Fúria! ATK +1 (${value}/10)`, 'info');

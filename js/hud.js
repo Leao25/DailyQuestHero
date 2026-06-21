@@ -104,9 +104,9 @@ const Hud = {
       fill.style.width = `${(stacks / 10) * 100}%`;
       if (text) text.textContent = `${stacks}/10`;
     } else if (hero.heroClass === 'hunter') {
-      const hits   = (hero.passiveStacks ?? 0) % 5;
-      fill.style.width = `${(hits / 5) * 100}%`;
-      if (text) text.textContent = `${hits}/5`;
+      const stacks = Math.min(hero.passiveStacks ?? 0, 10);
+      fill.style.width = `${(stacks / 10) * 100}%`;
+      if (text) text.textContent = `${stacks}/10`;
     } else {
       fill.style.width = '100%';
       if (text) text.textContent = '';

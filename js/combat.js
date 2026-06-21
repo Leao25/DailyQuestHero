@@ -14,12 +14,7 @@ const Combat = {
 
     // ── Herói ataca mob ──────────────────────────────────────
     if (heroInRange && hero.canAttack(now)) {
-      // Hunter "Foco": conta ataques; a cada 5º, crit garantido
       let isCrit = Math.random() < hero.critChance;
-      if (hero.heroClass === 'hunter') {
-        hero.passiveStacks = (hero.passiveStacks ?? 0) + 1;
-        if (hero.passiveStacks >= 5) { isCrit = true; hero.passiveStacks = 0; }
-      }
 
       let damage = hero.performAttack(now);
       if (isCrit) damage = Math.round(damage * hero.critMultiplier);
@@ -77,6 +72,15 @@ const Combat = {
     // if (drops.length > 0) hero.addItems(drops);
     const drops = [];
     mob.markedForRemoval = true;
+
+    // Hunter "Foco": cada kill +1 stack; a 10/10, 50% de flecha bônus
+    if (hero.heroClass === 'hunter') {
+      hero.passiveStacks = (hero.passiveStacks ?? 0) + 1;
+      if (hero.passiveStacks >= 10) {
+        if (Math.random() < 0.5) callbacks.onPassiveTrigger?.('hunter', 'bonus_arrow');
+        hero.passiveStacks = 0;
+      }
+    }
 
     // Warrior "Fúria": cada kill +1 ATK (máx 10)
     if (hero.heroClass === 'warrior' && (hero.passiveStacks ?? 0) < 10) {
