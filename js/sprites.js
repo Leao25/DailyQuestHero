@@ -205,7 +205,90 @@ const Sprites = {
    * targetH = altura VISÍVEL desejada do personagem (sem espaço transparente).
    * options: { alpha, flipX, glow, glowColor }
    */
+  // Fallback desenhado a canvas para o hunter enquanto sprite não existe
+  _drawHunterFallback(ctx, cx, baseY, targetH, options = {}) {
+    const s = targetH / 72; // escala baseada na altura alvo
+    const x = cx;
+    const y = baseY;
+
+    ctx.save();
+    if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
+    if (options.flipX) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
+
+    // sombra no chão
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 14 * s, 4 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // pernas
+    ctx.fillStyle = '#3b2a1a';
+    ctx.fillRect(x - 8 * s, y - 22 * s, 7 * s, 22 * s);
+    ctx.fillRect(x + 1 * s, y - 22 * s, 7 * s, 22 * s);
+
+    // botas
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(x - 9 * s, y - 8 * s, 8 * s, 8 * s);
+    ctx.fillRect(x + 1 * s, y - 8 * s, 8 * s, 8 * s);
+
+    // corpo / armadura de couro
+    ctx.fillStyle = '#5a3d20';
+    ctx.fillRect(x - 10 * s, y - 46 * s, 20 * s, 24 * s);
+
+    // cinto
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(x - 11 * s, y - 24 * s, 22 * s, 4 * s);
+
+    // capa / capuz (verde floresta)
+    ctx.fillStyle = '#2d4a20';
+    ctx.fillRect(x - 12 * s, y - 68 * s, 24 * s, 28 * s);
+
+    // cabeça
+    ctx.fillStyle = '#c8956a';
+    ctx.beginPath();
+    ctx.arc(x, y - 60 * s, 9 * s, 0, Math.PI * 2);
+    ctx.fill();
+
+    // capuz cobrindo parte da cabeça
+    ctx.fillStyle = '#2d4a20';
+    ctx.beginPath();
+    ctx.arc(x, y - 62 * s, 10 * s, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(x - 10 * s, y - 68 * s, 20 * s, 10 * s);
+
+    // arco nas costas (linha curva)
+    ctx.strokeStyle = '#8b5e2a';
+    ctx.lineWidth = 3 * s;
+    ctx.beginPath();
+    ctx.arc(x + 13 * s, y - 45 * s, 18 * s, -1.0, 1.0);
+    ctx.stroke();
+
+    // corda do arco
+    ctx.strokeStyle = '#d4b87a';
+    ctx.lineWidth = 1 * s;
+    ctx.beginPath();
+    ctx.moveTo(x + 13 * s, y - 62 * s);
+    ctx.lineTo(x + 13 * s, y - 28 * s);
+    ctx.stroke();
+
+    // braço esquerdo
+    ctx.fillStyle = '#5a3d20';
+    ctx.fillRect(x - 18 * s, y - 46 * s, 8 * s, 18 * s);
+
+    // mão
+    ctx.fillStyle = '#c8956a';
+    ctx.fillRect(x - 18 * s, y - 30 * s, 7 * s, 7 * s);
+
+    ctx.restore();
+  },
+
   drawHero(ctx, key, cx, baseY, targetH, options = {}) {
+    // Fallback desenhado para hunter enquanto sprite não existe
+    if (key === 'hunter' && (!this.images[key] || !(this.images[key] instanceof HTMLCanvasElement))) {
+      this._drawHunterFallback(ctx, cx, baseY, targetH, options);
+      return;
+    }
+
     const img = this.images[key];
     if (!img) return;
     const isCanvas = img instanceof HTMLCanvasElement;
