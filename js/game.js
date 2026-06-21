@@ -59,6 +59,12 @@
   const SPRITE_H   = 180; // altura de exibição na tela de seleção
   const CONFIRM_BTN = { x: 380, y: 490, w: 200, h: 38 };
 
+  // Pop-up de confirmação de reset de progresso
+  let deleteConfirmVisible = false;
+  const DELETE_YES = { x: 350, y: 300, w: 100, h: 34 };
+  const DELETE_NO  = { x: 510, y: 300, w: 100, h: 34 };
+  let deleteTrashHover = false;
+
   function drawClassSelect(timestamp) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
 
@@ -176,7 +182,66 @@
         ctx.shadowBlur  = 0;
         ctx.restore();
       }
+
+      // lixeira de reset (só no slot selecionado se há save)
+      if (isSelected) {
+        const saved = SaveSystem.load();
+        if (saved && saved.heroClass === key) {
+          const tx = slotX + SLOT_W - 28;
+          const ty = 78;
+          ctx.save();
+          ctx.font      = '18px monospace';
+          ctx.textAlign = 'center';
+          ctx.globalAlpha = deleteTrashHover ? 1.0 : 0.55;
+          ctx.fillStyle   = deleteTrashHover ? '#ff4444' : '#cc8888';
+          if (deleteTrashHover) { ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 8; }
+          ctx.fillText('🗑', tx, ty + 16);
+          ctx.restore();
+        }
+      }
     });
+
+    // pop-up de confirmação de reset
+    if (deleteConfirmVisible) {
+      ctx.save();
+      // fundo escuro
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+      // caixa
+      ctx.fillStyle = '#1a1228';
+      ctx.strokeStyle = '#883333';
+      ctx.lineWidth = 2;
+      const bx = 280, by = 220, bw = 400, bh = 140;
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeRect(bx, by, bw, bh);
+      // texto
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = '#f0d0d0';
+      ctx.fillText('Excluir progresso deste herói?', bx + bw / 2, by + 38);
+      ctx.font = '12px monospace';
+      ctx.fillStyle = '#aa8888';
+      ctx.fillText('Level, XP, HP, itens e equipamentos serão zerados.', bx + bw / 2, by + 62);
+      // botão Sim
+      const yBtn = DELETE_YES;
+      ctx.fillStyle = '#6a1a1a';
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 2;
+      ctx.fillRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
+      ctx.strokeRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
+      ctx.font = 'bold 14px monospace';
+      ctx.fillStyle = '#ff6666';
+      ctx.fillText('Sim, excluir', yBtn.x + yBtn.w / 2, yBtn.y + 22);
+      // botão Não
+      const nBtn = DELETE_NO;
+      ctx.fillStyle = '#1a2a1a';
+      ctx.strokeStyle = '#448844';
+      ctx.fillRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
+      ctx.strokeRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
+      ctx.fillStyle = '#88cc88';
+      ctx.fillText('Cancelar', nBtn.x + nBtn.w / 2, nBtn.y + 22);
+      ctx.restore();
+    }
 
     // descrição da classe selecionada
     const selCls = Sprites.CLASSES[selectedClass];
@@ -250,7 +315,18 @@
 
     const btn = CONFIRM_BTN;
     confirmHover = mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h;
-    canvas.style.cursor = (hoveredClass || confirmHover) ? 'pointer' : 'default';
+
+    // hover na lixeira do slot selecionado
+    const selIdx = CLASS_KEYS.indexOf(selectedClass);
+    const trashX = selIdx * SLOT_W + SLOT_W - 28;
+    deleteTrashHover = !deleteConfirmVisible &&
+      mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102;
+
+    canvas.style.cursor = (hoveredClass || confirmHover || deleteTrashHover ||
+      (deleteConfirmVisible && (
+        (mx >= DELETE_YES.x && mx <= DELETE_YES.x + DELETE_YES.w && my >= DELETE_YES.y && my <= DELETE_YES.y + DELETE_YES.h) ||
+        (mx >= DELETE_NO.x  && mx <= DELETE_NO.x  + DELETE_NO.w  && my >= DELETE_NO.y  && my <= DELETE_NO.y  + DELETE_NO.h)
+      ))) ? 'pointer' : 'default';
   });
 
   canvas.addEventListener('click', e => {
@@ -260,6 +336,28 @@
     const scaleY = CONFIG.canvas.height / rect.height;
     const mx = (e.clientX - rect.left) * scaleX;
     const my = (e.clientY - rect.top)  * scaleY;
+
+    // pop-up de confirmação aberto: só processa seus botões
+    if (deleteConfirmVisible) {
+      const yBtn = DELETE_YES, nBtn = DELETE_NO;
+      if (mx >= yBtn.x && mx <= yBtn.x + yBtn.w && my >= yBtn.y && my <= yBtn.y + yBtn.h) {
+        SaveSystem.delete();
+        deleteConfirmVisible = false;
+      } else if (mx >= nBtn.x && mx <= nBtn.x + nBtn.w && my >= nBtn.y && my <= nBtn.y + nBtn.h) {
+        deleteConfirmVisible = false;
+      }
+      return;
+    }
+
+    // clique na lixeira do slot selecionado
+    const selIdx = CLASS_KEYS.indexOf(selectedClass);
+    const trashX = selIdx * SLOT_W + SLOT_W - 28;
+    const saved = SaveSystem.load();
+    if (saved && saved.heroClass === selectedClass &&
+        mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102) {
+      deleteConfirmVisible = true;
+      return;
+    }
 
     // clique num herói
     CLASS_KEYS.forEach((key, idx) => {
@@ -371,7 +469,7 @@
 
       if (cls === 'hunter') {
         const snapMx = mx;
-        const arrowY = hero.y - hero.height * 0.48; // altura das mãos da hunter
+        const arrowY = hero.y - hero.height * 0.42; // altura das mãos da hunter
         const snapMy = arrowY;                       // voa em linha reta horizontal
         Effects.spawnProjectile('arrow',
           CONFIG.hero.screenX + 20, arrowY,
