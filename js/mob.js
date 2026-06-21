@@ -510,10 +510,11 @@ class Mob {
     const bob   = Math.sin(this.walkAnimTimer / 80) * 2;
     const baseY = fy + bob;
 
-    // sombra
+    // sombra — mesma altura da hunter (groundOffset 50)
+    const shadowY = fy + 44;
     ctx.fillStyle = 'rgba(0,0,0,0.30)';
-    ctx.fillRect(sx - 18, fy + 2, 36, 6);
-    ctx.fillRect(sx - 14, fy,     28, 4);
+    ctx.fillRect(sx - 18, shadowY + 2, 36, 6);
+    ctx.fillRect(sx - 14, shadowY,     28, 4);
 
     // sprite (animado ou estático)
     drawSprite();
