@@ -268,6 +268,8 @@ var Bag = {
     const fee = Math.ceil(totalValue * TAX_RATE);
     const hero = this._getHero();
 
+    document.getElementById('vw-title').textContent   = '🔒 Saque do Baú Seguro';
+    document.getElementById('vw-confirm').textContent = 'Confirmar Saque';
     document.getElementById('vw-msg').innerHTML =
       `A taxa de saque hoje está em <strong>10%</strong>.<br>` +
       `${qty}x ${item.name} → valor total: <strong>${totalValue}g</strong>`;
@@ -848,16 +850,18 @@ var Bag = {
   _confirmCraft() {
     const hero = this._getHero();
     if (!hero) return;
-    const TAX_RATE  = 0.05;
+    const TAX_RATE  = 0.10;
     const herbItem  = Items.get('forest_herb');
     const herbQty   = 10;
     const totalValue = (herbItem?.value ?? 0) * herbQty;
     const fee        = Math.ceil(totalValue * TAX_RATE);
 
+    document.getElementById('vw-title').textContent   = '⚗️ Confirmar Craft';
+    document.getElementById('vw-confirm').textContent = 'Confirmar Craft';
     document.getElementById('vw-msg').innerHTML =
-      `A taxa de craft hoje está em <strong>10%</strong>.<br>` +
+      `A taxa de craft hoje está em <strong>2%</strong>.<br>` +
       `Receita: 10x Erva da Floresta → <strong>Poção Menor de Vida</strong><br>` +
-      `Valor dos materiais: <strong>${totalValue}g</strong>`;
+      `Valor dos materiais: <strong>${totalValue}g</strong> (${herbQty}x ${herbItem?.name} × ${herbItem?.value}g)`;
     document.getElementById('vw-fee').textContent =
       fee > 0
         ? `Taxa de serviço: ${fee}g (seu gold atual: ${hero.gold ?? 0}g)`
