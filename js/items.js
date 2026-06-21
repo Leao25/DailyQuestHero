@@ -70,7 +70,7 @@ const ITEM_CATALOG = {
     id: 'minor_potion', name: 'Poção Menor de Vida',
     type: 'consumable', rarity: 'comum',
     desc: 'Restaura 20 HP imediatamente.',
-    value: 12, tradable: true, icon: '🧪', img: 'itm_small_health_potion.png',
+    value: 12, tradable: true, icon: '🧪', img: 'itm_small_health_potion.png', imgSize: 52,
     effect: { type: 'heal', amount: 20 },
   },
   health_potion: {
@@ -212,11 +212,11 @@ const ITEM_CATALOG = {
 // ── Tabela de drops por tipo de mob ──────────────────────────
 const MOB_DROP_TABLE = {
   goblin: [
-    { itemId: 'forest_herb',   chance: 0.40 },
-    { itemId: 'goblin_coin',   chance: 0.35 },
-    { itemId: 'wooden_sword',  chance: 0.12 },
-    { itemId: 'minor_potion',  chance: 0.08 },
-    { itemId: 'ancient_coin',  chance: 0.02 },
+    { itemId: 'forest_herb',   chance: 0.20 },
+    { itemId: 'goblin_coin',   chance: 0.10 },
+    //{ itemId: 'wooden_sword',  chance: 0.12 },
+    //{ itemId: 'minor_potion',  chance: 0.08 },
+    //{ itemId: 'ancient_coin',  chance: 0.02 },
   ],
   wolf: [
     { itemId: 'wolf_pelt',     chance: 0.45 },

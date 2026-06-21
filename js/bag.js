@@ -135,7 +135,7 @@ var Bag = {
       slot.dataset.rarity = item.rarity;
       slot.title = item.name;
 
-      const img = this._itemImg(item, 44);
+      const img = this._itemImg(item, item.imgSize ?? 44);
       if (img) slot.appendChild(img);
       else slot.textContent = item.icon ?? '?';
 
