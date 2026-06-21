@@ -10,7 +10,7 @@ const MOB_TYPES = {
     key:          'goblin',
     label:        'Goblin',
     spriteKey:    'mob_goblin',
-    spriteH:      72,
+    spriteH:      110,
     hp:           30,
     attack:       5,
     xpReward:     18,
