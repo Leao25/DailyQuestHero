@@ -88,8 +88,12 @@ const Sprites = {
     const anims = this.animSheets[key];
     const def   = this.ANIM_DEFS[key]?.[animName];
 
-    if (anims && def && anims[animName]) {
-      const frames = anims[animName];
+    // Se a animação pedida não carregou ainda, tenta walk como fallback
+    const resolvedAnim = (anims && anims[animName]) ? animName : 'walk';
+    const resolvedDef  = this.ANIM_DEFS[key]?.[resolvedAnim];
+
+    if (anims && resolvedDef && anims[resolvedAnim]) {
+      const frames = anims[resolvedAnim];
       const fi     = Math.min(frameIdx, def.count - 1);
       const frame  = frames[fi];
       if (!frame) return;
@@ -112,8 +116,10 @@ const Sprites = {
       return;
     }
 
-    // fallback: pose estática ou canvas desenhado
-    this.drawHero(ctx, key, cx, baseY, targetH, options);
+    // fallback só se não houver nenhuma animação carregada ainda
+    if (!anims || !anims['walk']) {
+      this.drawHero(ctx, key, cx, baseY, targetH, options);
+    }
   },
 
   // Chama onComplete() quando todos os sprites estáticos estiverem prontos.
