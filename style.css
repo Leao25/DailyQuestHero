@@ -54,6 +54,7 @@ body {
   width: 1152px;
   height: 648px;
   background: #1a1a1a;
+  image-rendering: pixelated;
 }
 
 /* ---------- HUD ---------- */
@@ -700,8 +701,8 @@ body {
 /* ---------- Balão de pensamento ---------- */
 #hero-bubble {
   position: absolute;
-  left: 210px;
-  bottom: 240px;
+  left: 280px;
+  bottom: 250px;
   background: rgba(255, 255, 255, 0.72);
   color: #1a1a1a;
   font-family: 'Courier New', monospace;

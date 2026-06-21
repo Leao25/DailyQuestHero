@@ -13,7 +13,7 @@ const MOB_TYPES = {
     spriteH:      120,
     hp:           30,
     attack:       5,
-    xpReward:     18,
+    xpReward:     5,
     goldReward:   5,
     attackRange:  45,
     approachSpeed:0.7,
