@@ -549,66 +549,86 @@
   // BACKGROUND — panning suave com crossfade ao reiniciar o loop
   // ============================================================
 
+  const PERIOD_KEYS = ['Manhã', 'Tarde', 'Entardecer', 'Noite'];
+
   const BG_STATE = {
-    offset:      0,       // offset atual em px
-    crossfading: false,
-    fromOffset:  0,
-    crossfadeT:  0,
+    offset:        0,
+    crossfading:   false,
+    fromOffset:    0,
+    crossfadeT:    0,
+    currentPeriod: null, // período sendo exibido agora
+    nextPeriod:    null, // período que vai entrar no crossfade
   };
-  const CROSSFADE_MS      = 500;
-  const CROSSFADE_TRIGGER = 0.82; // inicia crossfade quando 82% do pan usado
+  const CROSSFADE_MS      = 800;
+  const CROSSFADE_TRIGGER = 0.82;
+
+  function _pickRandomPeriod(excludeName) {
+    const options = PERIOD_KEYS.filter(k => k !== excludeName);
+    return DayCycle.PERIODS[options[Math.floor(Math.random() * options.length)]];
+  }
 
   function drawBackground(period, deltaMs) {
-    const name = BG_MAP[period.name] ?? BG_MAP['Tarde'];
-    const img  = BG_IMAGES[name];
+    // Inicializa o período atual na primeira chamada
+    if (!BG_STATE.currentPeriod) BG_STATE.currentPeriod = period;
 
-    if (!img || !img.complete || !img.naturalWidth) {
-      drawSky(period);
+    const cur  = BG_STATE.currentPeriod;
+    const curName = BG_MAP[cur.name] ?? BG_MAP['Tarde'];
+    const curImg  = BG_IMAGES[curName];
+
+    if (!curImg || !curImg.complete || !curImg.naturalWidth) {
+      drawSky(cur);
       return;
     }
 
     const CW    = CONFIG.canvas.width;
     const CH    = CONFIG.canvas.height;
     const W     = CW * 1.4;
-    const H     = img.naturalHeight * (W / img.naturalWidth);
+    const H     = curImg.naturalHeight * (W / curImg.naturalWidth);
     const drawY = (CH - H) / 2;
-    const maxOff = W - CW; // ~384px
+    const maxOff = W - CW;
 
-    // Avança o offset pelo movimento do herói nesse frame
-    const sf = 0.06;
+    const sf    = 0.06;
     const speed = (hero && hero.walkSpeed) ? hero.walkSpeed : CONFIG.hero.walkSpeed;
     const advance = speed * (deltaMs / 16.67) * sf;
     if (!BG_STATE.crossfading) BG_STATE.offset += advance;
 
-    // Dispara crossfade quando perto da borda
+    // Dispara crossfade com período aleatório
     if (!BG_STATE.crossfading && BG_STATE.offset >= maxOff * CROSSFADE_TRIGGER) {
-      BG_STATE.crossfading = true;
-      BG_STATE.fromOffset  = BG_STATE.offset;
-      BG_STATE.crossfadeT  = 0;
+      BG_STATE.crossfading  = true;
+      BG_STATE.fromOffset   = BG_STATE.offset;
+      BG_STATE.crossfadeT   = 0;
+      BG_STATE.nextPeriod   = _pickRandomPeriod(cur.name);
     }
 
     if (BG_STATE.crossfading) {
       BG_STATE.crossfadeT += deltaMs;
       const t = Math.min(BG_STATE.crossfadeT / CROSSFADE_MS, 1);
 
-      // Imagem saindo (offset atual → fading out)
+      const nxt    = BG_STATE.nextPeriod;
+      const nxtImg = BG_IMAGES[BG_MAP[nxt.name] ?? BG_MAP['Tarde']];
+
+      // BG atual saindo
       ctx.save();
       ctx.globalAlpha = 1 - t;
-      ctx.drawImage(img, -BG_STATE.fromOffset, drawY, W, H);
+      ctx.drawImage(curImg, -BG_STATE.fromOffset, drawY, W, H);
       ctx.restore();
 
-      // Imagem entrando (offset 0 → fading in)
-      ctx.save();
-      ctx.globalAlpha = t;
-      ctx.drawImage(img, 0, drawY, W, H);
-      ctx.restore();
+      // Novo BG entrando (se já carregou)
+      if (nxtImg && nxtImg.complete && nxtImg.naturalWidth) {
+        ctx.save();
+        ctx.globalAlpha = t;
+        ctx.drawImage(nxtImg, 0, drawY, W, H);
+        ctx.restore();
+      }
 
       if (t >= 1) {
-        BG_STATE.crossfading = false;
-        BG_STATE.offset      = 0;
+        BG_STATE.crossfading   = false;
+        BG_STATE.offset        = 0;
+        BG_STATE.currentPeriod = BG_STATE.nextPeriod;
+        BG_STATE.nextPeriod    = null;
       }
     } else {
-      ctx.drawImage(img, -BG_STATE.offset, drawY, W, H);
+      ctx.drawImage(curImg, -BG_STATE.offset, drawY, W, H);
     }
   }
 
@@ -1122,7 +1142,8 @@
       drawClassSelect(timestamp);
     } else if (gameState === 'playing') {
       update(deltaMs, Date.now());
-      const period = DayCycle.getCurrentPeriod();
+      // Período controlado pelo BG_STATE após primeiro crossfade (random lore)
+      const period = BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod();
       draw(period, deltaMs);
       Hud.updateHeroStats(hero);
       const activeBoss = mobs.find(m => m.type?.isBoss && m.state !== 'dead');
