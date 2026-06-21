@@ -370,9 +370,11 @@
       };
 
       if (cls === 'hunter') {
-        const snapMx = mx, snapMy = my;
+        const snapMx = mx;
+        const arrowY = hero.y - hero.height * 0.48; // altura das mãos da hunter
+        const snapMy = arrowY;                       // voa em linha reta horizontal
         Effects.spawnProjectile('arrow',
-          CONFIG.hero.screenX + 20, hero.y - hero.height * 0.7,
+          CONFIG.hero.screenX + 20, arrowY,
           snapMx, snapMy,
           () => {
             if (mob.state === 'dead') return;
