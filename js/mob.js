@@ -146,8 +146,8 @@ const MobSprites = {
   // ── Animações individuais por arquivo (novo sistema) ─────────
   ANIM_DEFS: {
     mob_goblin: {
-      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 42 },
-      attack: { file: 'mob_goblin_attack', count: 2, frameW: 353, frameH: 353, fps: [300, 420], groundOffset: 65 },
+      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 50 },
+      attack: { file: 'mob_goblin_attack', count: 2, frameW: 353, frameH: 353, fps: [300, 420], groundOffset: 50 },
     },
   },
 
@@ -425,7 +425,7 @@ class Mob {
     }
   }
 
-  update(deltaMs, hero) {
+  update(deltaMs, hero, allMobs) {
     if (this.flashTimer > 0) this.flashTimer = Math.max(0, this.flashTimer - deltaMs);
     if (this.state === 'dead') return;
 
@@ -435,12 +435,29 @@ class Mob {
       this._advanceAnim(deltaMs);
       return;
     }
+
+    // verifica se há mob à frente (entre este e o hero) bloqueando o caminho
+    if (allMobs) {
+      const MOB_SPACING = 48;
+      const blocker = allMobs.find(m =>
+        m !== this && m.state !== 'dead' &&
+        m.worldX > hero.worldX && m.worldX < this.worldX &&
+        (this.worldX - m.worldX) < MOB_SPACING
+      );
+      if (blocker) {
+        this.state = 'walking';
+        this.walkAnimTimer += deltaMs;
+        this._advanceAnim(deltaMs);
+        return;
+      }
+    }
+
     this.state = 'walking';
     this.walkAnimTimer += deltaMs;
     this._advanceAnim(deltaMs);
     const dir = hero.worldX > this.worldX ? 1 : -1;
     this.worldX += dir * this.approachSpeed * (deltaMs / 16.67);
-    // impede o mob de ultrapassar o hero (mobs sempre vêm da direita)
+    // impede o mob de ultrapassar o hero
     const minDist = this.attackRange - 2;
     if (this.worldX < hero.worldX + minDist) this.worldX = hero.worldX + minDist;
   }

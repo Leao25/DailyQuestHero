@@ -626,7 +626,7 @@
     spawnMobIfNeeded(now);
     const target = findActiveMobTarget();
     hero.update(deltaMs, target);
-    mobs.forEach(mob => mob.update(deltaMs, hero));
+    mobs.forEach(mob => mob.update(deltaMs, hero, mobs));
     if (target) Combat.resolveTick(hero, target, now, combatCallbacks);
     mobs = mobs.filter(m => !m.markedForRemoval);
     Effects.update(deltaMs);
