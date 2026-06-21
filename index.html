@@ -86,8 +86,14 @@
 
     <!-- Controle de volume (bottom-left) -->
     <div id="volume-ctrl" class="hidden">
-      <span id="volume-icon">🔊</span>
-      <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" />
+      <div class="vol-row">
+        <span id="volume-icon" title="Música">🎵</span>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" />
+      </div>
+      <div class="vol-row">
+        <span id="sfx-icon" title="Efeitos">🔊</span>
+        <input type="range" id="sfx-slider" min="0" max="1" step="0.05" value="0.7" />
+      </div>
     </div>
 
     <!-- Quick-use bar (bottom-center) -->

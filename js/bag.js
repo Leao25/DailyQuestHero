@@ -76,8 +76,13 @@ var Bag = {
     // volume slider
     document.getElementById('volume-slider').addEventListener('input', e => {
       const v = parseFloat(e.target.value);
-      Audio.setVolume(v);
-      document.getElementById('volume-icon').textContent = v === 0 ? '🔇' : v < 0.4 ? '🔉' : '🔊';
+      Audio.setMusicVolume(v);
+      document.getElementById('volume-icon').textContent = v === 0 ? '🔇' : '🎵';
+    });
+    document.getElementById('sfx-slider').addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      Audio.setSfxVolume(v);
+      document.getElementById('sfx-icon').textContent = v === 0 ? '🔇' : '🔊';
     });
 
     // quick-use bar — drag & drop
@@ -843,7 +848,7 @@ var Bag = {
   _confirmCraft() {
     const hero = this._getHero();
     if (!hero) return;
-    const TAX_RATE  = 0.10;
+    const TAX_RATE  = 0.05;
     const herbItem  = Items.get('forest_herb');
     const herbQty   = 10;
     const totalValue = (herbItem?.value ?? 0) * herbQty;

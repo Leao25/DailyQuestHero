@@ -366,26 +366,34 @@ body {
 #volume-ctrl {
   position: absolute;
   top: 130px; left: 14px;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; gap: 5px;
   z-index: 100; pointer-events: all;
   background: rgba(0,0,0,0.55);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 6px 10px;
 }
-#volume-icon { font-size: 13px; }
+.vol-row { display: flex; align-items: center; gap: 6px; }
+#volume-icon, #sfx-icon { font-size: 13px; width: 16px; text-align: center; }
 #volume-slider {
   -webkit-appearance: none;
   width: 70px; height: 4px;
   background: rgba(255,255,255,0.2);
   border-radius: 2px; outline: none; cursor: pointer;
 }
-#volume-slider::-webkit-slider-thumb {
+#volume-slider::-webkit-slider-thumb,
+#sfx-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px; height: 12px;
   border-radius: 50%;
   background: #f0d070;
   cursor: pointer;
+}
+#sfx-slider {
+  -webkit-appearance: none;
+  width: 70px; height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px; outline: none; cursor: pointer;
 }
 
 /* ---------- Quick-use bar ---------- */

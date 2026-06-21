@@ -9,7 +9,8 @@ const Audio = (() => {
   // ── Web Audio API (SFX) ──────────────────────────────────
   const _ctx = new (window.AudioContext || window.webkitAudioContext)();
   const _buffers = {};
-  let _masterVolume = 0.7;
+  let _musicVolume = 0.7;
+  let _sfxVolume   = 0.7;
 
   // resume contexto após interação do usuário (política do browser)
   document.addEventListener('click',   () => { if (_ctx.state === 'suspended') _ctx.resume(); });
@@ -33,7 +34,7 @@ const Audio = (() => {
     if (_ctx.state === 'suspended') await _ctx.resume();
     const src  = _ctx.createBufferSource();
     const gain = _ctx.createGain();
-    gain.gain.value = volume * _masterVolume;
+    gain.gain.value = volume * _sfxVolume;
     src.buffer = buf;
     src.connect(gain);
     gain.connect(_ctx.destination);
@@ -67,9 +68,13 @@ const Audio = (() => {
       music.play().catch(() => {});
     },
 
-    setVolume(v) {
-      _masterVolume = v;
+    setMusicVolume(v) {
+      _musicVolume  = v;
       music.volume  = 0.5 * v;
+    },
+
+    setSfxVolume(v) {
+      _sfxVolume = v;
     },
 
     playArrow()        { _play('arrow',        0.7);  },
