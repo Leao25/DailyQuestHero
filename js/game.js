@@ -546,33 +546,69 @@
   }
 
   // ============================================================
-  // BACKGROUND — imagem PNG com panning suave (sem tiling)
-  // A imagem é mais larga que o canvas; desloca lentamente com clamp nas bordas.
+  // BACKGROUND — panning suave com crossfade ao reiniciar o loop
   // ============================================================
 
-  function drawBackground(period, cameraX) {
+  const BG_STATE = {
+    offset:      0,       // offset atual em px
+    crossfading: false,
+    fromOffset:  0,
+    crossfadeT:  0,
+  };
+  const CROSSFADE_MS      = 500;
+  const CROSSFADE_TRIGGER = 0.82; // inicia crossfade quando 82% do pan usado
+
+  function drawBackground(period, deltaMs) {
     const name = BG_MAP[period.name] ?? BG_MAP['Tarde'];
     const img  = BG_IMAGES[name];
 
-    // fallback: se imagem ainda não carregou, desenha céu procedural
     if (!img || !img.complete || !img.naturalWidth) {
       drawSky(period);
       return;
     }
 
-    const CW   = CONFIG.canvas.width;
-    const CH   = CONFIG.canvas.height;
-    // Escala a imagem 1.4x mais larga que o canvas → 672px de margem para panear
-    const W    = CW * 1.4;
-    const H    = img.naturalHeight * (W / img.naturalWidth);
-    const drawY = (CH - H) / 2; // centraliza verticalmente se não cobrir o canvas todo
+    const CW    = CONFIG.canvas.width;
+    const CH    = CONFIG.canvas.height;
+    const W     = CW * 1.4;
+    const H     = img.naturalHeight * (W / img.naturalWidth);
+    const drawY = (CH - H) / 2;
+    const maxOff = W - CW; // ~384px
 
-    const sf     = 0.06;
-    const rawOff = cameraX * sf;
-    const maxOff = Math.max(0, W - CW);
-    const off    = Math.min(rawOff, maxOff);
+    // Avança o offset pelo movimento do herói nesse frame
+    const sf = 0.06;
+    const advance = hero.walkSpeed * (deltaMs / 16.67) * sf;
+    if (!BG_STATE.crossfading) BG_STATE.offset += advance;
 
-    ctx.drawImage(img, -off, drawY, W, H);
+    // Dispara crossfade quando perto da borda
+    if (!BG_STATE.crossfading && BG_STATE.offset >= maxOff * CROSSFADE_TRIGGER) {
+      BG_STATE.crossfading = true;
+      BG_STATE.fromOffset  = BG_STATE.offset;
+      BG_STATE.crossfadeT  = 0;
+    }
+
+    if (BG_STATE.crossfading) {
+      BG_STATE.crossfadeT += deltaMs;
+      const t = Math.min(BG_STATE.crossfadeT / CROSSFADE_MS, 1);
+
+      // Imagem saindo (offset atual → fading out)
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.drawImage(img, -BG_STATE.fromOffset, drawY, W, H);
+      ctx.restore();
+
+      // Imagem entrando (offset 0 → fading in)
+      ctx.save();
+      ctx.globalAlpha = t;
+      ctx.drawImage(img, 0, drawY, W, H);
+      ctx.restore();
+
+      if (t >= 1) {
+        BG_STATE.crossfading = false;
+        BG_STATE.offset      = 0;
+      }
+    } else {
+      ctx.drawImage(img, -BG_STATE.offset, drawY, W, H);
+    }
   }
 
   // ============================================================
@@ -991,7 +1027,7 @@
   // RENDER PRINCIPAL
   // ============================================================
 
-  function draw(period) {
+  function draw(period, deltaMs) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
 
     const shake = Effects.getShakeOffset();
@@ -1000,7 +1036,7 @@
 
     const cam = hero.worldX;
 
-    drawBackground(period, cam);
+    drawBackground(period, deltaMs);
 
     if (portalActive) drawPortal(cam);
 
@@ -1086,7 +1122,7 @@
     } else if (gameState === 'playing') {
       update(deltaMs, Date.now());
       const period = DayCycle.getCurrentPeriod();
-      draw(period);
+      draw(period, deltaMs);
       Hud.updateHeroStats(hero);
       const activeBoss = mobs.find(m => m.type?.isBoss && m.state !== 'dead');
       Hud.updateZone(
