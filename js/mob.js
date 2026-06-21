@@ -138,12 +138,65 @@ const MobSprites = {
   images: {},
   bounds: {},
   sheets: {},
+  animSheets: {}, // { spriteKey: { animName: [canvas, canvas, ...] } }
   _loaded: 0,
   _total:  0,
   ready:   false,
 
+  // ── Animações individuais por arquivo (novo sistema) ─────────
+  ANIM_DEFS: {
+    mob_goblin: {
+      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 42 },
+      attack: { file: 'mob_goblin_attack', count: 2, frameW: 353, frameH: 353, fps: [300, 420], groundOffset: 65 },
+    },
+  },
+
+  loadAnimSheets(spriteKey) {
+    const defs = this.ANIM_DEFS[spriteKey];
+    if (!defs) return;
+    if (!this.animSheets[spriteKey]) this.animSheets[spriteKey] = {};
+    Object.entries(defs).forEach(([animName, def]) => {
+      const img = new Image();
+      img.onload = () => {
+        const frames = [];
+        for (let i = 0; i < def.count; i++) {
+          const fc = document.createElement('canvas');
+          fc.width  = def.frameW;
+          fc.height = def.frameH;
+          fc.getContext('2d').drawImage(img, i * def.frameW, 0, def.frameW, def.frameH, 0, 0, def.frameW, def.frameH);
+          frames.push(fc);
+        }
+        this.animSheets[spriteKey][animName] = frames;
+      };
+      img.onerror = () => {};
+      img.src = `assets/sprites/${def.file}.png`;
+    });
+  },
+
+  drawAnimFrame(ctx, spriteKey, animName, frameIdx, cx, baseY, targetH, options = {}) {
+    const anims = this.animSheets[spriteKey];
+    const def   = this.ANIM_DEFS[spriteKey]?.[animName];
+    if (!anims || !def) return false;
+    const resolved = anims[animName] ? animName : 'walk';
+    const resolvedDef = this.ANIM_DEFS[spriteKey]?.[resolved];
+    const frames = anims[resolved];
+    if (!frames) return false;
+    const fi    = Math.min(frameIdx, resolvedDef.count - 1);
+    const frame = frames[fi];
+    if (!frame) return false;
+    const scale = (targetH * (resolvedDef.heightScale ?? 1)) / resolvedDef.frameH;
+    const dw    = resolvedDef.frameW * scale;
+    const dh    = resolvedDef.frameH * scale;
+    const drawY = baseY - dh + (resolvedDef.groundOffset ?? 0);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
+    ctx.drawImage(frame, cx - dw / 2, drawY, dw, dh);
+    ctx.restore();
+    return true;
+  },
+
   // ── Definição dos spritesheets por mob ───────────────────────
-  // Preencha frameW e rowH com os valores reais do PNG gerado.
   SHEET_DEFS: {
     mob_goblin: {
       rowH: 150,
@@ -230,6 +283,7 @@ const MobSprites = {
     this._loaded = 0;
 
     uniqueKeys.forEach(spriteKey => {
+      this.loadAnimSheets(spriteKey);
       this.loadSheet(spriteKey);
 
       const img = new Image();
@@ -340,7 +394,6 @@ class Mob {
   }
 
   _advanceAnim(deltaMs) {
-    const def  = MobSprites.SHEET_DEFS[this.spriteKey];
     const anim = this._animName();
     if (anim !== this._lastAnim) {
       this.animFrame = 0;
@@ -348,8 +401,24 @@ class Mob {
       this._lastAnim = anim;
       return;
     }
-    if (!def) return;
-    const row = def.rows.find(r => r.name === anim);
+    // novo sistema: ANIM_DEFS individuais
+    const animDef = MobSprites.ANIM_DEFS[this.spriteKey]?.[anim];
+    if (animDef) {
+      this.animTimer += deltaMs;
+      const frameDur = animDef.fps[this.animFrame] ?? 100;
+      if (this.animTimer >= frameDur) {
+        this.animTimer -= frameDur;
+        const looping = (anim === 'walk' || anim === 'attack');
+        this.animFrame = looping
+          ? (this.animFrame + 1) % animDef.count
+          : Math.min(this.animFrame + 1, animDef.count - 1);
+      }
+      return;
+    }
+    // fallback: SHEET_DEFS (spritesheet em linhas)
+    const sheetDef = MobSprites.SHEET_DEFS[this.spriteKey];
+    if (!sheetDef) return;
+    const row = sheetDef.rows.find(r => r.name === anim);
     if (!row) return;
     this.animTimer += deltaMs;
     const frameDur = row.fps[this.animFrame] ?? 100;
@@ -404,8 +473,13 @@ class Mob {
     ctx.save();
 
     const anim      = this._animName();
+    const hasAnims  = !!MobSprites.animSheets[this.spriteKey];
     const hasSheet  = !!MobSprites.sheets[this.spriteKey];
     const drawSprite = (opts = {}) => {
+      if (hasAnims) {
+        const drew = MobSprites.drawAnimFrame(ctx, this.spriteKey, anim, this.animFrame, sx, fy, this.spriteH, opts);
+        if (drew) return;
+      }
       if (hasSheet) {
         MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, fy, this.spriteH, opts);
       } else {
