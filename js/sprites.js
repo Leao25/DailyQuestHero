@@ -247,15 +247,16 @@ const Sprites = {
   },
 
   drawHero(ctx, key, cx, baseY, targetH, options = {}) {
-    // Fallback desenhado para hunter enquanto sprite não existe
-    if (key === 'hunter' && (!this.images[key] || !(this.images[key] instanceof HTMLCanvasElement))) {
-      this._drawHunterFallback(ctx, cx, baseY, targetH, options);
+    const img = this.images[key];
+    const isCanvas = img instanceof HTMLCanvasElement;
+    const hasImage = img && (isCanvas ? img.width > 0 : (img.complete && img.naturalWidth > 0));
+
+    // Fallback desenhado enquanto imagem não carregou
+    if (!hasImage) {
+      if (key === 'hunter') this._drawHunterFallback(ctx, cx, baseY, targetH, options);
       return;
     }
 
-    const img = this.images[key];
-    if (!img) return;
-    const isCanvas = img instanceof HTMLCanvasElement;
     if (!isCanvas && (!img.complete || !img.naturalWidth)) return;
     const srcW = isCanvas ? img.width  : img.naturalWidth;
     const srcH = isCanvas ? img.height : img.naturalHeight;
