@@ -68,9 +68,8 @@ const Combat = {
     const leveledUp = hero.gainXp(mob.xpReward);
     const goldEarned = mob.goldReward ?? 0;
     hero.gold += goldEarned;
-    // const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
-    // if (drops.length > 0) hero.addItems(drops);
-    const drops = [];
+    const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
+    if (drops.length > 0) hero.addItems(drops);
     mob.markedForRemoval = true;
 
     // Hunter "Foco": cada kill +1 stack; a 10/10, 50% de flecha bônus
