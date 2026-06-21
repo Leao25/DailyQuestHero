@@ -397,38 +397,6 @@
       }
     },
     onMobAttack(mob, damage) {
-      const roll = Math.random();
-      if (roll < hero.dodgeChance) {
-        // ESQUIVA
-        hero.hp = Math.min(hero.maxHp, hero.hp + damage);
-        hero.flashTimer = 0;
-        if (hero.state !== 'dead') hero.state = 'walking';
-        hero.triggerDodge();
-        Effects.spawnDamageNumber(
-          CONFIG.hero.screenX, hero.y - hero.height - 8, 'ESQUIVA',
-          { color: '#80e0ff', outline: '#004488', size: 13, bold: true, prefix: '' }
-        );
-        return;
-      }
-      if (roll < hero.dodgeChance + hero.blockChance) {
-        // BLOQUEIO — reverte e aplica só 40%
-        hero.hp = Math.min(hero.maxHp, hero.hp + damage);
-        const blocked = Math.ceil(damage * 0.4);
-        hero.takeDamage(blocked);
-        hero.triggerBlock();
-        Effects.spawnDamageNumber(
-          CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
-          hero.y - hero.height - 8, blocked,
-          { color: '#80e0ff', outline: '#004488' }
-        );
-        Effects.spawnDamageNumber(
-          CONFIG.hero.screenX, hero.y - hero.height - 28, 'BLOQUEIO',
-          { color: '#a0d0ff', outline: '#003366', size: 12, bold: true, prefix: '' }
-        );
-        Hud.logEvent(`Bloqueou! ${blocked} de dano.`, 'info');
-        return;
-      }
-      // dano normal
       Effects.spawnDamageNumber(
         CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
         hero.y - hero.height - 8, damage,
@@ -436,6 +404,25 @@
       );
       Effects.triggerShake(5, 200);
       Hud.logEvent(`Você sofreu ${damage} de dano.`, 'damage');
+    },
+    onDodge(hero) {
+      Effects.spawnDamageNumber(
+        CONFIG.hero.screenX, hero.y - hero.height - 8, 'ESQUIVA',
+        { color: '#80e0ff', outline: '#004488', size: 13, bold: true, prefix: '' }
+      );
+      Hud.logEvent('Esquivou!', 'info');
+    },
+    onBlock(hero, damage) {
+      Effects.spawnDamageNumber(
+        CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
+        hero.y - hero.height - 8, damage,
+        { color: '#80e0ff', outline: '#004488' }
+      );
+      Effects.spawnDamageNumber(
+        CONFIG.hero.screenX, hero.y - hero.height - 28, 'BLOQUEIO',
+        { color: '#a0d0ff', outline: '#003366', size: 12, bold: true, prefix: '' }
+      );
+      Hud.logEvent(`Bloqueou! ${damage} de dano.`, 'info');
     },
     onPassiveTrigger(cls, value) {
       const hx = CONFIG.hero.screenX;

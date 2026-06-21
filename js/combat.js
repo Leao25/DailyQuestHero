@@ -41,13 +41,31 @@ const Combat = {
 
     // ── Mob ataca herói ──────────────────────────────────────
     if (mobInRange && mob.state !== 'dead' && mob.canAttack(now)) {
-      const damage = mob.performAttack(now);
-      hero.takeDamage(damage);
-      callbacks.onMobAttack(mob, damage);
+      const rawDamage = mob.performAttack(now);
 
-      if (hero.state === 'dead') {
-        callbacks.onHeroDeath();
+      // Esquiva (SPD): evita o dano completamente
+      const dodgeRoll = Math.random();
+      if (dodgeRoll < hero.dodgeChance) {
+        hero.triggerDodge();
+        callbacks.onDodge?.(hero);
+        return;
       }
+
+      // Bloqueio (DEF): reduz o dano pela metade
+      const blockRoll = Math.random();
+      if (blockRoll < hero.blockChance) {
+        const blocked = Math.max(1, Math.floor(rawDamage * 0.5));
+        hero.triggerBlock();
+        hero.takeDamage(blocked);
+        callbacks.onBlock?.(hero, blocked);
+        if (hero.state === 'dead') callbacks.onHeroDeath();
+        return;
+      }
+
+      // Dano normal
+      hero.takeDamage(rawDamage);
+      callbacks.onMobAttack(mob, rawDamage);
+      if (hero.state === 'dead') callbacks.onHeroDeath();
     }
   },
 

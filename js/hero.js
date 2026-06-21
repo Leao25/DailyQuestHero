@@ -67,6 +67,18 @@ class Hero {
 
     if (this.state === 'dead') return;
 
+    // estados temporários de dodge/block sobrepõem attacking/walking
+    if (this.dodgeTimer > 0) {
+      this.state = 'dodging';
+      this._advanceAnim(deltaMs);
+      return;
+    }
+    if (this.blockTimer > 0) {
+      this.state = 'blocking';
+      this._advanceAnim(deltaMs);
+      return;
+    }
+
     if (targetMob && this.distanceTo(targetMob) <= this.attackRange) {
       this.state = 'attacking';
       this._advanceAnim(deltaMs);
@@ -77,6 +89,16 @@ class Hero {
     this.worldX        += CONFIG.hero.walkSpeed * (deltaMs / 16.67);
     this.walkAnimTimer += deltaMs;
     this._advanceAnim(deltaMs);
+  }
+
+  triggerDodge() {
+    this.dodgeTimer  = 400; // duração da animação de esquiva em ms
+    this.dodgeOffset = 0;
+  }
+
+  triggerBlock() {
+    this.blockTimer = 350; // duração da animação de bloqueio em ms
+    this.flashTimer = 150;
   }
 
   // Mapeia estado do herói para nome de animação
