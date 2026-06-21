@@ -142,13 +142,7 @@ const Hud = {
       this.els.zonePortal.classList.add('hidden');
     }
 
-    // distância restante
-    const distLeft = Math.max(0, Math.round(portalX - heroWorldX));
-    if (distLeft > 0) {
-      this.els.zoneDistLabel.textContent = `${distLeft} u até o portal`;
-    } else {
-      this.els.zoneDistLabel.textContent = portalOpen ? 'Portal aberto!' : 'Chegou!';
-    }
+    this.els.zoneDistLabel.textContent = '';
   },
 
   updateClock(period) {
