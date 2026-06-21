@@ -132,7 +132,12 @@ class Hero {
       this.animTimer -= frameDur;
       const isLooping = (anim === 'walk' || anim === 'attack');
       if (isLooping) {
-        this.animFrame = (this.animFrame + 1) % def.count;
+        const next = (this.animFrame + 1) % def.count;
+        // fim do último frame do ataque → dispara callback de projétil
+        if (anim === 'attack' && next === 0) {
+          this.onAttackAnimFire?.();
+        }
+        this.animFrame = next;
       } else {
         this.animFrame = Math.min(this.animFrame + 1, def.count - 1);
       }

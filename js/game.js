@@ -278,6 +278,9 @@
 
   function startGame() {
     hero          = new Hero(selectedClass);
+    hero.onAttackAnimFire = () => {
+      if (hero._pendingArrow) { hero._pendingArrow.fire(); hero._pendingArrow = null; }
+    };
     bossSpawned   = false;
     phase2Triggered = false;
 
@@ -371,15 +374,23 @@
 
       if (cls === 'hunter') {
         const snapMx = mx, snapMy = my;
-        Effects.spawnProjectile('arrow',
-          CONFIG.hero.screenX + 20, hero.y - hero.height * 0.7,
+        // guarda flecha pendente — dispara ao fim do frame 2 da animação
+        hero._pendingArrow = {
+          originX: CONFIG.hero.screenX + 20,
+          originY: hero.y - hero.height * 0.7,
           snapMx, snapMy,
-          () => {
-            if (mob.state === 'dead') return;
-            showDamage(snapMx, mob.y - mob.height - 8);
-            Effects.spawnHitSparks(snapMx, snapMy);
+          fire() {
+            Effects.spawnProjectile('arrow',
+              this.originX, this.originY,
+              this.snapMx, this.snapMy,
+              () => {
+                if (mob.state === 'dead') return;
+                showDamage(this.snapMx, mob.y - mob.height - 8);
+                Effects.spawnHitSparks(this.snapMx, this.snapMy);
+              }
+            );
           }
-        );
+        };
       } else if (cls === 'mage') {
         const snapMx = mx, snapMy = my;
         Effects.spawnProjectile('fireball',
