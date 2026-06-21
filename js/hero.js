@@ -200,7 +200,9 @@ class Hero {
     ctx.save();
     const sx   = CONFIG.hero.screenX + this.dodgeOffset;
     const fy   = this.y;
-    const bob  = this.state === 'walking' ? Math.sin(this.walkAnimTimer / 90) * 3 : 0;
+    const bob  = this.state === 'walking'  ? Math.sin(this.walkAnimTimer / 90) * 3
+               : this.state === 'attacking' ? (this.animFrame === 1 ? 3 : -3)
+               : 0;
     const baseY = fy + bob;
 
     // sombra — pulsa com o bob da animação
