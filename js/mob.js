@@ -198,14 +198,7 @@ const MobSprites = {
 
   // ── Definição dos spritesheets por mob ───────────────────────
   SHEET_DEFS: {
-    mob_goblin: {
-      rowH: 150,
-      rows: [
-        { name: 'walk',   count: 5, frameW: 150, fps: [110,110,110,110,110] },
-        { name: 'attack', count: 4, frameW: 150, fps: [80,60,60,140] },
-        { name: 'death',  count: 4, frameW: 150, fps: [100,100,150,250] },
-      ],
-    },
+    // mob_goblin usa ANIM_DEFS (arquivos individuais) — sem entrada aqui
     mob_wolf: {
       rowH: 150,
       rows: [
