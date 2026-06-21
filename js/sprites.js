@@ -37,112 +37,76 @@ const Sprites = {
     // },
   },
 
-  bounds: {}, // tight pixel bounds por sprite key
-  sheets: {}, // spritesheets animados por key
+  bounds:     {}, // tight pixel bounds por sprite key
+  animSheets: {}, // { heroKey: { animName: canvas } }
 
-  // ── Definição dos spritesheets por herói ────────────────────
-  //
-  // Formato padrão esperado (hero_[class]_sheet.png):
-  //   Cada linha = uma animação, frames lado a lado da esquerda p/ direita.
-  //   Row 0: walk   — 4 frames
-  //   Row 1: attack — 4 frames
-  //   Row 2: death  — 4 frames
-  //
-  //   frameW / rowH: dimensões em pixels de cada célula do grid.
-  //   fps: duração em ms de cada frame (array com count entradas).
-  //
-  // Para adicionar um herói: preencha frameW e rowH conforme o asset gerado.
+  // ── Definição das animações por herói ───────────────────────
+  // Cada animação é um arquivo PNG separado com frames lado a lado.
+  // file: nome do arquivo em assets/sprites/ (sem .png)
+  // count: número de frames
+  // frameW/frameH: tamanho de cada frame em px
+  // fps: duração em ms de cada frame
   // ─────────────────────────────────────────────────────────────
-
-  SHEET_DEFS: {
-    // Formato: 3 linhas x 4 frames, 128x128px por frame
-    // Sheet total: 512x384px
-    // Row 0: walk (4 frames)
-    // Row 1: attack (4 frames)
-    // Row 2: death (4 frames)
-    warrior: {
-      rowH: 128,
-      rows: [
-        { name: 'walk',   count: 4, frameW: 128, fps: [120,120,120,120] },
-        { name: 'attack', count: 4, frameW: 128, fps: [80,60,80,160] },
-        { name: 'death',  count: 4, frameW: 128, fps: [100,100,150,250] },
-      ],
-    },
+  ANIM_DEFS: {
     hunter: {
-      rowH: 128,
-      rows: [
-        { name: 'walk',   count: 4, frameW: 128, fps: [110,110,110,110] },
-        { name: 'attack', count: 4, frameW: 128, fps: [70,55,70,150] },
-        { name: 'death',  count: 4, frameW: 128, fps: [100,100,150,250] },
-      ],
+      walk:   { file: 'hero_hunter',        count: 1, frameW: 128, frameH: 128, fps: [300] },
+      attack: { file: 'hero_hunter_attack', count: 2, frameW: 128, frameH: 128, fps: [100, 180] },
+      block:  { file: 'hero_hunter_block',  count: 2, frameW: 128, frameH: 128, fps: [100, 180] },
+      dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 128, frameH: 128, fps: [80,  120] },
+      death:  { file: 'hero_hunter_death',  count: 2, frameW: 128, frameH: 128, fps: [150, 400] },
     },
-    mage: {
-      rowH: 128,
-      rows: [
-        { name: 'walk',   count: 4, frameW: 128, fps: [130,130,130,130] },
-        { name: 'attack', count: 4, frameW: 128, fps: [90,70,90,160] },
-        { name: 'death',  count: 4, frameW: 128, fps: [100,100,150,250] },
-      ],
-    },
-    cleric: {
-      rowH: 128,
-      rows: [
-        { name: 'walk',   count: 4, frameW: 128, fps: [125,125,125,125] },
-        { name: 'attack', count: 4, frameW: 128, fps: [90,70,90,160] },
-        { name: 'death',  count: 4, frameW: 128, fps: [100,100,150,250] },
-      ],
-    },
+    // outros heróis usarão ANIM_DEFS quando tiverem assets
   },
 
-  loadSheet(key) {
-    if (this.sheets[key]) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const oc = document.createElement('canvas');
-      oc.width  = img.naturalWidth;
-      oc.height = img.naturalHeight;
-      oc.getContext('2d').drawImage(img, 0, 0);
-      this.sheets[key] = oc;
-    };
-    img.onerror = () => {}; // arquivo ainda não existe — fallback silencioso
-    img.src = `assets/sprites/hero_${key}_sheet.png`;
+  loadAnimSheets(key) {
+    const defs = this.ANIM_DEFS[key];
+    if (!defs) return;
+    if (!this.animSheets[key]) this.animSheets[key] = {};
+    Object.entries(defs).forEach(([animName, def]) => {
+      const img = new Image();
+      img.onload = () => {
+        const oc = document.createElement('canvas');
+        oc.width  = img.naturalWidth;
+        oc.height = img.naturalHeight;
+        oc.getContext('2d').drawImage(img, 0, 0);
+        this.animSheets[key][animName] = oc;
+      };
+      img.onerror = () => {};
+      img.src = `assets/sprites/${def.file}.png`;
+    });
   },
 
-  // Desenha um frame específico do spritesheet.
-  // animName: 'walk' | 'attack' | 'defend' | 'dodge'
-  // frameIdx: índice do frame dentro da linha
+  // Desenha um frame de animação individual.
+  // Usa animSheets (arquivo por animação) se disponível,
+  // senão cai no fallback desenhado.
   drawFrame(ctx, key, animName, frameIdx, cx, baseY, targetH, options = {}) {
-    const img = this.sheets[key];
-    const def = this.SHEET_DEFS[key];
-    const ready = img && def && (img instanceof HTMLCanvasElement ? img.width > 0 : (img.complete && img.naturalWidth > 0));
-    if (!ready) {
-      this.drawHero(ctx, key, cx, baseY, targetH, options);
+    const anims = this.animSheets[key];
+    const def   = this.ANIM_DEFS[key]?.[animName];
+
+    if (anims && def && anims[animName]) {
+      const sheet = anims[animName];
+      const fi    = Math.min(frameIdx, def.count - 1);
+      const sx    = fi * def.frameW;
+      const scale = targetH / def.frameH;
+      const dw    = def.frameW * scale;
+      const dh    = def.frameH * scale;
+
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
+      if (options.flipX) {
+        ctx.translate(cx, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, -dw / 2, baseY - dh, dw, dh);
+      } else {
+        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, cx - dw / 2, baseY - dh, dw, dh);
+      }
+      ctx.restore();
       return;
     }
 
-    const rowIdx = def.rows.findIndex(r => r.name === animName);
-    if (rowIdx < 0) return;
-    const row = def.rows[rowIdx];
-    const fi  = Math.min(frameIdx, row.count - 1);
-
-    const sx = fi * row.frameW;
-    const sy = rowIdx * def.rowH;
-    const scale = targetH / def.rowH;
-    const dw = row.frameW * scale;
-    const dh = def.rowH  * scale;
-
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
-    if (options.flipX) {
-      ctx.translate(cx, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(img, sx, sy, row.frameW, def.rowH, -dw / 2, baseY - dh, dw, dh);
-    } else {
-      ctx.drawImage(img, sx, sy, row.frameW, def.rowH, cx - dw / 2, baseY - dh, dw, dh);
-    }
-    ctx.restore();
+    // fallback: pose estática ou canvas desenhado
+    this.drawHero(ctx, key, cx, baseY, targetH, options);
   },
 
   // Chama onComplete() quando todos os sprites estáticos estiverem prontos.
@@ -152,8 +116,8 @@ const Sprites = {
     this._total = keys.length;
 
     keys.forEach(key => {
-      // tenta carregar sheet animado (silencioso se não existir)
-      this.loadSheet(key);
+      // carrega animações individuais (novo sistema)
+      this.loadAnimSheets(key);
 
       const img = new Image();
       img.onload = () => {

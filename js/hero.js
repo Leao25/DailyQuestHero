@@ -79,19 +79,20 @@ class Hero {
     this._advanceAnim(deltaMs);
   }
 
-  // Mapeia estado do herói para nome de animação no sheet
+  // Mapeia estado do herói para nome de animação
   _animName() {
-    if (this.state === 'dead')     return 'death';
+    if (this.state === 'dead')      return 'death';
+    if (this.state === 'dodging')   return 'dodge';
+    if (this.state === 'blocking')  return 'block';
     if (this.state === 'attacking') return 'attack';
     return 'walk';
   }
 
-  // Avança o frame da animação com base no fps definido no SHEET_DEF
+  // Avança o frame da animação com base no ANIM_DEFS
   _advanceAnim(deltaMs) {
-    const def  = Sprites.SHEET_DEFS[this.heroClass];
+    const defs = Sprites.ANIM_DEFS[this.heroClass];
     const anim = this._animName();
 
-    // troca de animação — reinicia frame
     if (anim !== this._lastAnim) {
       this.animFrame = 0;
       this.animTimer = 0;
@@ -99,19 +100,19 @@ class Hero {
       return;
     }
 
+    if (!defs) return;
+    const def = defs[anim];
     if (!def) return;
-    const row = def.rows.find(r => r.name === anim);
-    if (!row) return;
 
     this.animTimer += deltaMs;
-    const frameDur = row.fps[this.animFrame] ?? 100;
+    const frameDur = def.fps[this.animFrame] ?? 100;
     if (this.animTimer >= frameDur) {
       this.animTimer -= frameDur;
       const isLooping = (anim === 'walk');
       if (isLooping) {
-        this.animFrame = (this.animFrame + 1) % row.count;
+        this.animFrame = (this.animFrame + 1) % def.count;
       } else {
-        this.animFrame = Math.min(this.animFrame + 1, row.count - 1);
+        this.animFrame = Math.min(this.animFrame + 1, def.count - 1);
       }
     }
   }
