@@ -173,9 +173,29 @@ body {
 #atk-stat strong { color: #ffc040; }
 #gold-stat { color: #c09050; }
 #gold-stat strong { color: #ffd700; }
-#passive-indicator {
-  font-size: 9px; color: #e0a030;
-  letter-spacing: 0.5px;
+#passive-wrap {
+  display: flex; align-items: center; gap: 5px;
+}
+#passive-label {
+  font-size: 9px; font-weight: bold; letter-spacing: 0.5px;
+  color: #e0a030; min-width: 28px;
+}
+#passive-bar-bg {
+  width: 72px; height: 7px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 5px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  position: relative;
+}
+#passive-bar-fill {
+  height: 100%; width: 0%;
+  border-radius: 5px;
+  transition: width 0.2s ease-out;
+  background: linear-gradient(90deg, #888800, #e0a030, #ffe066);
+  box-shadow: 0 0 5px rgba(224,160,48,0.6);
+}
+#passive-bar-text {
+  font-size: 9px; color: #c0a060; min-width: 22px;
 }
 
 /* ── Barra de progresso de zona ───────────────────── */

@@ -34,7 +34,9 @@ const Hud = {
     this.els.classLabel    = document.getElementById('hero-class-label');
     this.els.atkValue      = document.getElementById('atk-value');
     this.els.goldValue     = document.getElementById('gold-value');
-    this.els.passiveInd    = document.getElementById('passive-indicator');
+    this.els.passiveLabel  = document.getElementById('passive-label');
+    this.els.passiveBarFill= document.getElementById('passive-bar-fill');
+    this.els.passiveBarText= document.getElementById('passive-bar-text');
     // zone bar removida
     this.hideStats();
   },
@@ -57,10 +59,14 @@ const Hud = {
     badge.className   = `cls-${heroClass}`;
     this.els.classLabel.textContent = meta.label;
 
-    // cor da passiva
+    // cor e label da passiva
     const pm = PASSIVE_META[heroClass];
-    if (pm && this.els.passiveInd) {
-      this.els.passiveInd.style.color = pm.color;
+    if (pm) {
+      if (this.els.passiveLabel)   this.els.passiveLabel.textContent  = pm.label;
+      if (this.els.passiveBarFill) this.els.passiveBarFill.style.background =
+        `linear-gradient(90deg, ${pm.color}88, ${pm.color}, ${pm.color}dd)`;
+      if (this.els.passiveBarFill) this.els.passiveBarFill.style.boxShadow =
+        `0 0 5px ${pm.color}99`;
     }
   },
 
@@ -88,23 +94,22 @@ const Hud = {
   },
 
   _updatePassive(hero) {
-    const el  = this.els.passiveInd;
-    const pm  = PASSIVE_META[hero.heroClass];
-    if (!el || !pm) return;
+    const fill = this.els.passiveBarFill;
+    const text = this.els.passiveBarText;
+    const pm   = PASSIVE_META[hero.heroClass];
+    if (!fill || !pm) return;
 
     if (hero.heroClass === 'warrior') {
       const stacks = hero.passiveStacks ?? 0;
-      if (stacks > 0) {
-        el.textContent = `${pm.label} ${'█'.repeat(stacks)}${'░'.repeat(10 - stacks)}`;
-      } else {
-        el.textContent = `${pm.label} ${'░'.repeat(10)}`;
-      }
+      fill.style.width = `${(stacks / 10) * 100}%`;
+      if (text) text.textContent = `${stacks}/10`;
     } else if (hero.heroClass === 'hunter') {
-      const hits = hero.passiveStacks ?? 0;
-      const filled = hits % 5;
-      el.textContent = `${pm.label} ${'█'.repeat(filled)}${'░'.repeat(5 - filled)}`;
+      const hits   = (hero.passiveStacks ?? 0) % 5;
+      fill.style.width = `${(hits / 5) * 100}%`;
+      if (text) text.textContent = `${hits}/5`;
     } else {
-      el.textContent = pm.label;
+      fill.style.width = '100%';
+      if (text) text.textContent = '';
     }
   },
 
