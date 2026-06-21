@@ -17,7 +17,7 @@ const MOB_TYPES = {
     attackRange:  45,
     approachSpeed:0.7,
     weight:       40,   // peso de spawn (maior = mais frequente)
-    periods:      ['Manhã', 'Tarde', 'Entardecer', 'Noite'], // aparece sempre
+    periods:      ['Manhã', 'Tarde', 'Entardecer', 'Noite'],
     minLevel:     1,
     drops:        ['herb', 'coin'],
   },
@@ -47,7 +47,7 @@ const MOB_TYPES = {
     attackRange:  55,
     approachSpeed:0.5,
     weight:       15,
-    periods:      ['Tarde', 'Entardecer'],
+    periods:      ['Tarde', 'Entardecer', 'Noite'],
     minLevel:     4,
     drops:        ['weapon', 'gold'],
   },
@@ -82,6 +82,24 @@ const MOB_TYPES = {
     minLevel:     8,
     drops:        ['rune', 'rare_item'],
   },
+
+  // Boss da Fase 1 — Guardião da Floresta
+  forest_guardian: {
+    key:          'forest_guardian',
+    label:        'Guardião da Floresta',
+    spriteKey:    'mob_orc',   // usa sprite do orc por enquanto
+    spriteH:      110,
+    hp:           400,
+    attack:       22,
+    xpReward:     200,
+    attackRange:  60,
+    approachSpeed:0.4,
+    weight:       0,           // não entra no pool normal
+    periods:      ['Noite'],
+    minLevel:     10,
+    drops:        [],          // drop especial tratado em game.js
+    isBoss:       true,
+  },
 };
 
 // Pool disponível na Fase 1 (sem demônio)
@@ -104,31 +122,123 @@ function pickMobType(heroLevel, period) {
 }
 
 // ── Carregamento de sprites dos mobs ─────────────────────────
+//
+// Formato padrão esperado (mob_[type]_sheet.png):
+//   Row 0: walk   — 5 frames
+//   Row 1: attack — 4 frames
+//   Row 2: death  — 4 frames
+//
 const MobSprites = {
   images: {},
   bounds: {},
+  sheets: {},
   _loaded: 0,
   _total:  0,
   ready:   false,
 
+  // ── Definição dos spritesheets por mob ───────────────────────
+  // Preencha frameW e rowH com os valores reais do PNG gerado.
+  SHEET_DEFS: {
+    mob_goblin: {
+      rowH: 150,
+      rows: [
+        { name: 'walk',   count: 5, frameW: 150, fps: [110,110,110,110,110] },
+        { name: 'attack', count: 4, frameW: 150, fps: [80,60,60,140] },
+        { name: 'death',  count: 4, frameW: 150, fps: [100,100,150,250] },
+      ],
+    },
+    mob_wolf: {
+      rowH: 150,
+      rows: [
+        { name: 'walk',   count: 5, frameW: 150, fps: [100,100,100,100,100] },
+        { name: 'attack', count: 4, frameW: 150, fps: [70,55,55,140] },
+        { name: 'death',  count: 4, frameW: 150, fps: [100,100,150,250] },
+      ],
+    },
+    mob_orc: {
+      rowH: 180,
+      rows: [
+        { name: 'walk',   count: 5, frameW: 180, fps: [130,130,130,130,130] },
+        { name: 'attack', count: 4, frameW: 180, fps: [100,70,70,160] },
+        { name: 'death',  count: 4, frameW: 180, fps: [100,100,150,250] },
+      ],
+    },
+    mob_skeleton: {
+      rowH: 160,
+      rows: [
+        { name: 'walk',   count: 5, frameW: 160, fps: [120,120,120,120,120] },
+        { name: 'attack', count: 4, frameW: 160, fps: [90,65,65,150] },
+        { name: 'death',  count: 4, frameW: 160, fps: [100,100,150,250] },
+      ],
+    },
+    mob_demon: {
+      rowH: 200,
+      rows: [
+        { name: 'walk',   count: 5, frameW: 200, fps: [110,110,110,110,110] },
+        { name: 'attack', count: 4, frameW: 200, fps: [80,60,60,150] },
+        { name: 'death',  count: 4, frameW: 200, fps: [100,100,150,250] },
+      ],
+    },
+  },
+
+  loadSheet(spriteKey) {
+    if (this.sheets[spriteKey]) return;
+    const img = new Image();
+    img.onload = () => {
+      const oc = document.createElement('canvas');
+      oc.width  = img.naturalWidth;
+      oc.height = img.naturalHeight;
+      oc.getContext('2d').drawImage(img, 0, 0);
+      this.sheets[spriteKey] = oc;
+    };
+    img.onerror = () => {};
+    img.src = `assets/sprites/${spriteKey}_sheet.png`;
+  },
+
+  drawFrame(ctx, spriteKey, animName, frameIdx, cx, baseY, targetH, options = {}) {
+    const sheet = this.sheets[spriteKey];
+    const def   = this.SHEET_DEFS[spriteKey];
+    if (!sheet || !def) {
+      this.draw(ctx, spriteKey, cx, baseY, targetH, options);
+      return;
+    }
+    const rowIdx = def.rows.findIndex(r => r.name === animName);
+    if (rowIdx < 0) { this.draw(ctx, spriteKey, cx, baseY, targetH, options); return; }
+    const row = def.rows[rowIdx];
+    const fi  = Math.min(frameIdx, row.count - 1);
+    const scale = targetH / def.rowH;
+    const dw    = row.frameW * scale;
+    const dh    = def.rowH   * scale;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
+    ctx.drawImage(sheet, fi * row.frameW, rowIdx * def.rowH, row.frameW, def.rowH,
+                  cx - dw / 2, baseY - dh, dw, dh);
+    ctx.restore();
+  },
+
   load(onComplete) {
-    const keys = Object.keys(MOB_TYPES);
-    this._total = keys.length;
-    keys.forEach(k => {
-      const def = MOB_TYPES[k];
+    // carrega apenas spriteKeys únicos para evitar duplicatas (ex: forest_guardian usa mob_orc)
+    const uniqueKeys = [...new Set(Object.values(MOB_TYPES).map(d => d.spriteKey))];
+    this._total  = uniqueKeys.length;
+    this._loaded = 0;
+
+    uniqueKeys.forEach(spriteKey => {
+      this.loadSheet(spriteKey);
+
       const img = new Image();
       img.onload = () => {
-        this._calcBounds(def.spriteKey, img);
+        this._calcBounds(spriteKey, img);
         this._loaded++;
         if (this._loaded === this._total) { this.ready = true; onComplete(); }
       };
       img.onerror = () => {
-        this.bounds[def.spriteKey] = { topY: 0, bottomY: 1, contentH: 1 };
+        this.bounds[spriteKey] = { topY: 0, bottomY: 1, contentH: 1 };
         this._loaded++;
         if (this._loaded === this._total) { this.ready = true; onComplete(); }
       };
-      img.src = `assets/sprites/${def.spriteKey}.png`;
-      this.images[def.spriteKey] = img;
+      img.src = `assets/sprites/${spriteKey}.png`;
+      this.images[spriteKey] = img;
     });
   },
 
@@ -144,10 +254,7 @@ const MobSprites = {
     for (let y = 0; y < img.naturalHeight; y++) {
       for (let x = 0; x < img.naturalWidth; x++) {
         const i = (y * img.naturalWidth + x) * 4;
-        const r = d[i], g = d[i+1], b = d[i+2];
-        if (r > 155 && g > 155 && b > 155 && Math.abs(r-g) < 20 && Math.abs(g-b) < 20) {
-          d[i+3] = 0;
-        } else if (d[i+3] > 8) {
+        if (d[i+3] > 8) {
           if (y < topY)    topY    = y;
           if (y > bottomY) bottomY = y;
         }
@@ -184,9 +291,9 @@ const MobSprites = {
 let mobIdCounter = 0;
 
 class Mob {
-  constructor(hero, period = 'Manhã') {
+  constructor(hero, period = 'Manhã', forceType = null) {
     this.id   = ++mobIdCounter;
-    const def = pickMobType(hero.level, period);
+    const def = forceType ? MOB_TYPES[forceType] : pickMobType(hero.level, period);
     this.type = def;
 
     // escala atributos com nível do hero
@@ -213,6 +320,40 @@ class Mob {
     this.markedForRemoval = false;
     this.walkAnimTimer    = 0;
     this.flashTimer       = 0;
+
+    // animação por frames
+    this.animFrame = 0;
+    this.animTimer = 0;
+    this._lastAnim = '';
+  }
+
+  _animName() {
+    if (this.state === 'dead')      return 'death';
+    if (this.state === 'attacking') return 'attack';
+    return 'walk';
+  }
+
+  _advanceAnim(deltaMs) {
+    const def  = MobSprites.SHEET_DEFS[this.spriteKey];
+    const anim = this._animName();
+    if (anim !== this._lastAnim) {
+      this.animFrame = 0;
+      this.animTimer = 0;
+      this._lastAnim = anim;
+      return;
+    }
+    if (!def) return;
+    const row = def.rows.find(r => r.name === anim);
+    if (!row) return;
+    this.animTimer += deltaMs;
+    const frameDur = row.fps[this.animFrame] ?? 100;
+    if (this.animTimer >= frameDur) {
+      this.animTimer -= frameDur;
+      const looping = (anim === 'walk');
+      this.animFrame = looping
+        ? (this.animFrame + 1) % row.count
+        : Math.min(this.animFrame + 1, row.count - 1);
+    }
   }
 
   update(deltaMs, hero) {
@@ -222,12 +363,17 @@ class Mob {
     const distance = Math.abs(this.worldX - hero.worldX);
     if (distance <= this.attackRange) {
       this.state = 'attacking';
+      this._advanceAnim(deltaMs);
       return;
     }
     this.state = 'walking';
     this.walkAnimTimer += deltaMs;
+    this._advanceAnim(deltaMs);
     const dir = hero.worldX > this.worldX ? 1 : -1;
     this.worldX += dir * this.approachSpeed * (deltaMs / 16.67);
+    // impede o mob de ultrapassar o hero (mobs sempre vêm da direita)
+    const minDist = this.attackRange - 2;
+    if (this.worldX < hero.worldX + minDist) this.worldX = hero.worldX + minDist;
   }
 
   canAttack(now)     { return now - this.lastAttackTime >= CONFIG.mob.attackCooldownMs; }
@@ -251,14 +397,24 @@ class Mob {
 
     ctx.save();
 
+    const anim      = this._animName();
+    const hasSheet  = !!MobSprites.sheets[this.spriteKey];
+    const drawSprite = (opts = {}) => {
+      if (hasSheet) {
+        MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, fy, this.spriteH, opts);
+      } else {
+        const drew = MobSprites.draw(ctx, this.spriteKey, sx, fy, this.spriteH, opts);
+        if (!drew && !opts.alpha) this._drawFallback(ctx, sx, fy);
+      }
+    };
+
     if (this.state === 'dead') {
-      ctx.globalAlpha = 0.35;
-      MobSprites.draw(ctx, this.spriteKey, sx, fy, this.spriteH, { alpha: 0.35 });
+      drawSprite({ alpha: 0.35 });
       ctx.restore();
       return;
     }
 
-    const bob  = Math.sin(this.walkAnimTimer / 80) * 2;
+    const bob   = Math.sin(this.walkAnimTimer / 80) * 2;
     const baseY = fy + bob;
 
     // sombra
@@ -266,17 +422,24 @@ class Mob {
     ctx.fillRect(sx - 18, fy + 2, 36, 6);
     ctx.fillRect(sx - 14, fy,     28, 4);
 
-    // sprite PNG (fallback para canvas goblin se não carregou)
-    const drew = MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
-    if (!drew) this._drawFallback(ctx, sx, fy);
+    // sprite (animado ou estático)
+    if (hasSheet) {
+      MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, baseY, this.spriteH);
+    } else {
+      const drew = MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
+      if (!drew) this._drawFallback(ctx, sx, fy);
+    }
 
     // flash de dano — glow branco
     if (this.flashTimer > 0) {
-      const alpha = (this.flashTimer / 150);
       ctx.save();
-      ctx.shadowColor = `rgba(255,255,255,${alpha})`;
+      ctx.shadowColor = `rgba(255,255,255,${this.flashTimer / 150})`;
       ctx.shadowBlur  = 14;
-      MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
+      if (hasSheet) {
+        MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, baseY, this.spriteH);
+      } else {
+        MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
+      }
       ctx.restore();
     }
 

@@ -1,97 +1,122 @@
 // ============================================================
-// bag.js — UI da mochila: inventário, equipamento, detalhes
+// bag.js — Mochila (grid) e Equipamentos (character screen)
 // ============================================================
 
-const Bag = {
-  _hero:     null,
-  _open:     false,
-  _selected: null, // { item, index }
+var Bag = {
+  _bagOpen:   false,
+  _equipOpen: false,
+  _selected:  null,
+  _getHero:   null,
 
   init(getHero) {
     this._getHero = getHero;
 
-    document.getElementById('bag-btn').addEventListener('click',  () => this.toggle());
-    document.getElementById('bag-close').addEventListener('click', () => this.close());
-    document.getElementById('detail-equip').addEventListener('click',   () => this._equip());
-    document.getElementById('detail-unequip').addEventListener('click', () => this._unequip());
+    document.getElementById('bag-btn').addEventListener('click',   () => this.toggleBag());
+    document.getElementById('equip-btn').addEventListener('click', () => this.toggleEquip());
+    document.getElementById('bag-close').addEventListener('click',   () => this.closeBag());
+    document.getElementById('equip-close').addEventListener('click', () => this.closeEquip());
 
-    // slots de equipamento — clique mostra o item equipado
-    document.querySelectorAll('.equip-slot').forEach(el => {
-      el.addEventListener('click', () => {
-        const slot = el.dataset.slot;
-        const hero = this._getHero();
-        if (!hero) return;
-        const item = hero.equipment?.[slot];
-        if (item) this._showDetail(item, null);
-      });
-    });
+    document.getElementById('ip-equip').addEventListener('click',           () => this._equip());
+    document.getElementById('ip-unequip').addEventListener('click',         () => this._unequip());
+    document.getElementById('equip-detail-unequip').addEventListener('click',() => this._unequipSlot());
 
-    // tecla B abre/fecha
-    document.addEventListener('keydown', e => {
-      if (e.key === 'b' || e.key === 'B') this.toggle();
-    });
-  },
-
-  toggle() { this._open ? this.close() : this.open(); },
-
-  open() {
-    this._open = true;
-    document.getElementById('bag-panel').classList.remove('hidden');
-    this.refresh();
-  },
-
-  close() {
-    this._open = false;
-    document.getElementById('bag-panel').classList.add('hidden');
-    this._selected = null;
-    document.getElementById('item-detail').classList.add('hidden');
-  },
-
-  refresh() {
-    if (!this._open) return;
-    const hero = this._getHero();
-    if (!hero) return;
-    this._renderEquipSlots(hero);
-    this._renderGrid(hero);
-  },
-
-  _renderEquipSlots(hero) {
-    const eq = hero.equipment ?? {};
-    document.querySelectorAll('.equip-slot').forEach(el => {
-      const slot = el.dataset.slot;
-      const item = eq[slot];
-      // limpa
-      el.innerHTML = '';
-      el.classList.remove('filled');
-      if (item) {
-        el.textContent = item.icon ?? '?';
-        el.classList.add('filled');
-        el.style.borderColor = Items.getRarityColor(item.rarity);
-      } else {
-        // ícone placeholder por slot
-        const placeholders = { weapon: '⚔️', armor: '🛡️', accessory: '📿' };
-        el.textContent = placeholders[slot] ?? '?';
+    // fecha popup ao clicar fora
+    document.getElementById('bag-overlay').addEventListener('click', e => {
+      if (!e.target.closest('#item-popup') && !e.target.closest('.bag-slot')) {
+        this._hideItemPopup();
       }
-      const label = document.createElement('span');
-      label.className = 'slot-name';
-      label.textContent = slot === 'weapon' ? 'arma' : slot === 'armor' ? 'arm.' : 'aces.';
-      el.appendChild(label);
+    });
+
+    document.querySelectorAll('#equip-modal .equip-slot').forEach(el => {
+      el.addEventListener('click', () => this._onEquipSlotClick(el.dataset.slot));
+    });
+
+    document.getElementById('bag-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closeBag();
+    });
+    document.getElementById('equip-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closeEquip();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'b' || e.key === 'B') this.toggleBag();
+      if (e.key === 'e' || e.key === 'E') this.toggleEquip();
+      if (e.key === 'Escape') { this.closeBag(); this.closeEquip(); }
     });
   },
 
-  _renderGrid(hero) {
+  // ── Mochila ─────────────────────────────────────────────────
+  toggleBag() { this._bagOpen ? this.closeBag() : this.openBag(); },
+
+  openBag() {
+    this._bagOpen = true;
+    document.getElementById('bag-overlay').classList.remove('hidden');
+    this._renderGrid();
+    this._hideItemPopup();
+    this._selected = null;
+  },
+
+  closeBag() {
+    this._bagOpen = false;
+    document.getElementById('bag-overlay').classList.add('hidden');
+    this._hideItemPopup();
+  },
+
+  // ── Equipamentos ─────────────────────────────────────────────
+  toggleEquip() { this._equipOpen ? this.closeEquip() : this.openEquip(); },
+
+  openEquip() {
+    this._equipOpen = true;
+    document.getElementById('equip-overlay').classList.remove('hidden');
+    document.getElementById('equip-detail').classList.add('hidden');
+    this._activeEquipSlot = null;
+    this._renderEquipScreen();
+    this._startHeroLoop();
+  },
+
+  closeEquip() {
+    this._equipOpen = false;
+    document.getElementById('equip-overlay').classList.add('hidden');
+    this._stopHeroLoop();
+  },
+
+  _startHeroLoop() {
+    this._stopHeroLoop();
+    const tick = () => {
+      if (!this._equipOpen) return;
+      const hero = this._getHero();
+      if (hero) this._drawHeroCanvas(hero);
+      this._heroLoopId = requestAnimationFrame(tick);
+    };
+    this._heroLoopId = requestAnimationFrame(tick);
+  },
+
+  _stopHeroLoop() {
+    if (this._heroLoopId) { cancelAnimationFrame(this._heroLoopId); this._heroLoopId = null; }
+  },
+
+  // chamado por combat.js / hero.js depois de equip/drop
+  refresh() {
+    if (this._bagOpen)   this._renderGrid();
+    if (this._equipOpen) this._renderEquipScreen();
+  },
+
+  // ── Render: grid da mochila ──────────────────────────────────
+  _renderGrid() {
+    const hero = this._getHero();
     const grid = document.getElementById('bag-grid');
     grid.innerHTML = '';
+    if (!hero) return;
 
     if (!hero.inventory || hero.inventory.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'grid-column:1/-1;color:#555;font-size:11px;text-align:center;padding:20px 0;';
+      empty.style.cssText = 'grid-column:1/-1;color:#6a5030;font-size:11px;text-align:center;padding:30px 0;font-family:Courier New,monospace;';
       empty.textContent = 'Mochila vazia';
       grid.appendChild(empty);
       return;
     }
 
-    // agrupa itens empilháveis (materiais e consumíveis) por ID
+    // agrupa stackáveis
     const grouped = [];
     const seen = {};
     for (const item of hero.inventory) {
@@ -108,39 +133,59 @@ const Bag = {
       const slot = document.createElement('div');
       slot.className = 'bag-slot';
       slot.dataset.rarity = item.rarity;
-      slot.dataset.index  = idx;
-      slot.textContent    = item.icon ?? '?';
-      slot.title          = item.name;
+      slot.title = item.name;
+
+      const img = this._itemImg(item, 44);
+      if (img) slot.appendChild(img);
+      else slot.textContent = item.icon ?? '?';
 
       if (qty > 1) {
         const badge = document.createElement('span');
-        badge.className   = 'item-qty';
+        badge.className = 'item-qty';
         badge.textContent = qty;
         slot.appendChild(badge);
       }
 
       if (this._selected?.index === idx) slot.classList.add('selected');
 
-      slot.addEventListener('click', () => {
+      slot.addEventListener('mouseenter', e => this._showItemPopup(item, hero, e.currentTarget));
+      slot.addEventListener('mouseleave', e => {
+        // só esconde se não foi fixado por click
+        if (!this._popupPinned) this._hideItemPopup();
+      });
+      slot.addEventListener('click', e => {
         this._selected = { item, index: idx };
-        this._renderGrid(hero); // re-render para atualizar seleção
-        this._showDetail(item, hero);
+        this._popupPinned = true;
+        this._showItemPopup(item, hero, e.currentTarget);
+        this._renderGrid();
       });
 
       grid.appendChild(slot);
     });
   },
 
-  _showDetail(item, hero) {
-    const el = document.getElementById('item-detail');
-    el.classList.remove('hidden');
+  _showItemPopup(item, hero, slotEl) {
+    const popup = document.getElementById('item-popup');
 
-    document.getElementById('detail-name').textContent  = item.name;
-    document.getElementById('detail-name').style.color  = Items.getRarityColor(item.rarity);
-    document.getElementById('detail-desc').textContent  = item.desc ?? '';
+    // imagem
+    const img = document.getElementById('ip-img');
+    if (item.img) {
+      img.src   = `assets/items/${item.img}`;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
 
-    // bônus
-    const bonusEl = document.getElementById('detail-bonus');
+    // textos
+    const nameEl = document.getElementById('ip-name');
+    nameEl.textContent = item.name;
+    nameEl.style.color = Items.getRarityColor(item.rarity);
+
+    const RARITY_LABELS = { comum:'Comum', incomum:'Incomum', raro:'Raro', epico:'Épico' };
+    document.getElementById('ip-rarity').textContent = RARITY_LABELS[item.rarity] ?? item.rarity;
+    document.getElementById('ip-desc').textContent   = item.desc ?? '';
+
+    const bonusEl = document.getElementById('ip-bonus');
     if (item.bonus) {
       const parts = [];
       if (item.bonus.attack) parts.push(`+${item.bonus.attack} ATK`);
@@ -149,56 +194,174 @@ const Bag = {
     } else if (item.effect) {
       bonusEl.textContent = item.effect.type === 'heal'
         ? `Cura ${item.effect.amount} HP`
-        : `+${item.effect.amount} ATK por ${item.effect.duration/1000}s`;
+        : item.effect.type === 'xp'
+          ? `+${item.effect.amount} XP`
+          : `+${item.effect.amount} ATK por ${item.effect.duration / 1000}s`;
     } else {
       bonusEl.textContent = '';
     }
+    document.getElementById('ip-value').textContent = item.value ? `Valor: ${item.value} ouro` : '';
 
-    document.getElementById('detail-value').textContent = `Valor: ${item.value ?? 0} ouro`;
-
-    // botões equip/unequip
-    const equipBtn   = document.getElementById('detail-equip');
-    const unequipBtn = document.getElementById('detail-unequip');
+    // botões
+    const equipBtn   = document.getElementById('ip-equip');
+    const unequipBtn = document.getElementById('ip-unequip');
+    equipBtn.textContent = 'Equipar';
     equipBtn.classList.add('hidden');
     unequipBtn.classList.add('hidden');
 
-    if (!hero) return;
-    const eq = hero.equipment ?? {};
-
-    const isEquipable = ['weapon','armor','accessory'].includes(item.type);
-    const isEquipped  = item.slot && eq[item.slot]?.id === item.id;
-
-    if (isEquipable && isEquipped) {
-      unequipBtn.classList.remove('hidden');
-    } else if (isEquipable) {
-      equipBtn.classList.remove('hidden');
+    if (hero) {
+      const isEquipable = ['weapon','armor','accessory'].includes(item.type);
+      const isEquipped  = item.slot && hero.equipment?.[item.slot]?.id === item.id;
+      if (isEquipable && isEquipped) unequipBtn.classList.remove('hidden');
+      else if (isEquipable)          equipBtn.classList.remove('hidden');
+      if (item.type === 'keygem' && !GemSystem.isConsumed(item.heroClass)) {
+        equipBtn.textContent = 'Usar Keygem';
+        equipBtn.classList.remove('hidden');
+      }
     }
+
+    // posicionamento fixo relativo ao viewport
+    popup.classList.remove('hidden');
+    const slotRect = slotEl.getBoundingClientRect();
+    const popupW   = 210;
+    const popupH   = popup.offsetHeight || 280;
+    const vw       = window.innerWidth;
+    const vh       = window.innerHeight;
+
+    // tenta à direita do slot; se não couber, vai à esquerda
+    let left = slotRect.right + 8;
+    if (left + popupW > vw - 8) left = slotRect.left - popupW - 8;
+
+    // alinha pelo topo do slot; se sair por baixo, sobe
+    let top = slotRect.top;
+    if (top + popupH > vh - 8) top = vh - popupH - 8;
+
+    popup.style.left = `${Math.max(8, left)}px`;
+    popup.style.top  = `${Math.max(8, top)}px`;
   },
 
+  _hideItemPopup() {
+    this._popupPinned = false;
+    document.getElementById('item-popup').classList.add('hidden');
+  },
+
+  // ── Render: tela de equipamentos ────────────────────────────
+  _renderEquipScreen() {
+    const hero = this._getHero();
+    if (!hero) return;
+
+    // slots
+    const eq = hero.equipment ?? {};
+    const placeholders = { weapon: '⚔️', armor: '🛡️', accessory: '📿' };
+
+    document.querySelectorAll('#equip-modal .equip-slot').forEach(el => {
+      const slot = el.dataset.slot;
+      const item = eq[slot];
+      el.innerHTML = '';
+      el.classList.remove('filled');
+      el.style.borderColor = '';
+
+      if (item) {
+        const img = this._itemImg(item, 50);
+        if (img) el.appendChild(img);
+        else el.textContent = item.icon ?? '?';
+        el.classList.add('filled');
+        el.style.borderColor = Items.getRarityColor(item.rarity);
+      } else {
+        el.textContent = placeholders[slot] ?? '?';
+      }
+    });
+
+    // stats
+    document.getElementById('equip-atk-val').textContent = hero.attack ?? '—';
+    document.getElementById('equip-hp-val').textContent  = hero.maxHp  ?? '—';
+
+    // desenha sprite do hero no canvas central
+    this._drawHeroCanvas(hero);
+  },
+
+  _drawHeroCanvas(hero) {
+    const canvas = document.getElementById('equip-hero-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = false;
+
+    // centraliza o hero no canvas de equipamentos, menor que no jogo
+    const scale = 1.6;
+    const tx = canvas.width  / 2 - CONFIG.hero.screenX * scale;
+    const ty = canvas.height - 8  - hero.y * scale;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.scale(scale, scale);
+    hero.draw(ctx);
+    ctx.restore();
+  },
+
+  _onEquipSlotClick(slot) {
+    const hero = this._getHero();
+    if (!hero) return;
+    const item = hero.equipment?.[slot];
+    this._activeEquipSlot = slot;
+
+    const detailEl = document.getElementById('equip-detail');
+    if (!item) { detailEl.classList.add('hidden'); return; }
+
+    const nameEl = document.getElementById('equip-detail-name');
+    nameEl.textContent = item.name;
+    nameEl.style.color = Items.getRarityColor(item.rarity);
+
+    const parts = [];
+    if (item.bonus?.attack) parts.push(`+${item.bonus.attack} ATK`);
+    if (item.bonus?.maxHp)  parts.push(`+${item.bonus.maxHp} HP`);
+    document.getElementById('equip-detail-bonus').textContent = parts.join('  ') || (item.desc ?? '');
+
+    detailEl.classList.remove('hidden');
+  },
+
+  _unequipSlot() {
+    const hero = this._getHero();
+    if (!hero || !this._activeEquipSlot) return;
+    const item = hero.equipment?.[this._activeEquipSlot];
+    if (!item) return;
+
+    Items.removeBonus(hero, item);
+    delete hero.equipment[this._activeEquipSlot];
+    hero.inventory.push(item);
+    SaveSystem.save(hero);
+    Hud.updateHeroStats(hero);
+    document.getElementById('equip-detail').classList.add('hidden');
+    this._activeEquipSlot = null;
+    this._renderEquipScreen();
+  },
+
+  // ── Equipar / desequipar da mochila ─────────────────────────
   _equip() {
     const hero = this._getHero();
     if (!hero || !this._selected) return;
     const { item } = this._selected;
+
+    // keygem — usa e abre popup especial
+    if (item.type === 'keygem') {
+      this._useKeygem(hero, item);
+      return;
+    }
+
     if (!item.slot) return;
 
-    // desequipa o atual nesse slot, se houver
-    const eq = hero.equipment ?? {};
-    if (eq[item.slot]) Items.removeBonus(hero, eq[item.slot]);
-
-    // equipa o novo
     if (!hero.equipment) hero.equipment = {};
+    if (hero.equipment[item.slot]) Items.removeBonus(hero, hero.equipment[item.slot]);
     hero.equipment[item.slot] = item;
     Items.applyBonus(hero, item);
 
-    // remove do inventário (1 unidade)
-    const idx = hero.inventory.findIndex(i => i.id === item.id);
+    const idx = hero.inventory.findIndex(i => i === item || i.id === item.id);
     if (idx !== -1) hero.inventory.splice(idx, 1);
 
     SaveSystem.save(hero);
     Hud.updateHeroStats(hero);
     this._selected = null;
-    document.getElementById('item-detail').classList.add('hidden');
-    this.refresh();
+    this._hideItemPopup();
+    this._renderGrid();
   },
 
   _unequip() {
@@ -214,7 +377,46 @@ const Bag = {
     SaveSystem.save(hero);
     Hud.updateHeroStats(hero);
     this._selected = null;
-    document.getElementById('item-detail').classList.add('hidden');
-    this.refresh();
+    this._hideItemPopup();
+    this._renderGrid();
+  },
+
+  // ── Keygem: usa e abre popup ─────────────────────────────────
+  _useKeygem(hero, item) {
+    GemSystem.consume(item.heroClass);
+
+    // remove da mochila
+    const idx = hero.inventory.findIndex(i => i.id === item.id);
+    if (idx !== -1) hero.inventory.splice(idx, 1);
+    SaveSystem.save(hero);
+
+    this.closeBag();
+
+    const count   = GemSystem.count();
+    const total   = 5;
+    const allDone = GemSystem.allConsumed();
+
+    document.getElementById('keygem-icon').textContent  = item.icon;
+    document.getElementById('keygem-title').textContent = `${item.name} Consumida!`;
+    document.getElementById('keygem-count').textContent =
+      allDone ? '✅ Todas as 5 gems coletadas! O portal se abrirá em breve...'
+              : `${count} / ${total} gems coletadas`;
+
+    document.getElementById('keygem-overlay').classList.remove('hidden');
+
+    // se todas consumidas, notifica o game para abrir o portal
+    if (allDone && typeof window._onAllGemsConsumed === 'function') {
+      window._onAllGemsConsumed();
+    }
+  },
+
+  // ── Helper: cria <img> para item ────────────────────────────
+  _itemImg(item, size) {
+    if (!item.img) return null;
+    const img = document.createElement('img');
+    img.src   = `assets/items/${item.img}`;
+    img.style.cssText = `width:${size}px;height:${size}px;image-rendering:pixelated;object-fit:contain;`;
+    img.onerror = () => { img.replaceWith(document.createTextNode(item.icon ?? '?')); };
+    return img;
   },
 };

@@ -7,7 +7,18 @@
       "Bash(git commit *)",
       "Bash(git branch *)",
       "Bash(git remote *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(node --version)",
+      "Bash(node create_items_db.js)",
+      "Bash(node -e \"require\\('fs'\\).readFileSync\\('C:/Users/Pichau/DailyQuestHero/js/hero.js', 'utf8'\\)\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/hero.js\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/mob.js\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/game.js\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/hud.js\")",
+      "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/sprites.js\")",
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(rm \"C:/Users/Pichau/DailyQuestHero/assets/backgrounds/\"*.png && echo \"Deletados\")"
     ]
   }
 }

@@ -5,28 +5,41 @@
 
 const Combat = {
 
-  /**
-   * Processa um "tick" de combate entre o hero e um mob específico.
-   * Retorna um objeto com os eventos ocorridos neste tick, para a
-   * camada de jogo decidir o que mostrar no log/HUD.
-   */
   resolveTick(hero, mob, now, callbacks) {
     if (!mob || mob.state === 'dead' || hero.state === 'dead') return;
 
-    const distance = hero.distanceTo(mob);
+    const distance    = hero.distanceTo(mob);
     const heroInRange = distance <= hero.attackRange;
-    const mobInRange = distance <= mob.attackRange;
+    const mobInRange  = distance <= mob.attackRange;
 
+    // ── Herói ataca mob ──────────────────────────────────────
     if (heroInRange && hero.canAttack(now)) {
-      const damage = hero.performAttack(now);
+      // Hunter "Foco": conta ataques; a cada 5º, crit garantido
+      let isCrit = Math.random() < hero.critChance;
+      if (hero.heroClass === 'hunter') {
+        hero.passiveStacks = (hero.passiveStacks ?? 0) + 1;
+        if (hero.passiveStacks >= 5) { isCrit = true; hero.passiveStacks = 0; }
+      }
+
+      let damage = hero.performAttack(now);
+      if (isCrit) damage = Math.round(damage * hero.critMultiplier);
+
       mob.takeDamage(damage);
-      callbacks.onHeroAttack(mob, damage);
+      callbacks.onHeroAttack(mob, damage, isCrit);
+
+      // Mage "Colheita": crit cura 10% do maxHP
+      if (isCrit && hero.heroClass === 'mage') {
+        const heal = Math.round(hero.maxHp * 0.10);
+        hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+        callbacks.onPassiveTrigger?.('mage', heal);
+      }
 
       if (mob.state === 'dead') {
         this.handleMobDeath(hero, mob, callbacks);
       }
     }
 
+    // ── Mob ataca herói ──────────────────────────────────────
     if (mobInRange && mob.state !== 'dead' && mob.canAttack(now)) {
       const damage = mob.performAttack(now);
       hero.takeDamage(damage);
@@ -40,14 +53,26 @@ const Combat = {
 
   handleMobDeath(hero, mob, callbacks) {
     const leveledUp = hero.gainXp(mob.xpReward);
-    const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
-
-    if (drops.length > 0) {
-      hero.addItems(drops);
-    }
-
+    // const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
+    // if (drops.length > 0) hero.addItems(drops);
+    const drops = [];
     mob.markedForRemoval = true;
 
+    // Warrior "Fúria": cada kill +1 ATK (máx 10)
+    if (hero.heroClass === 'warrior' && (hero.passiveStacks ?? 0) < 10) {
+      hero.passiveStacks    = (hero.passiveStacks ?? 0) + 1;
+      hero.passiveBonusAtk  = (hero.passiveBonusAtk ?? 0) + 1;
+      hero.attack           += 1;
+      callbacks.onPassiveTrigger?.('warrior', hero.passiveStacks);
+    }
+
+    // Cleric "Bênção": cada kill cura 15% do maxHP
+    if (hero.heroClass === 'cleric') {
+      const heal = Math.round(hero.maxHp * 0.15);
+      hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+      callbacks.onPassiveTrigger?.('cleric', heal);
+    }
+
     callbacks.onMobDeath(mob, drops, leveledUp);
-  }
+  },
 };

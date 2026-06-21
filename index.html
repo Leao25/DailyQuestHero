@@ -13,90 +13,187 @@
   <div id="game-container">
     <canvas id="game-canvas" width="960" height="540"></canvas>
 
-    <!-- HUD sobreposto ao canvas -->
+    <!-- HUD -->
     <div id="hud">
+
+      <!-- Painel esquerdo: stats do herói -->
       <div id="hero-stats">
-        <div class="stat-row">
-          <span class="stat-label">Hero — Lv. <span id="hero-level">1</span></span>
+        <div id="hero-header">
+          <div id="class-badge"></div>
+          <div id="hero-title">
+            <span id="hero-class-label">—</span>
+            <span id="hero-level-label">Lv. <strong id="hero-level">1</strong></span>
+          </div>
         </div>
         <div class="bar-wrapper">
-          <div class="bar-bg">
-            <div id="hp-bar" class="bar-fill hp"></div>
-          </div>
+          <span class="bar-icon hp-icon">HP</span>
+          <div class="bar-bg"><div id="hp-bar" class="bar-fill hp"></div></div>
           <span class="bar-text" id="hp-text">100/100</span>
         </div>
-        <div class="bar-wrapper">
-          <div class="bar-bg">
+        <div class="bar-wrapper xp-wrapper">
+          <span class="bar-icon xp-icon">XP</span>
+          <div class="bar-bg xp-bg">
             <div id="xp-bar" class="bar-fill xp"></div>
+            <div id="xp-shine"></div>
           </div>
-          <span class="bar-text" id="xp-text">0/100 XP</span>
+          <span class="bar-text" id="xp-text">0/100</span>
+        </div>
+        <div id="hero-combat-row">
+          <span id="atk-stat">ATK <strong id="atk-value">5</strong></span>
+          <span id="passive-indicator"></span>
         </div>
       </div>
 
+      <!-- Painel direito: relógio -->
       <div id="clock-display">
         <div id="clock-top">
           <span id="period-icon">🌅</span>
           <span id="period-name">--</span>
         </div>
         <div id="clock-time">--:--</div>
-        <div id="clock-arc-wrap">
-          <div id="clock-arc-fill"></div>
-        </div>
+        <div id="clock-arc-wrap"><div id="clock-arc-fill"></div></div>
       </div>
     </div>
 
-    <!-- Log de eventos (drops, level up etc) -->
+    <!-- Barra de progresso da zona (bottom) -->
+    <div id="zone-bar-wrap">
+      <div id="zone-label">Floresta — Fase 1</div>
+      <div id="zone-track">
+        <div id="zone-fill"></div>
+        <div id="zone-hero-dot"></div>
+        <div id="zone-boss-marker" class="hidden">!</div>
+        <div id="zone-portal-marker" class="hidden">⬡</div>
+      </div>
+      <div id="zone-dist-label"></div>
+    </div>
+
+    <!-- Log de eventos -->
     <div id="event-log"></div>
 
-    <!-- Botão da mochila -->
-    <button id="bag-btn" title="Mochila (B)">🎒</button>
+    <!-- Balão de pensamento -->
+    <div id="hero-bubble" class="hidden">
+      <span id="hero-bubble-text"></span>
+    </div>
+
+    <!-- Botões de menu (bottom-right) -->
+    <div id="menu-btns">
+      <button id="bag-btn"   title="Mochila (B)">🎒</button>
+      <button id="equip-btn" title="Equipamentos (E)">⚔️</button>
+    </div>
 
     <!-- Popup de morte -->
     <div id="death-overlay" class="hidden">
       <div id="death-box">
         <div id="death-title">☠️ Você Morreu</div>
-        <div id="death-msg">Todos os itens da sua mochila foram perdidos.</div>
-        <div id="death-sub">Equipamentos e nível foram mantidos.</div>
-        <button id="death-btn">Continuar</button>
+        <div id="death-msg">Seu herói foi derrotado. Todo o progresso foi perdido.</div>
+        <div id="death-sub">Volte à tela inicial e comece uma nova jornada.</div>
+        <button id="death-btn">Tela Inicial</button>
       </div>
     </div>
 
-    <!-- Painel da mochila -->
-    <div id="bag-panel" class="hidden">
-      <div id="bag-header">
-        <span>🎒 Mochila</span>
-        <button id="bag-close">✕</button>
-      </div>
-
-      <!-- Slots de equipamento -->
-      <div id="equip-section">
-        <div class="equip-label">Equipamento</div>
-        <div id="equip-slots">
-          <div class="equip-slot" data-slot="weapon"  title="Arma">⚔️</div>
-          <div class="equip-slot" data-slot="armor"   title="Armadura">🛡️</div>
-          <div class="equip-slot" data-slot="accessory" title="Acessório">📿</div>
+    <!-- Popup: Keygem consumida -->
+    <div id="keygem-overlay" class="hidden">
+      <div id="keygem-box">
+        <div id="keygem-icon">💎</div>
+        <div id="keygem-title">Keygem Consumida!</div>
+        <div id="keygem-msg">A essência foi absorvida. Agora mude para outro herói e repita o processo.</div>
+        <div id="keygem-count"></div>
+        <div id="keygem-actions">
+          <button id="keygem-change">Mudar de Herói</button>
+          <button id="keygem-stay">Continuar aqui</button>
         </div>
       </div>
+    </div>
 
-      <div class="bag-divider"></div>
-
-      <!-- Grid de itens -->
-      <div id="bag-grid"></div>
-
-      <!-- Detalhe do item selecionado -->
-      <div id="item-detail" class="hidden">
-        <div id="detail-name"></div>
-        <div id="detail-desc"></div>
-        <div id="detail-bonus"></div>
-        <div id="detail-value"></div>
-        <button id="detail-equip" class="hidden">Equipar</button>
-        <button id="detail-unequip" class="hidden">Desequipar</button>
+    <!-- Popup: Fase 2 desbloqueada -->
+    <div id="phase2-overlay" class="hidden">
+      <div id="phase2-box">
+        <div id="phase2-title">⚔️ Fase 1 Completa!</div>
+        <div id="phase2-msg">Todos os heróis uniram suas essências.<br>O caminho para a Fase 2 está aberto!</div>
+        <button id="phase2-btn">Continuar</button>
       </div>
     </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODAL: MOCHILA                          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="bag-overlay" class="hidden">
+      <div id="bag-modal">
+        <div id="bag-modal-title">
+          <span>Items Bag</span>
+          <button id="bag-close">✕</button>
+        </div>
+        <div id="bag-grid"></div>
+      </div>
+    </div>
+
+    <!-- Popup flutuante de item -->
+    <div id="item-popup" class="hidden">
+      <div id="ip-img-wrap"><img id="ip-img" src="" alt="" /></div>
+      <div id="ip-body">
+        <div id="ip-name"></div>
+        <div id="ip-rarity"></div>
+        <div id="ip-desc"></div>
+        <div id="ip-bonus"></div>
+        <div id="ip-value"></div>
+        <div id="ip-actions">
+          <button id="ip-equip"   class="hidden">Equipar</button>
+          <button id="ip-unequip" class="hidden">Desequipar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODAL: EQUIPAMENTOS                     -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="equip-overlay" class="hidden">
+      <div id="equip-modal">
+        <div id="equip-modal-title">
+          <span>Equipamentos</span>
+          <button id="equip-close">✕</button>
+        </div>
+        <div id="equip-modal-body">
+          <!-- Coluna esquerda -->
+          <div class="equip-col equip-col-left">
+            <div class="equip-slot-wrap">
+              <div class="equip-slot-label">Arma</div>
+              <div class="equip-slot" data-slot="weapon">⚔️</div>
+            </div>
+            <div class="equip-slot-wrap">
+              <div class="equip-slot-label">Armadura</div>
+              <div class="equip-slot" data-slot="armor">🛡️</div>
+            </div>
+          </div>
+          <!-- Centro: sprite do hero -->
+          <div id="equip-hero-canvas-wrap">
+            <canvas id="equip-hero-canvas" width="160" height="220"></canvas>
+            <div id="equip-hero-power">
+              <span id="equip-atk-val">—</span><span class="equip-stat-label"> ATK</span>
+              &nbsp;·&nbsp;
+              <span id="equip-hp-val">—</span><span class="equip-stat-label"> HP</span>
+            </div>
+          </div>
+          <!-- Coluna direita -->
+          <div class="equip-col equip-col-right">
+            <div class="equip-slot-wrap">
+              <div class="equip-slot-label">Acessório</div>
+              <div class="equip-slot" data-slot="accessory">📿</div>
+            </div>
+          </div>
+        </div>
+        <!-- Detalhe do equipado -->
+        <div id="equip-detail" class="hidden">
+          <div id="equip-detail-name"></div>
+          <div id="equip-detail-bonus"></div>
+          <button id="equip-detail-unequip">Desequipar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Scripts do jogo, em ordem de dependência -->
   <script src="js/config.js"></script>
+  <script src="js/gems.js"></script>
   <script src="js/sprites.js"></script>
   <script src="js/dayCycle.js"></script>
   <script src="js/items.js"></script>
@@ -116,36 +213,24 @@
     function applyScale() {
       const scaleX = window.innerWidth  / 960;
       const scaleY = window.innerHeight / 540;
-      const scale  = Math.min(scaleX, scaleY); // mantém proporção
-      container.style.transform = `scale(${scale})`;
+      container.style.transform = `scale(${Math.min(scaleX, scaleY)})`;
     }
-
     function enterFullscreen() {
       isScaled = true;
       document.body.style.overflow = 'hidden';
       applyScale();
       window.addEventListener('resize', applyScale);
-      btn.textContent = '✕';
-      btn.title = 'Sair da tela cheia';
+      btn.textContent = '✕'; btn.title = 'Sair da tela cheia';
     }
-
     function exitFullscreen() {
       isScaled = false;
       document.body.style.overflow = '';
       container.style.transform = '';
       window.removeEventListener('resize', applyScale);
-      btn.textContent = '⛶';
-      btn.title = 'Tela cheia';
+      btn.textContent = '⛶'; btn.title = 'Tela cheia';
     }
-
-    btn.addEventListener('click', () => {
-      isScaled ? exitFullscreen() : enterFullscreen();
-    });
-
-    // ESC para sair
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && isScaled) exitFullscreen();
-    });
+    btn.addEventListener('click', () => isScaled ? exitFullscreen() : enterFullscreen());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && isScaled) exitFullscreen(); });
   </script>
 </body>
 </html>

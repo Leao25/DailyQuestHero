@@ -1,67 +1,55 @@
 // ============================================================
-// dayCycle.js — Determina o período do dia baseado no horário
-// REAL do jogador, e fornece a paleta de cores pro cenário.
+// dayCycle.js — 4 períodos: Manhã · Tarde · Entardecer · Noite
 // ============================================================
 
 const DayCycle = {
 
-  /**
-   * Retorna um objeto descrevendo o período atual:
-   * { name, icon, skyTop, skyBottom, groundTint, ambientAlpha }
-   */
-  getCurrentPeriod() {
-    const hour = new Date().getHours();
-    const { morningStart, afternoonStart, eveningStart, nightStart } = CONFIG.dayCycle;
+  // ----------------------------------------------------------
+  // MODO DE TESTE: ciclo de 4 minutos (1 min por período)
+  // Para versão final, comente o bloco TEST e descomente REAL
+  // ----------------------------------------------------------
 
-    if (hour >= morningStart && hour < afternoonStart) {
-      return {
-        name: 'Manhã',
-        icon: '🌅',
-        skyTop: '#ffd89b',
-        skyBottom: '#f9a857',
-        groundTint: '#3a5a32',
-        ambientAlpha: 0, // 0 = sem escurecimento
-      };
-    }
-
-    if (hour >= afternoonStart && hour < eveningStart) {
-      return {
-        name: 'Tarde',
-        icon: '☀️',
-        skyTop: '#5ba8e0',
-        skyBottom: '#bde3f4',
-        groundTint: '#2e5530',
-        ambientAlpha: 0,
-      };
-    }
-
-    if (hour >= eveningStart && hour < nightStart) {
-      return {
-        name: 'Entardecer',
-        icon: '🌇',
-        skyTop: '#3b3b6b',
-        skyBottom: '#d9743a',
-        groundTint: '#23381f',
-        ambientAlpha: 0.15,
-      };
-    }
-
-    // Noite (cobre o resto das horas, incluindo madrugada)
-    return {
-      name: 'Noite',
-      icon: '🌙',
-      skyTop: '#05050f',
-      skyBottom: '#101030',
-      groundTint: '#10180f',
-      ambientAlpha: 0.45,
-    };
+  // TEST — 10 minutos por ciclo completo (~2,5 min por BG)
+  _getSimulatedHour() {
+    const CYCLE_MS = 10 * 60 * 1000;
+    const t = Date.now() % CYCLE_MS;
+    return Math.floor((t / CYCLE_MS) * 24);
   },
 
-  /** Retorna a hora atual formatada HH:MM, pro display do HUD */
+  // REAL — hora do relógio do PC (usar na versão final)
+  // _getSimulatedHour() { return new Date().getHours(); },
+
+  // REAL — descomente para versão final
+  // _getRealHour() { return new Date().getHours(); },
+
+  getCurrentPeriod() {
+    const hour = this._getSimulatedHour(); // troque por _getRealHour() na versão final
+    const C = CONFIG.dayCycle;
+
+    if (hour >= C.morningStart && hour < C.afternoonStart)
+      return { name: 'Manhã', key: 'morning', icon: '🌅',
+        skyTop: '#ffd89b', skyBottom: '#f9a857', groundTint: '#3a5a32', ambientAlpha: 0 };
+
+    if (hour >= C.afternoonStart && hour < C.duskStart)
+      return { name: 'Tarde', key: 'afternoon', icon: '☀️',
+        skyTop: '#5ba8e0', skyBottom: '#bde3f4', groundTint: '#2e5530', ambientAlpha: 0 };
+
+    if (hour >= C.duskStart && hour < C.nightStart)
+      return { name: 'Entardecer', key: 'dusk', icon: '🌇',
+        skyTop: '#3b3b6b', skyBottom: '#d9743a', groundTint: '#23381f', ambientAlpha: 0.15 };
+
+    // Noite 22–05
+    return { name: 'Noite', key: 'night', icon: '🌙',
+      skyTop: '#05050f', skyBottom: '#101030', groundTint: '#10180f', ambientAlpha: 0.45 };
+  },
+
   getFormattedTime() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
+    // TEST — mostra hora simulada
+    const hour = this._getSimulatedHour();
+    return `${String(hour).padStart(2,'0')}:00`;
+
+    // REAL — descomente para versão final
+    // const now = new Date();
+    // return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   }
 };

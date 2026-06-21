@@ -53,9 +53,9 @@ const CONFIG = {
   },
 
   dayCycle: {
-    morningStart:   6,
-    afternoonStart: 12,
-    eveningStart:   18,
-    nightStart:     21,
+    morningStart:   6,   // Manhã      06–11
+    afternoonStart: 12,  // Tarde      12–17
+    duskStart:      18,  // Entardecer 18–21
+    nightStart:     22,  // Noite      22–05
   }
 };

@@ -14,7 +14,7 @@
 
   // estado global do jogo
   let gameState     = 'loading';   // 'loading' | 'classSelect' | 'playing'
-  let selectedClass = 'darknight';
+  let selectedClass = 'hunter';
   let hoveredClass  = null;
   let confirmHover  = false;
 
@@ -22,6 +22,13 @@
   let mobs = [];
   let lastTimestamp = 0;
   let nextSpawnAt   = 0;
+
+  // Portal da Fase 1
+  const PORTAL_WORLD_X  = 2800;   // posição fixa na floresta
+  let   portalActive    = false;   // true após todas as gems consumidas
+  let   portalOpenAt    = null;    // timestamp em que o portal apareceu
+  let   bossSpawned     = false;   // uma vez por sessão
+  let   phase2Triggered = false;
 
   // ============================================================
   // BACKGROUNDS — uma imagem por período do dia
@@ -31,7 +38,7 @@
   const BG_MAP = {
     'Manhã':      'bg_forest_morning',
     'Tarde':      'bg_forest_afternoon',
-    'Entardecer': 'bg_forest_evening',
+    'Entardecer': 'bg_forest_dusk',
     'Noite':      'bg_forest_night',
   };
 
@@ -156,6 +163,19 @@
       if (isSelected) {
         drawStatBars(ctx, centerX, 375, cls.stat, cls.color);
       }
+
+      // badge de keygem consumida
+      if (GemSystem.isConsumed(key)) {
+        ctx.save();
+        ctx.font      = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#4ade80';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur  = 6;
+        ctx.fillText('✅ Keygem · Fase 1', centerX, 430);
+        ctx.shadowBlur  = 0;
+        ctx.restore();
+      }
     });
 
     // descrição da classe selecionada
@@ -255,8 +275,11 @@
     }
   });
 
+
   function startGame() {
-    hero = new Hero(selectedClass);
+    hero          = new Hero(selectedClass);
+    bossSpawned   = false;
+    phase2Triggered = false;
 
     // carrega save se existir para a mesma classe
     const saved = SaveSystem.load();
@@ -265,10 +288,18 @@
       Hud.logEvent(`Bem-vindo de volta, Lv.${hero.level}!`, 'info');
     }
 
+    // portal já ativo se todas as gems foram consumidas antes de entrar
+    if (GemSystem.allConsumed() && !portalActive) {
+      portalActive = true;
+      portalOpenAt = Date.now(); // já aberto (sem delay)
+    }
+
     gameState = 'playing';
     canvas.style.cursor = 'default';
     scheduleNextSpawn(Date.now());
     Hud.showStats();
+    Hud.setClass(selectedClass);
+    Hud.updateHeroStats(hero);
     Hud.logEvent(`${Sprites.CLASSES[selectedClass].label} entrou na Floresta!`, 'info');
   }
 
@@ -287,16 +318,28 @@
   }
 
   function spawnMobIfNeeded(now) {
-    // limpa mobs presos (dead mas não removidos por algum motivo)
     mobs = mobs.filter(m => !m.markedForRemoval);
-
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
+    const period    = DayCycle.getCurrentPeriod().name;
 
-    // safety-net: força spawn se ficou mais de 6s sem mob
+    // tenta spawnar o boss se condições forem atendidas
+    if (
+      !bossSpawned &&
+      aliveMobs === 0 &&
+      period === 'Noite' &&
+      hero.level >= 10 &&
+      !GemSystem.isConsumed(hero.heroClass)
+    ) {
+      bossSpawned = true;
+      const boss = new Mob(hero, 'Noite', 'forest_guardian');
+      mobs.push(boss);
+      Hud.logEvent('⚠️ O Guardião da Floresta surgiu das sombras!', 'damage');
+      scheduleNextSpawn(now);
+      return;
+    }
+
     const forceSpawn = (now - nextSpawnAt) > 6000 && aliveMobs < 1;
-
     if ((now >= nextSpawnAt && aliveMobs < 1) || forceSpawn) {
-      const period  = DayCycle.getCurrentPeriod().name;
       const count   = pickWaveSize(hero.level);
       const spacing = 120;
       for (let i = 0; i < count; i++) {
@@ -309,10 +352,22 @@
   }
 
   const combatCallbacks = {
-    onHeroAttack(mob, damage) {
+    onHeroAttack(mob, damage, isCrit = false) {
       const mx  = mob.getScreenX(hero);
       const my  = mob.y - mob.height / 2;
       const cls = hero.heroClass;
+
+      const dmgOpts = isCrit
+        ? { color: '#ffe066', outline: '#aa6600', size: 18, bold: true }
+        : {};
+
+      const showDamage = (x, y) => {
+        if (isCrit) {
+          Effects.spawnDamageNumber(x, y - 18, 'CRÍTICO!',
+            { color: '#ffe066', outline: '#aa4400', size: 13, bold: true, prefix: '' });
+        }
+        Effects.spawnDamageNumber(x, y, damage, dmgOpts);
+      };
 
       if (cls === 'hunter') {
         const snapMx = mx, snapMy = my;
@@ -320,8 +375,8 @@
           CONFIG.hero.screenX + 20, hero.y - hero.height * 0.7,
           snapMx, snapMy,
           () => {
-            if (mob.state === 'dead') return; // mob já morreu antes de chegar
-            Effects.spawnDamageNumber(snapMx, mob.y - mob.height - 8, damage);
+            if (mob.state === 'dead') return;
+            showDamage(snapMx, mob.y - mob.height - 8);
             Effects.spawnHitSparks(snapMx, snapMy);
           }
         );
@@ -332,31 +387,30 @@
           snapMx, snapMy,
           () => {
             if (mob.state === 'dead') return;
-            Effects.spawnDamageNumber(snapMx, mob.y - mob.height - 8, damage);
+            showDamage(snapMx, mob.y - mob.height - 8);
             Effects.spawnDeathBurst(snapMx, snapMy, ['#ff4400','#ff8800','#ffcc00','#ffffff']);
           }
         );
       } else {
-        // melee — efeitos imediatos
-        Effects.spawnDamageNumber(mx, mob.y - mob.height - 8, damage);
+        showDamage(mx, mob.y - mob.height - 8);
         Effects.spawnHitSparks(mx, my);
       }
     },
     onMobAttack(mob, damage) {
       const roll = Math.random();
-      if (roll < 0.15) {
-        // ESQUIVA — cancela o dano aplicado pelo combat.js
+      if (roll < hero.dodgeChance) {
+        // ESQUIVA
         hero.hp = Math.min(hero.maxHp, hero.hp + damage);
         hero.flashTimer = 0;
         if (hero.state !== 'dead') hero.state = 'walking';
         hero.triggerDodge();
         Effects.spawnDamageNumber(
-          CONFIG.hero.screenX, hero.y - hero.height - 8, 'DODGE',
-          { color: '#80e0ff', outline: '#004488', size: 14, bold: true, prefix: '' }
+          CONFIG.hero.screenX, hero.y - hero.height - 8, 'ESQUIVA',
+          { color: '#80e0ff', outline: '#004488', size: 13, bold: true, prefix: '' }
         );
         return;
       }
-      if (roll < 0.40) {
+      if (roll < hero.dodgeChance + hero.blockChance) {
         // BLOQUEIO — reverte e aplica só 40%
         hero.hp = Math.min(hero.maxHp, hero.hp + damage);
         const blocked = Math.ceil(damage * 0.4);
@@ -368,8 +422,8 @@
           { color: '#80e0ff', outline: '#004488' }
         );
         Effects.spawnDamageNumber(
-          CONFIG.hero.screenX, hero.y - hero.height - 28, 'BLOCK',
-          { color: '#a0d0ff', outline: '#003366', size: 13, bold: true, prefix: '' }
+          CONFIG.hero.screenX, hero.y - hero.height - 28, 'BLOQUEIO',
+          { color: '#a0d0ff', outline: '#003366', size: 12, bold: true, prefix: '' }
         );
         Hud.logEvent(`Bloqueou! ${blocked} de dano.`, 'info');
         return;
@@ -383,11 +437,41 @@
       Effects.triggerShake(5, 200);
       Hud.logEvent(`Você sofreu ${damage} de dano.`, 'damage');
     },
+    onPassiveTrigger(cls, value) {
+      const hx = CONFIG.hero.screenX;
+      const hy = hero.y - hero.height - 28;
+      if (cls === 'warrior') {
+        Effects.spawnDamageNumber(hx, hy, `FÚRIA! ATK+1 (${value}/10)`,
+          { color: '#ff6622', outline: '#661100', size: 11, bold: true, prefix: '' });
+        Hud.logEvent(`Fúria! ATK +1 (${value}/10)`, 'info');
+      } else if (cls === 'mage') {
+        Effects.spawnDamageNumber(hx, hy, `+${value} HP`,
+          { color: '#88ffcc', outline: '#006644', size: 13, bold: true });
+        Hud.logEvent(`Colheita Arcana: +${value} HP`, 'info');
+      } else if (cls === 'cleric') {
+        Effects.spawnDamageNumber(hx, hy, `+${value} HP`,
+          { color: '#ffdd88', outline: '#886600', size: 13, bold: true });
+        Hud.logEvent(`Bênção Sagrada: +${value} HP`, 'info');
+      }
+      Hud.updateHeroStats(hero);
+    },
     onMobDeath(mob, drops, leveledUp) {
       const mx = mob.getScreenX(hero);
       Effects.spawnDeathBurst(mx, mob.y, ['#4a6838', '#c23b3b', '#e07030', '#ffffff']);
       Effects.spawnXpNumber(mx, mob.y - mob.height - 24, mob.xpReward);
       Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP`, 'info');
+
+      // boss drop — keygem da classe atual
+      if (mob.type.isBoss) {
+        const gemId   = `keygem_${hero.heroClass}`;
+        const gemItem = Items.get(gemId);
+        if (gemItem && !GemSystem.isConsumed(hero.heroClass)) {
+          drops = [{ ...gemItem }];
+          Hud.logEvent(`💎 Keygem obtida: ${gemItem.name}!`, 'drop');
+          Effects.spawnDeathBurst(mx, mob.y, ['#a855f7','#d4a0ff','#ffffff','#a855f7']);
+        }
+      }
+
       drops.forEach(item => {
         Hud.logEvent(`Item obtido: ${item.name} (${item.rarity})`, 'drop');
       });
@@ -407,12 +491,7 @@
       Effects.triggerShake(10, 400);
 
       setTimeout(() => {
-        // perde todos os itens da bag (mantém nível e equipamentos)
-        hero.inventory = [];
-        SaveSystem.save(hero);
-        Bag.refresh();
-
-        // mostra popup
+        SaveSystem.delete();
         document.getElementById('death-overlay').classList.remove('hidden');
       }, 800);
     }
@@ -433,6 +512,20 @@
     if (target) Combat.resolveTick(hero, target, now, combatCallbacks);
     mobs = mobs.filter(m => !m.markedForRemoval);
     Effects.update(deltaMs);
+    updatePortal(now);
+  }
+
+  function portalIsOpen(now) {
+    return portalActive && portalOpenAt && now >= portalOpenAt;
+  }
+
+  function updatePortal(now) {
+    if (!portalActive || phase2Triggered) return;
+    if (!portalIsOpen(now)) return;
+    if (hero.worldX >= PORTAL_WORLD_X) {
+      phase2Triggered = true;
+      document.getElementById('phase2-overlay').classList.remove('hidden');
+    }
   }
 
   // ============================================================
@@ -453,7 +546,8 @@
   }
 
   // ============================================================
-  // BACKGROUND — imagem PNG tileada com parallax lento
+  // BACKGROUND — imagem PNG com panning suave (sem tiling)
+  // A imagem é mais larga que o canvas; desloca lentamente com clamp nas bordas.
   // ============================================================
 
   function drawBackground(period, cameraX) {
@@ -466,15 +560,19 @@
       return;
     }
 
-    const H   = CONFIG.canvas.height; // preenche o canvas inteiro
-    const W   = img.naturalWidth * (H / img.naturalHeight); // largura proporcional
-    const sf  = 0.08; // parallax muito lento (fundo distante)
-    const off = (cameraX * sf) % W;
-    const count = Math.ceil(CONFIG.canvas.width / W) + 2;
+    const CW   = CONFIG.canvas.width;
+    const CH   = CONFIG.canvas.height;
+    // Escala a imagem 1.4x mais larga que o canvas → 672px de margem para panear
+    const W    = CW * 1.4;
+    const H    = img.naturalHeight * (W / img.naturalWidth);
+    const drawY = (CH - H) / 2; // centraliza verticalmente se não cobrir o canvas todo
 
-    for (let i = -1; i <= count; i++) {
-      ctx.drawImage(img, Math.floor(i * W - off), 0, Math.ceil(W), H);
-    }
+    const sf     = 0.06;
+    const rawOff = cameraX * sf;
+    const maxOff = Math.max(0, W - CW);
+    const off    = Math.min(rawOff, maxOff);
+
+    ctx.drawImage(img, -off, drawY, W, H);
   }
 
   // ============================================================
@@ -896,7 +994,6 @@
   function draw(period) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
 
-    // screen shake: desloca tudo com um offset aleatório
     const shake = Effects.getShakeOffset();
     ctx.save();
     ctx.translate(shake.x, shake.y);
@@ -905,13 +1002,70 @@
 
     drawBackground(period, cam);
 
+    if (portalActive) drawPortal(cam);
+
     mobs.forEach(mob => mob.draw(ctx, hero));
     hero.draw(ctx);
 
     drawAmbientOverlay(period);
-
-    // efeitos por cima de tudo (partículas + números flutuantes)
     Effects.draw(ctx);
+
+    ctx.restore();
+  }
+
+  function drawPortal(camX) {
+    if (!portalIsOpen(Date.now())) return;
+    const screenX = CONFIG.hero.screenX + (PORTAL_WORLD_X - camX);
+    if (screenX < -120 || screenX > CONFIG.canvas.width + 120) return;
+
+    const now      = Date.now();
+    const elapsed  = portalOpenAt ? (now - portalOpenAt) / 1000 : 0;
+    const pulse    = Math.sin(elapsed * 3) * 0.18 + 0.82;   // 0.64–1.0
+    const shimmer  = Math.sin(elapsed * 7) * 0.12 + 0.88;
+    const groundY  = CONFIG.canvas.groundY;
+    const portalH  = 120;
+    const portalW  = 54;
+    const px       = screenX;
+    const py       = groundY - portalH;
+
+    ctx.save();
+
+    // brilho externo
+    ctx.shadowColor = `rgba(74,222,128,${0.7 * pulse})`;
+    ctx.shadowBlur  = 38;
+
+    // anel externo
+    ctx.strokeStyle = `rgba(74,222,128,${0.9 * pulse})`;
+    ctx.lineWidth   = 5;
+    ctx.beginPath();
+    ctx.ellipse(px, py + portalH / 2, portalW / 2 + 6, portalH / 2 + 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // interior gradiente giratório
+    const grad = ctx.createRadialGradient(px, py + portalH / 2, 4, px, py + portalH / 2, portalW / 2);
+    grad.addColorStop(0,   `rgba(255,255,255,${0.9 * shimmer})`);
+    grad.addColorStop(0.3, `rgba(134,239,172,${0.7 * pulse})`);
+    grad.addColorStop(0.7, `rgba(21,128,61,${0.5 * pulse})`);
+    grad.addColorStop(1,   `rgba(0,0,0,0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(px, py + portalH / 2, portalW / 2, portalH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // anel interno pulsante
+    ctx.strokeStyle = `rgba(255,255,255,${0.6 * shimmer})`;
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.ellipse(px, py + portalH / 2, portalW / 2 - 4, portalH / 2 - 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // label "PORTAL" acima
+    ctx.shadowBlur  = 10;
+    ctx.shadowColor = '#4ade80';
+    ctx.fillStyle   = `rgba(134,239,172,${pulse})`;
+    ctx.font        = 'bold 11px monospace';
+    ctx.textAlign   = 'center';
+    ctx.fillText('PORTAL', px, py - 10);
 
     ctx.restore();
   }
@@ -934,6 +1088,13 @@
       const period = DayCycle.getCurrentPeriod();
       draw(period);
       Hud.updateHeroStats(hero);
+      const activeBoss = mobs.find(m => m.type?.isBoss && m.state !== 'dead');
+      Hud.updateZone(
+        hero.worldX,
+        PORTAL_WORLD_X,
+        activeBoss ? activeBoss.worldX : null,
+        portalIsOpen(Date.now())
+      );
     } else {
       // loading
       ctx.fillStyle = '#080810';
@@ -947,19 +1108,81 @@
     requestAnimationFrame(loop);
   }
 
+  // ── Balão de pensamento ───────────────────────────────────────
+  const BUBBLE_PHRASES = {
+    all: [
+      'Huum...',
+      'Essas árvores...',
+      'Tenho a sensação de estar andando em loop...',
+      'Ser um herói é mais cansativo do que parece.',
+      'Quantos goblins já derrubei hoje?',
+      'Preciso de um descanso.',
+    ],
+    warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa floresta vai durar?'],
+    hunter:    ['Karine me disse que a floresta fala... até agora só ouvi vento.'],
+    mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
+    cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
+  };
+
+  let _bubbleTimer = null;
+
+  function _scheduleBubble() {
+    const delay = 18000 + Math.random() * 20000; // 18–38s
+    _bubbleTimer = setTimeout(() => {
+      if (gameState !== 'playing' || !hero) { _scheduleBubble(); return; }
+      const pool = [...BUBBLE_PHRASES.all, ...(BUBBLE_PHRASES[hero.heroClass] ?? [])];
+      const text = pool[Math.floor(Math.random() * pool.length)];
+      const el   = document.getElementById('hero-bubble');
+      document.getElementById('hero-bubble-text').textContent = text;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+      _scheduleBubble();
+    }, delay);
+  }
+
   function init() {
     Hud.init();
     loadBackgrounds();
     requestAnimationFrame(loop);
     Bag.init(() => hero);
+    _scheduleBubble();
 
     document.getElementById('death-btn').addEventListener('click', () => {
       document.getElementById('death-overlay').classList.add('hidden');
-      hero.respawn();
-      mobs = [];
-      scheduleNextSpawn(Date.now());
-      Hud.logEvent('O herói voltou à luta!', 'info');
+      Bag.closeBag();
+      Bag.closeEquip();
+      gameState = 'classSelect';
     });
+
+    // Keygem popup
+    document.getElementById('keygem-change').addEventListener('click', () => {
+      document.getElementById('keygem-overlay').classList.add('hidden');
+      Bag.closeBag();
+      Bag.closeEquip();
+      gameState = 'classSelect';
+    });
+    document.getElementById('keygem-stay').addEventListener('click', () => {
+      document.getElementById('keygem-overlay').classList.add('hidden');
+    });
+
+    // Fase 2 popup
+    document.getElementById('phase2-btn').addEventListener('click', () => {
+      document.getElementById('phase2-overlay').classList.add('hidden');
+      Bag.closeBag();
+      Bag.closeEquip();
+      phase2Triggered = false;
+      portalActive    = false;
+      gameState       = 'classSelect';
+    });
+
+    // hook para quando todas as gems forem consumidas via bag.js
+    window._onAllGemsConsumed = () => {
+      portalActive = true;
+      portalOpenAt = Date.now() + 10000; // abre após 10s
+      Hud.logEvent('💎 Todas as Keygens consumidas! O portal se abrirá em 10 segundos...', 'levelup');
+    };
+    // Tecla T — desativada
+
     Sprites.load(() => {
       MobSprites.load(() => {
         gameState = 'classSelect';

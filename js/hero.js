@@ -1,10 +1,11 @@
 class Hero {
-  constructor(heroClass = 'darknight') {
+  constructor(heroClass = 'warrior') {
     this.heroClass = heroClass;
     this.worldX = 0;
     this.y      = CONFIG.canvas.groundY;
     this.width  = 40;
-    this.height = 88;
+    const heightByClass = { warrior: 130, hunter: 120, mage: 125, cleric: 120 };
+    this.height = heightByClass[heroClass] ?? 130;
 
     this.level      = 1;
     this.maxHp      = CONFIG.hero.baseMaxHp;
@@ -18,19 +19,38 @@ class Hero {
     this.inventory      = [];
 
     // alcance e cadência de ataque por classe
-    const rangeByClass   = { hunter: 280, mage: 320, darknight: 55, warrior: 60, cleric: 65 };
-    const cooldownByClass = { hunter: 1300, mage: 1600, darknight: 800, warrior: 900, cleric: 1100 };
+    const rangeByClass    = { hunter: 280, mage: 320, warrior: 60, cleric: 65 };
+    const cooldownByClass = { hunter: 1300, mage: 1600, warrior: 900, cleric: 1100 };
     this.attackRange      = rangeByClass[heroClass]    ?? CONFIG.hero.attackRange;
     this.attackCooldownMs = cooldownByClass[heroClass] ?? CONFIG.hero.attackCooldownMs;
+
+    // stats de combate por classe
+    const critChanceByClass = { warrior: 0.15, hunter: 0.25, mage: 0.20, cleric: 0.08 };
+    const critMultByClass   = { warrior: 1.8,  hunter: 2.0,  mage: 2.5,  cleric: 1.5  };
+    const dodgeByClass      = { warrior: 0.08, hunter: 0.20, mage: 0.05, cleric: 0.12 };
+    const blockByClass      = { warrior: 0.30, hunter: 0.10, mage: 0.05, cleric: 0.20 };
+    this.critChance     = critChanceByClass[heroClass] ?? 0.10;
+    this.critMultiplier = critMultByClass[heroClass]   ?? 1.5;
+    this.dodgeChance    = dodgeByClass[heroClass]      ?? 0.10;
+    this.blockChance    = blockByClass[heroClass]      ?? 0.15;
+
+    // passiva da classe (stacks e estado)
+    this.passiveStacks  = 0;
+    this.passiveBonusAtk = 0; // warrior: ATK acumulado pela passiva
 
     this.state         = 'walking';
     this.walkAnimTimer = 0;
     this.flashTimer    = 0;
 
+    // animação por frames
+    this.animFrame = 0;
+    this.animTimer = 0;
+    this._lastAnim = '';
+
     // efeitos visuais de ação
-    this.dodgeOffset   = 0;   // deslocamento horizontal temporário na esquiva
+    this.dodgeOffset   = 0;
     this.dodgeTimer    = 0;
-    this.blockTimer    = 0;   // duração do flash de bloqueio (azul)
+    this.blockTimer    = 0;
   }
 
   update(deltaMs, targetMob) {
@@ -49,12 +69,51 @@ class Hero {
 
     if (targetMob && this.distanceTo(targetMob) <= this.attackRange) {
       this.state = 'attacking';
+      this._advanceAnim(deltaMs);
       return;
     }
 
     this.state = 'walking';
     this.worldX        += CONFIG.hero.walkSpeed * (deltaMs / 16.67);
     this.walkAnimTimer += deltaMs;
+    this._advanceAnim(deltaMs);
+  }
+
+  // Mapeia estado do herói para nome de animação no sheet
+  _animName() {
+    if (this.state === 'dead')     return 'death';
+    if (this.state === 'attacking') return 'attack';
+    return 'walk';
+  }
+
+  // Avança o frame da animação com base no fps definido no SHEET_DEF
+  _advanceAnim(deltaMs) {
+    const def  = Sprites.SHEET_DEFS[this.heroClass];
+    const anim = this._animName();
+
+    // troca de animação — reinicia frame
+    if (anim !== this._lastAnim) {
+      this.animFrame = 0;
+      this.animTimer = 0;
+      this._lastAnim = anim;
+      return;
+    }
+
+    if (!def) return;
+    const row = def.rows.find(r => r.name === anim);
+    if (!row) return;
+
+    this.animTimer += deltaMs;
+    const frameDur = row.fps[this.animFrame] ?? 100;
+    if (this.animTimer >= frameDur) {
+      this.animTimer -= frameDur;
+      const isLooping = (anim === 'walk');
+      if (isLooping) {
+        this.animFrame = (this.animFrame + 1) % row.count;
+      } else {
+        this.animFrame = Math.min(this.animFrame + 1, row.count - 1);
+      }
+    }
   }
 
   distanceTo(entity) { return Math.abs(this.worldX - entity.worldX); }
@@ -64,7 +123,17 @@ class Hero {
   takeDamage(amount) {
     this.hp = Math.max(0, this.hp - amount);
     this.flashTimer = 180;
-    if (this.hp === 0) this.state = 'dead';
+    if (this.hp === 0) {
+      this.state = 'dead';
+      // Warrior "Fúria": reseta stacks e ATK bônus na morte
+      if (this.heroClass === 'warrior' && this.passiveBonusAtk > 0) {
+        this.attack = Math.max(1, this.attack - this.passiveBonusAtk);
+        this.passiveBonusAtk = 0;
+        this.passiveStacks   = 0;
+      }
+      // Hunter: reseta contador de hits
+      if (this.heroClass === 'hunter') this.passiveStacks = 0;
+    }
   }
 
   triggerBlock() { this.blockTimer = 320; }
@@ -116,29 +185,39 @@ class Hero {
     ctx.fillRect(sx - 22, fy + 2, 44, 8);
     ctx.fillRect(sx - 18, fy,     36, 4);
 
+    const anim      = this._animName();
+    const hasSheet  = !!Sprites.sheets[this.heroClass];
+    const drawSprite = (opts = {}) => {
+      if (hasSheet) {
+        Sprites.drawFrame(ctx, this.heroClass, anim, this.animFrame, sx, baseY, this.height, opts);
+      } else {
+        Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height, opts);
+      }
+    };
+
     if (this.state === 'dead') {
-      Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height, { alpha: 0.35 });
+      drawSprite({ alpha: 0.35 });
       ctx.restore();
       return;
     }
 
-    Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height);
+    drawSprite();
 
-    // feedback visual de bloqueio — brilho azul no contorno
+    // brilho azul de bloqueio
     if (this.blockTimer > 0) {
       ctx.save();
       ctx.shadowColor = `rgba(80,160,255,${(this.blockTimer / 320) * 0.9})`;
       ctx.shadowBlur  = 18;
-      Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height);
+      drawSprite();
       ctx.restore();
     }
 
-    // feedback visual de dano — brilho vermelho no contorno
+    // brilho vermelho de dano
     if (this.flashTimer > 0 && this.blockTimer === 0) {
       ctx.save();
       ctx.shadowColor = `rgba(255,60,40,${(this.flashTimer / 180) * 0.9})`;
       ctx.shadowBlur  = 16;
-      Sprites.drawHero(ctx, this.heroClass, sx, baseY, this.height);
+      drawSprite();
       ctx.restore();
     }
 
