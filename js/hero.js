@@ -10,17 +10,17 @@ class Hero {
     this.level      = 1;
     this.maxHp      = CONFIG.hero.baseMaxHp;
     this.hp         = this.maxHp;
-    this.attack     = CONFIG.hero.baseAttack;
-
     this.xp             = 0;
     this.xpToNextLevel  = CONFIG.hero.xpToLevelBase;
 
     this.lastAttackTime = 0;
     this.inventory      = [];
 
-    // alcance e cadência de ataque por classe
+    // alcance, cadência e dano base por classe
+    const attackByClass   = { hunter: 12, mage: 18, warrior: 15, cleric: 9 };
     const rangeByClass    = { hunter: 280, mage: 320, warrior: 60, cleric: 65 };
-    const cooldownByClass = { hunter: 1300, mage: 1600, warrior: 900, cleric: 1100 };
+    const cooldownByClass = { hunter: 1100, mage: 1600, warrior: 900, cleric: 1100 };
+    this.attack     = attackByClass[heroClass] ?? CONFIG.hero.baseAttack;
     this.attackRange      = rangeByClass[heroClass]    ?? CONFIG.hero.attackRange;
     this.attackCooldownMs = cooldownByClass[heroClass] ?? CONFIG.hero.attackCooldownMs;
 
