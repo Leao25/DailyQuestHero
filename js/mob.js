@@ -10,7 +10,7 @@ const MOB_TYPES = {
     key:          'goblin',
     label:        'Goblin',
     spriteKey:    'mob_goblin',
-    spriteH:      72,
+    spriteH:      120,
     hp:           30,
     attack:       5,
     xpReward:     18,
@@ -189,7 +189,8 @@ const MobSprites = {
     const dh    = resolvedDef.frameH * scale;
     const drawY = baseY - dh + (resolvedDef.groundOffset ?? 0);
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
     ctx.drawImage(frame, cx - dw / 2, drawY, dw, dh);
     ctx.restore();
