@@ -366,6 +366,7 @@ class Mob {
     this.hp         = this.maxHp;
     this.attack     = Math.round(def.attack * scale);
     this.xpReward   = Math.round(def.xpReward * scale);
+    this.goldReward = def.goldReward ?? 0;
     this.attackRange    = def.attackRange;
     this.approachSpeed  = def.approachSpeed;
 
