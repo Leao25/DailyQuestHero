@@ -121,6 +121,10 @@ var Bag = {
     if (item.img) {
       const img = document.createElement('img');
       img.src = `assets/items/${item.img}`;
+      const sz = item.quickbarSize ?? 38;
+      img.style.width  = `${sz}px`;
+      img.style.height = `${sz}px`;
+      img.style.objectFit = 'contain';
       el.appendChild(img);
     } else {
       const ic = document.createElement('span');
@@ -569,7 +573,7 @@ var Bag = {
       craftBtn.textContent = '⚗ Craft (x10)';
       craftBtn.style.cssText = 'margin-top:6px;padding:3px 10px;font-size:11px;background:#2a4a2a;color:#88ffaa;border:1px solid #4a8a4a;border-radius:4px;cursor:pointer;font-family:inherit;width:100%;';
       document.getElementById('ip-value').insertAdjacentElement('afterend', craftBtn);
-      craftBtn.addEventListener('click', () => this._craftHerb());
+      craftBtn.addEventListener('click', () => this._confirmCraft());
     }
     if (item.id === 'forest_herb' && hero) {
       const herbQty = hero.inventory.filter(i => i.id === 'forest_herb').length;
@@ -836,6 +840,39 @@ var Bag = {
   },
 
   // ── Craft: 10 forest_herb → 1 minor_potion ──────────────────
+  _confirmCraft() {
+    const hero = this._getHero();
+    if (!hero) return;
+    const TAX_RATE  = 0.10;
+    const herbItem  = Items.get('forest_herb');
+    const herbQty   = 10;
+    const totalValue = (herbItem?.value ?? 0) * herbQty;
+    const fee        = Math.ceil(totalValue * TAX_RATE);
+
+    document.getElementById('vw-msg').innerHTML =
+      `A taxa de craft hoje está em <strong>10%</strong>.<br>` +
+      `Receita: 10x Erva da Floresta → <strong>Poção Menor de Vida</strong><br>` +
+      `Valor dos materiais: <strong>${totalValue}g</strong>`;
+    document.getElementById('vw-fee').textContent =
+      fee > 0
+        ? `Taxa de serviço: ${fee}g (seu gold atual: ${hero.gold ?? 0}g)`
+        : 'Craft gratuito!';
+
+    const confirmBtn = document.getElementById('vw-confirm');
+    confirmBtn.onclick = () => {
+      if (fee > 0 && (hero.gold ?? 0) < fee) {
+        document.getElementById('vw-fee').textContent = `Gold insuficiente! Você precisa de ${fee}g.`;
+        return;
+      }
+      hero.gold = (hero.gold ?? 0) - fee;
+      this._craftHerb();
+      this._closeWithdrawPopup();
+      Hud.updateHeroStats(hero);
+    };
+
+    document.getElementById('vault-withdraw-overlay').classList.remove('hidden');
+  },
+
   _craftHerb() {
     const hero = this._getHero();
     if (!hero) return;
@@ -850,7 +887,7 @@ var Bag = {
     SaveSystem.save(hero);
     this._hideItemPopup();
     this._renderGrid();
-    Hud.logEvent('Craft: 10 Ervas → Poção Menor de Vida', 'info');
+    Hud.logEvent('Craft: 10 Ervas → Poção Menor de Vida (-taxa 10%)', 'info');
   },
 
   // ── Helper: cria <img> para item ────────────────────────────

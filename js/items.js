@@ -70,7 +70,7 @@ const ITEM_CATALOG = {
     id: 'minor_potion', name: 'Poção Menor de Vida',
     type: 'consumable', rarity: 'comum',
     desc: 'Restaura 20 HP imediatamente.',
-    value: 12, tradable: true, icon: '🧪', img: 'itm_small_health_potion.png', imgSize: 60,
+    value: 12, tradable: true, icon: '🧪', img: 'itm_small_health_potion.png', imgSize: 60, quickbarSize: 36,
     effect: { type: 'heal', amount: 20 },
   },
   health_potion: {
