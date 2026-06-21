@@ -18,7 +18,7 @@ const Sprites = {
     //   stat:  { atk: 3, def: 4, spd: 3 },
     // },
     hunter: {
-      label: 'Caçador',
+      label: 'Caçadora',
       desc:  'Ágil e preciso. Ataques rápidos com alta chance de crítico.',
       color: '#4a8050',
       stat:  { atk: 3, def: 2, spd: 5 },

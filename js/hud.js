@@ -4,7 +4,7 @@
 
 const CLASS_META = {
   warrior: { label: 'Guerreiro',  symbol: '⚔',  css: 'cls-warrior' },
-  hunter:  { label: 'Caçador',    symbol: '🏹', css: 'cls-hunter'  },
+  hunter:  { label: 'Caçadora',   symbol: '🏹', css: 'cls-hunter'  },
   mage:    { label: 'Mago',       symbol: '✦',  css: 'cls-mage'    },
   cleric:  { label: 'Clérigo',    symbol: '✝',  css: 'cls-cleric'  },
 };
