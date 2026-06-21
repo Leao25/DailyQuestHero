@@ -148,12 +148,21 @@ var Bag = {
 
       if (this._selected?.index === idx) slot.classList.add('selected');
 
-      slot.addEventListener('mouseenter', e => this._showItemPopup(item, hero, e.currentTarget));
+      slot.addEventListener('mouseenter', e => {
+        if (!this._popupPinned) this._showItemPopup(item, hero, e.currentTarget);
+      });
       slot.addEventListener('mouseleave', e => {
-        // só esconde se não foi fixado por click
         if (!this._popupPinned) this._hideItemPopup();
       });
       slot.addEventListener('click', e => {
+        if (this._selected?.index === idx) {
+          // clicou no mesmo item selecionado: desseleciona
+          this._selected = null;
+          this._popupPinned = false;
+          this._hideItemPopup();
+          this._renderGrid();
+          return;
+        }
         this._selected = { item, index: idx };
         this._popupPinned = true;
         this._showItemPopup(item, hero, e.currentTarget);
@@ -244,8 +253,12 @@ var Bag = {
     const vh      = window.innerHeight;
     const bagRect = document.getElementById('bag-modal').getBoundingClientRect();
 
-    // sempre à esquerda da bag modal
-    const left = bagRect.left - popupW - 12;
+    // à esquerda da bag; se não couber, à direita
+    const vw  = window.innerWidth;
+    let left = bagRect.left - popupW - 12;
+    if (left < 8) left = bagRect.right + 12;
+    if (left + popupW > vw - 8) left = Math.max(8, bagRect.left - popupW - 12);
+
     let top = bagRect.top;
     if (top + popupH > vh - 8) top = vh - popupH - 8;
 
