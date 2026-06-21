@@ -21,6 +21,7 @@ const SaveSystem = {
       maxHp:          hero.maxHp,
       hp:             hero.hp,
       attack:         hero.attack,
+      gold:           hero.gold,
       inventory:      hero.inventory.map(item => item.id),
       equipment:      hero.equipment ?? {},
       savedAt:        Date.now(),
@@ -41,6 +42,7 @@ const SaveSystem = {
 
   // Aplica dados salvos em uma instância de Hero já criada
   applyToHero(hero, data) {
+    hero.gold          = data.gold ?? 0;
     hero.level         = data.level;
     hero.xp            = data.xp;
     hero.xpToNextLevel = data.xpToNextLevel;

@@ -542,11 +542,15 @@
       }
       Hud.updateHeroStats(hero);
     },
-    onMobDeath(mob, drops, leveledUp) {
+    onMobDeath(mob, drops, leveledUp, goldEarned = 0) {
       const mx = mob.getScreenX(hero);
       Effects.spawnDeathBurst(mx, mob.y, ['#4a6838', '#c23b3b', '#e07030', '#ffffff']);
       Effects.spawnXpNumber(mx, mob.y - mob.height - 24, mob.xpReward);
-      Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP`, 'info');
+      if (goldEarned > 0) {
+        Effects.spawnDamageNumber(mx + 18, mob.y - mob.height - 40, `+${goldEarned}g`,
+          { color: '#ffd700', outline: '#996600', size: 13 });
+      }
+      Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP  +${goldEarned}g`, 'info');
 
       // boss drop — keygem da classe atual
       if (mob.type.isBoss) {

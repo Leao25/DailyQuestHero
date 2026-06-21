@@ -12,6 +12,7 @@ class Hero {
     this.hp         = this.maxHp;
     this.xp             = 0;
     this.xpToNextLevel  = CONFIG.hero.xpToLevelBase;
+    this.gold           = 0;
 
     this.lastAttackTime = 0;
     this.inventory      = [];

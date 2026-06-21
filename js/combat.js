@@ -71,6 +71,8 @@ const Combat = {
 
   handleMobDeath(hero, mob, callbacks) {
     const leveledUp = hero.gainXp(mob.xpReward);
+    const goldEarned = mob.goldReward ?? 0;
+    hero.gold += goldEarned;
     // const drops = Items.rollDrops(mob.type?.key ?? 'goblin');
     // if (drops.length > 0) hero.addItems(drops);
     const drops = [];
@@ -91,6 +93,6 @@ const Combat = {
       callbacks.onPassiveTrigger?.('cleric', heal);
     }
 
-    callbacks.onMobDeath(mob, drops, leveledUp);
+    callbacks.onMobDeath(mob, drops, leveledUp, goldEarned);
   },
 };

@@ -33,6 +33,7 @@ const Hud = {
     this.els.classBadge    = document.getElementById('class-badge');
     this.els.classLabel    = document.getElementById('hero-class-label');
     this.els.atkValue      = document.getElementById('atk-value');
+    this.els.goldValue     = document.getElementById('gold-value');
     this.els.passiveInd    = document.getElementById('passive-indicator');
     // zone bar removida
     this.hideStats();
@@ -79,7 +80,8 @@ const Hud = {
     this.els.xpBar.style.width  = `${Math.min(xpRatio, 100)}%`;
     this.els.xpText.textContent = `${hero.xp}/${hero.xpToNextLevel}`;
 
-    this.els.atkValue.textContent = hero.attack;
+    this.els.atkValue.textContent  = hero.attack;
+    if (this.els.goldValue) this.els.goldValue.textContent = hero.gold ?? 0;
 
     // indicador de passiva
     this._updatePassive(hero);
