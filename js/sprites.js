@@ -19,7 +19,7 @@ const Sprites = {
     // },
     hunter: {
       label: 'Caçadora',
-      desc:  'Ágil e preciso. Ataques rápidos com alta chance de crítico.',
+      desc:  'Ágil e precisa. Ataques rápidos com alta chance de crítico.',
       color: '#4a8050',
       stat:  { atk: 3, def: 2, spd: 5 },
     },
@@ -51,9 +51,9 @@ const Sprites = {
     hunter: {
       walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 50 },
       attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 314, fps: [420, 420], groundOffset: 43, heightScale: 1.10 },
-      block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
+      // block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
       dodge:  { file: 'hero_hunter_dodge',  count: 1, frameW: 500, frameH: 500, fps: [200],       groundOffset: 110 },
-      death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
+      // death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
     },
     // outros heróis usarão ANIM_DEFS quando tiverem assets
   },

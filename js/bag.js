@@ -12,13 +12,38 @@ var Bag = {
     this._getHero = getHero;
 
     document.getElementById('bag-btn').addEventListener('click',   () => this.toggleBag());
-    document.getElementById('equip-btn').addEventListener('click', () => this.toggleEquip());
+    document.getElementById('equip-btn')?.addEventListener('click', () => this.toggleEquip());
     document.getElementById('bag-close').addEventListener('click',   () => this.closeBag());
     document.getElementById('equip-close').addEventListener('click', () => this.closeEquip());
 
     document.getElementById('ip-equip').addEventListener('click',           () => this._equip());
     document.getElementById('ip-unequip').addEventListener('click',         () => this._unequip());
+    document.getElementById('ip-vault').addEventListener('click',           () => this._sendToVault());
+    document.getElementById('ip-delete').addEventListener('click',          () => this._confirmDelete());
+    document.getElementById('del-confirm').addEventListener('click',        () => this._executeDelete());
+    document.getElementById('del-cancel').addEventListener('click',         () => this._closeDeletePopup());
+    document.getElementById('delete-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this._closeDeletePopup();
+    });
     document.getElementById('equip-detail-unequip').addEventListener('click',() => this._unequipSlot());
+    document.getElementById('vault-close').addEventListener('click',        () => this.closeVault());
+    document.getElementById('vault-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closeVault();
+    });
+    document.getElementById('vw-cancel').addEventListener('click',  () => this._closeWithdrawPopup());
+    document.getElementById('vault-withdraw-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this._closeWithdrawPopup();
+    });
+
+    // aba "Baú" na mochila → abre modal separado
+    document.getElementById('tab-bag').addEventListener('click',   () => {
+      document.getElementById('tab-bag').classList.add('active');
+      document.getElementById('tab-vault').classList.remove('active');
+    });
+    document.getElementById('tab-vault').addEventListener('click', () => {
+      this.closeBag();
+      this.openVault();
+    });
 
     // fecha popup ao clicar fora
     document.getElementById('bag-overlay').addEventListener('click', e => {
@@ -41,7 +66,309 @@ var Bag = {
     document.addEventListener('keydown', e => {
       if (e.key === 'b' || e.key === 'B') this.toggleBag();
       if (e.key === 'e' || e.key === 'E') this.toggleEquip();
-      if (e.key === 'Escape') { this.closeBag(); this.closeEquip(); }
+      if (e.key === 'v' || e.key === 'V') this.toggleVault();
+      if (e.key === 'Escape') { this.closeBag(); this.closeEquip(); this.closeVault(); }
+      if (e.key === '1' && this._gameActive) this._useQuickSlot(1);
+      if (e.key === '2' && this._gameActive) this._useQuickSlot(2);
+      if (e.key === '3' && this._gameActive) this._useQuickSlot(3);
+    });
+
+    // volume slider
+    document.getElementById('volume-slider').addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      Audio.setVolume(v);
+      document.getElementById('volume-icon').textContent = v === 0 ? '🔇' : v < 0.4 ? '🔉' : '🔊';
+    });
+
+    // quick-use bar — drag & drop
+    this._quickSlots = { 1: null, 2: null, 3: null };
+    this._initQuickBar();
+  },
+
+  _initQuickBar() {
+    [1, 2, 3].forEach(n => {
+      const el = document.getElementById(`qslot-${n}`);
+      el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        const itemId = e.dataTransfer.getData('text/plain');
+        const hero = this._getHero();
+        if (!hero) return;
+        const item = hero.inventory.find(i => i.id === itemId);
+        if (!item) return;
+        if (item.type !== 'consumable') {
+          this._showQuickMsg('Apenas consumíveis');
+          return;
+        }
+        this._quickSlots[n] = itemId;
+        this._renderQuickSlot(n, item);
+      });
+    });
+  },
+
+  _renderQuickSlot(n, item) {
+    const el = document.getElementById(`qslot-${n}`);
+    // limpa conteúdo exceto a key label
+    const key = el.querySelector('.qslot-key');
+    el.innerHTML = '';
+    el.appendChild(key);
+    if (!item) return;
+    const hero = this._getHero();
+    const qty = hero ? hero.inventory.filter(i => i.id === item.id).length : 0;
+    if (qty === 0) { this._quickSlots[n] = null; return; }
+    if (item.img) {
+      const img = document.createElement('img');
+      img.src = `assets/items/${item.img}`;
+      el.appendChild(img);
+    } else {
+      const ic = document.createElement('span');
+      ic.textContent = item.icon ?? '?';
+      ic.style.fontSize = '22px';
+      el.appendChild(ic);
+    }
+    const qtyEl = document.createElement('span');
+    qtyEl.className = 'qslot-qty';
+    qtyEl.textContent = qty > 1 ? qty : '';
+    el.appendChild(qtyEl);
+  },
+
+  _useQuickSlot(n) {
+    const itemId = this._quickSlots?.[n];
+    if (!itemId) return;
+    const hero = this._getHero();
+    if (!hero) return;
+    const item = hero.inventory.find(i => i.id === itemId);
+    if (!item?.effect) return;
+
+    const ef = item.effect;
+    if (ef.type === 'heal') {
+      const before = hero.hp;
+      hero.hp = Math.min(hero.maxHp, hero.hp + ef.amount);
+      const healed = hero.hp - before;
+      Hud.logEvent(`Usou ${item.name}: +${healed} HP`, 'info');
+      Hud.updateHeroStats(hero);
+    } else if (ef.type === 'xp') {
+      hero.xp = (hero.xp ?? 0) + ef.amount;
+      Hud.logEvent(`Usou ${item.name}: +${ef.amount} XP`, 'info');
+      Hud.updateHeroStats(hero);
+    } else if (ef.type === 'buff') {
+      hero[ef.stat] = (hero[ef.stat] ?? 0) + ef.amount;
+      setTimeout(() => { hero[ef.stat] -= ef.amount; Hud.updateHeroStats(hero); }, ef.duration);
+      Hud.logEvent(`Usou ${item.name}: +${ef.amount} ${ef.stat} por ${ef.duration/1000}s`, 'info');
+      Hud.updateHeroStats(hero);
+    }
+
+    const idx = hero.inventory.findIndex(i => i.id === itemId);
+    if (idx !== -1) hero.inventory.splice(idx, 1);
+    SaveSystem.save(hero);
+    this._renderQuickSlot(n, item);
+
+    // flash visual no slot
+    const el = document.getElementById(`qslot-${n}`);
+    el.classList.add('active-flash');
+    setTimeout(() => el.classList.remove('active-flash'), 300);
+  },
+
+  _showQuickMsg(text) {
+    const el = document.getElementById('quickbar-msg');
+    el.textContent = text;
+    el.classList.remove('hidden');
+    clearTimeout(this._quickMsgTimer);
+    this._quickMsgTimer = setTimeout(() => el.classList.add('hidden'), 1800);
+  },
+
+  openVault() {
+    this._vaultOpen = true;
+    document.getElementById('vault-overlay').classList.remove('hidden');
+    this._renderVault();
+  },
+
+  closeVault() {
+    this._vaultOpen = false;
+    this._vaultSelected = null;
+    this._popupPinned = false;
+    this._hideItemPopup();
+    document.getElementById('vault-overlay').classList.add('hidden');
+  },
+
+  toggleVault() { this._vaultOpen ? this.closeVault() : this.openVault(); },
+
+  _renderVault() {
+    const grid = document.getElementById('vault-grid');
+    grid.innerHTML = '';
+    const entries = Vault.getAll();
+    if (entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'grid-column:1/-1;text-align:center;color:#666;font-size:11px;padding:20px 0;';
+      empty.textContent = 'O baú está vazio.';
+      grid.appendChild(empty);
+      return;
+    }
+    const hero = this._getHero();
+    entries.forEach(({ item, qty }) => {
+      const slot = document.createElement('div');
+      slot.className = 'bag-slot';
+      slot.dataset.rarity = item.rarity;
+      slot.title = item.name;
+
+      const img = this._itemImg(item, item.imgSize ?? 44);
+      if (img) slot.appendChild(img);
+      else slot.textContent = item.icon ?? '?';
+
+      if (qty > 1) {
+        const badge = document.createElement('span');
+        badge.className = 'item-qty';
+        badge.textContent = qty;
+        slot.appendChild(badge);
+      }
+
+      slot.addEventListener('mouseenter', () => {
+        if (!this._popupPinned) this._showItemPopup(item, null, slot);
+      });
+      slot.addEventListener('mouseleave', () => {
+        if (!this._popupPinned) this._hideItemPopup();
+      });
+      slot.addEventListener('click', () => {
+        if (this._vaultSelected === item.id) {
+          this._vaultSelected = null;
+          this._popupPinned = false;
+          this._hideItemPopup();
+          this._renderVault();
+          return;
+        }
+        this._vaultSelected = item.id;
+        this._popupPinned = true;
+        this._showItemPopup(item, null, slot);
+        const vaultBtn = document.getElementById('ip-vault');
+        vaultBtn.textContent = 'Retirar do Baú 📦';
+        vaultBtn.classList.remove('hidden');
+        // esconde botões irrelevantes no contexto do vault
+        document.getElementById('ip-use').style.display   = 'none';
+        document.getElementById('ip-craft')?.style && (document.getElementById('ip-craft').style.display = 'none');
+        vaultBtn.onclick = () => this._confirmWithdraw(item, qty);
+      });
+      grid.appendChild(slot);
+    });
+  },
+
+  _confirmWithdraw(item, qty) {
+    const TAX_RATE = 0.10;
+    const totalValue = (item.value ?? 0) * qty;
+    const fee = Math.ceil(totalValue * TAX_RATE);
+    const hero = this._getHero();
+
+    document.getElementById('vw-msg').innerHTML =
+      `A taxa de saque hoje está em <strong>10%</strong>.<br>` +
+      `${qty}x ${item.name} → valor total: <strong>${totalValue}g</strong>`;
+    document.getElementById('vw-fee').textContent =
+      fee > 0 ? `Taxa: ${fee}g (seu gold atual: ${hero?.gold ?? 0}g)` : 'Item sem valor — saque gratuito.';
+
+    const confirmBtn = document.getElementById('vw-confirm');
+    confirmBtn.onclick = () => {
+      if (!hero) return;
+      if (fee > 0 && hero.gold < fee) {
+        document.getElementById('vw-fee').textContent = `Gold insuficiente! Você precisa de ${fee}g.`;
+        return;
+      }
+      hero.gold -= fee;
+      Vault.withdraw(item.id, qty, hero);
+      SaveSystem.save(hero);
+      Hud.updateHeroStats(hero);
+      Hud.logEvent(`Retirou ${qty}x ${item.name} do baú. Taxa: ${fee}g`, 'info');
+      this._closeWithdrawPopup();
+      this._popupPinned = false;
+      this._vaultSelected = null;
+      this._hideItemPopup();
+      this._renderVault();
+    };
+
+    document.getElementById('vault-withdraw-overlay').classList.remove('hidden');
+  },
+
+  _closeWithdrawPopup() {
+    document.getElementById('vault-withdraw-overlay').classList.add('hidden');
+  },
+
+  _confirmDelete() {
+    // contexto: vault ou bag?
+    if (this._vaultOpen && this._vaultSelected) {
+      const entries = Vault.getAll();
+      const entry   = entries.find(e => e.item.id === this._vaultSelected);
+      if (!entry) return;
+      document.getElementById('del-msg').innerHTML =
+        `Deseja excluir permanentemente <strong>${entry.qty}x ${entry.item.name}</strong> do Baú Seguro?<br><span style="color:#ff6666;font-size:10px">Esta ação não pode ser desfeita.</span>`;
+    } else {
+      if (!this._selected) return;
+      const hero = this._getHero();
+      const item = this._selected.item;
+      const qty  = hero?.inventory.filter(i => i.id === item.id).length ?? 0;
+      document.getElementById('del-msg').innerHTML =
+        `Deseja excluir permanentemente <strong>${qty}x ${item.name}</strong> da Mochila?<br><span style="color:#ff6666;font-size:10px">Esta ação não pode ser desfeita.</span>`;
+    }
+    document.getElementById('delete-overlay').classList.remove('hidden');
+  },
+
+  _executeDelete() {
+    if (this._vaultOpen && this._vaultSelected) {
+      const itemId = this._vaultSelected;
+      const entries = Vault.getAll();
+      const entry   = entries.find(e => e.item.id === itemId);
+      if (entry) {
+        Vault.withdraw(itemId, entry.qty, { inventory: [] }); // retira sem dar a ninguém
+        // forçar remoção direta (withdraw pode não funcionar sem hero real)
+        const raw = Vault._read().filter(e => e.id !== itemId);
+        Vault._write(raw);
+        Hud.logEvent(`${entry.qty}x ${entry.item.name} excluído do baú.`, 'info');
+      }
+      this._popupPinned = false;
+      this._vaultSelected = null;
+      this._hideItemPopup();
+      this._renderVault();
+    } else {
+      const hero = this._getHero();
+      if (!hero || !this._selected) return;
+      const itemId = this._selected.item.id;
+      const qty    = hero.inventory.filter(i => i.id === itemId).length;
+      hero.inventory = hero.inventory.filter(i => i.id !== itemId);
+      SaveSystem.save(hero);
+      Hud.logEvent(`${qty}x ${this._selected.item.name} excluído da mochila.`, 'info');
+      this._hideItemPopup();
+      this._renderGrid();
+      this.refreshQuickBar();
+    }
+    this._closeDeletePopup();
+  },
+
+  _closeDeletePopup() {
+    document.getElementById('delete-overlay').classList.add('hidden');
+  },
+
+  _sendToVault() {
+    const hero = this._getHero();
+    if (!hero || !this._selected) return;
+    const item = this._selected.item;
+    if (item.type === 'keygem') return;
+    const qty = hero.inventory.filter(i => i.id === item.id).length;
+    if (qty === 0) return;
+    // remove toda a pilha do inventário
+    hero.inventory = hero.inventory.filter(i => i.id !== item.id);
+    Vault.deposit(item.id, qty);
+    SaveSystem.save(hero);
+    Hud.logEvent(`${qty}x ${item.name} enviado ao baú.`, 'info');
+    this._hideItemPopup();
+    this._renderGrid();
+    this.refreshQuickBar();
+  },
+
+  refreshQuickBar() {
+    [1, 2, 3].forEach(n => {
+      const itemId = this._quickSlots?.[n];
+      if (!itemId) return;
+      const hero = this._getHero();
+      const item = hero?.inventory.find(i => i.id === itemId);
+      this._renderQuickSlot(n, item ?? { id: itemId });
     });
   },
 
@@ -51,7 +378,10 @@ var Bag = {
   openBag() {
     this._bagOpen = true;
     document.getElementById('bag-overlay').classList.remove('hidden');
+    document.getElementById('tab-bag').classList.add('active');
+    document.getElementById('tab-vault').classList.remove('active');
     this._renderGrid();
+    this.refreshQuickBar();
     this._hideItemPopup();
     this._selected = null;
   },
@@ -135,6 +465,14 @@ var Bag = {
       slot.dataset.rarity = item.rarity;
       slot.title = item.name;
 
+      slot.draggable = true;
+      slot.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', item.id);
+        this._dragging = true;
+        this._hideItemPopup();
+      });
+      slot.addEventListener('dragend', () => { this._dragging = false; });
+
       const img = this._itemImg(item, item.imgSize ?? 44);
       if (img) slot.appendChild(img);
       else slot.textContent = item.icon ?? '?';
@@ -149,7 +487,7 @@ var Bag = {
       if (this._selected?.index === idx) slot.classList.add('selected');
 
       slot.addEventListener('mouseenter', e => {
-        if (!this._popupPinned) this._showItemPopup(item, hero, e.currentTarget);
+        if (!this._popupPinned && !this._dragging) this._showItemPopup(item, hero, e.currentTarget);
       });
       slot.addEventListener('mouseleave', e => {
         if (!this._popupPinned) this._hideItemPopup();
@@ -211,6 +549,18 @@ var Bag = {
     }
     document.getElementById('ip-value').textContent = item.value ? `Valor: ${item.value} ouro` : '';
 
+    // botão usar (consumíveis)
+    let useBtn = document.getElementById('ip-use');
+    if (!useBtn) {
+      useBtn = document.createElement('button');
+      useBtn.id = 'ip-use';
+      useBtn.textContent = 'Usar';
+      useBtn.style.cssText = 'margin-top:6px;padding:3px 10px;font-size:11px;background:#2a3a4a;color:#88ccff;border:1px solid #4a7aaa;border-radius:4px;cursor:pointer;font-family:inherit;width:100%;';
+      document.getElementById('ip-value').insertAdjacentElement('afterend', useBtn);
+      useBtn.addEventListener('click', () => this._useConsumable());
+    }
+    useBtn.style.display = (item.type === 'consumable' && hero) ? '' : 'none';
+
     // botão craft (herb x10 → minor_potion)
     let craftBtn = document.getElementById('ip-craft');
     if (!craftBtn) {
@@ -231,9 +581,20 @@ var Bag = {
     // botões
     const equipBtn   = document.getElementById('ip-equip');
     const unequipBtn = document.getElementById('ip-unequip');
+    const vaultBtn   = document.getElementById('ip-vault');
     equipBtn.textContent = 'Equipar';
     equipBtn.classList.add('hidden');
     unequipBtn.classList.add('hidden');
+    // baú: texto e ação dependem do contexto
+    if (this._vaultOpen) {
+      vaultBtn.textContent = 'Retirar do Baú 📦';
+      vaultBtn.onclick = null; // será definido no click do slot
+    } else {
+      vaultBtn.textContent = 'Enviar ao Baú 🔒';
+      vaultBtn.onclick = null;
+    }
+    if (item.type !== 'keygem') vaultBtn.classList.remove('hidden');
+    else vaultBtn.classList.add('hidden');
 
     if (hero) {
       const isEquipable = ['weapon','armor','accessory'].includes(item.type);
@@ -246,20 +607,24 @@ var Bag = {
       }
     }
 
-    // posicionamento fixo relativo ao viewport
+    // posicionamento relativo ao modal de referência
     popup.classList.remove('hidden');
+    const refId   = this._vaultOpen ? 'vault-modal' : 'bag-modal';
+    this._positionPopup(popup, refId);
+  },
+
+  _positionPopup(popup, refModalId) {
     const popupW  = 210;
     const popupH  = popup.offsetHeight || 280;
     const vh      = window.innerHeight;
-    const bagRect = document.getElementById('bag-modal').getBoundingClientRect();
+    const vw      = window.innerWidth;
+    const rect    = document.getElementById(refModalId).getBoundingClientRect();
 
-    // à esquerda da bag; se não couber, à direita
-    const vw  = window.innerWidth;
-    let left = bagRect.left - popupW - 12;
-    if (left < 8) left = bagRect.right + 12;
-    if (left + popupW > vw - 8) left = Math.max(8, bagRect.left - popupW - 12);
+    let left = rect.left - popupW - 12;
+    if (left < 8) left = rect.right + 12;
+    if (left + popupW > vw - 8) left = Math.max(8, rect.left - popupW - 12);
 
-    let top = bagRect.top;
+    let top = rect.top;
     if (top + popupH > vh - 8) top = vh - popupH - 8;
 
     popup.style.left = `${Math.max(8, left)}px`;
@@ -434,6 +799,40 @@ var Bag = {
     if (allDone && typeof window._onAllGemsConsumed === 'function') {
       window._onAllGemsConsumed();
     }
+  },
+
+  // ── Usar consumível ─────────────────────────────────────────
+  _useConsumable() {
+    const hero = this._getHero();
+    if (!hero || !this._selected) return;
+    const item = this._selected.item;
+    if (!item?.effect) return;
+
+    const ef = item.effect;
+    if (ef.type === 'heal') {
+      const before = hero.hp;
+      hero.hp = Math.min(hero.maxHp, hero.hp + ef.amount);
+      const healed = hero.hp - before;
+      Hud.logEvent(`Usou ${item.name}: +${healed} HP`, 'info');
+      Hud.updateHeroStats(hero);
+    } else if (ef.type === 'xp') {
+      hero.xp = (hero.xp ?? 0) + ef.amount;
+      Hud.logEvent(`Usou ${item.name}: +${ef.amount} XP`, 'info');
+      Hud.updateHeroStats(hero);
+    } else if (ef.type === 'buff') {
+      hero[ef.stat] = (hero[ef.stat] ?? 0) + ef.amount;
+      setTimeout(() => { hero[ef.stat] -= ef.amount; Hud.updateHeroStats(hero); }, ef.duration);
+      Hud.logEvent(`Usou ${item.name}: +${ef.amount} ${ef.stat} por ${ef.duration/1000}s`, 'info');
+      Hud.updateHeroStats(hero);
+    }
+
+    // remove uma unidade do inventário
+    const idx = hero.inventory.findIndex(i => i.id === item.id);
+    if (idx !== -1) hero.inventory.splice(idx, 1);
+    SaveSystem.save(hero);
+    this._hideItemPopup();
+    this._renderGrid();
+    this.refreshQuickBar();
   },
 
   // ── Craft: 10 forest_herb → 1 minor_potion ──────────────────

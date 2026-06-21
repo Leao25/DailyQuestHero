@@ -212,8 +212,8 @@ const ITEM_CATALOG = {
 // ── Tabela de drops por tipo de mob ──────────────────────────
 const MOB_DROP_TABLE = {
   goblin: [
-    { itemId: 'forest_herb',   chance: 0.20 },
-    { itemId: 'goblin_coin',   chance: 0.10 },
+    { itemId: 'forest_herb',   chance: 0.10 },
+    { itemId: 'goblin_coin',   chance: 0.05 },
     //{ itemId: 'wooden_sword',  chance: 0.12 },
     //{ itemId: 'minor_potion',  chance: 0.08 },
     //{ itemId: 'ancient_coin',  chance: 0.02 },

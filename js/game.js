@@ -295,6 +295,14 @@
       ctx.fillText(labels[key], bx - 28, dy + barH);
       dy += gap;
     }
+
+    // versão
+    ctx.save();
+    ctx.font      = '10px monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.textAlign = 'right';
+    ctx.fillText('V0.1', CONFIG.canvas.width - 8, 14);
+    ctx.restore();
   }
 
   // mouse: hover e clique na tela de seleção
@@ -394,9 +402,13 @@
 
     gameState = 'playing';
     canvas.style.cursor = 'default';
+    document.getElementById('quickbar').classList.remove('hidden');
+    document.getElementById('volume-ctrl').classList.remove('hidden');
+    Bag._gameActive = true;
+    Audio.startMusic();
     scheduleNextSpawn(Date.now());
     // inicializa relógio de jogo no período atual do BG
-    DayCycle.initForPeriod(DayCycle.getCurrentPeriod().name);
+    DayCycle.initForPeriod('Manhã');
     Hud.showStats();
     Hud.setClass(selectedClass);
     Hud.updateHeroStats(hero);
@@ -470,6 +482,7 @@
       };
 
       if (cls === 'hunter') {
+        Audio.playArrow();
         const snapMx = mx;
         const arrowY = hero.y - hero.height * 0.42; // altura das mãos da hunter
         const snapMy = arrowY;                       // voa em linha reta horizontal
@@ -499,15 +512,18 @@
       }
     },
     onMobAttack(mob, damage) {
+      Audio.playGoblinAttack();
       Effects.spawnDamageNumber(
         CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
         hero.y - hero.height - 8, damage,
         { color: '#ff8844', outline: '#441100' }
       );
+      Audio.playHunterHurt();
       Effects.triggerShake(5, 200);
       Hud.logEvent(`Você sofreu ${damage} de dano.`, 'damage');
     },
     onDodge(hero) {
+      Audio.playDodge();
       Effects.spawnDamageNumber(
         CONFIG.hero.screenX, hero.y - hero.height - 8, 'ESQUIVA',
         { color: '#80e0ff', outline: '#004488', size: 13, bold: true, prefix: '' }
@@ -570,6 +586,7 @@
       Hud.updateHeroStats(hero);
     },
     onMobDeath(mob, drops, leveledUp, goldEarned = 0) {
+      Audio.playGoblinHurt();
       const mx = mob.getScreenX(hero);
       Effects.spawnDeathBurst(mx, mob.y, ['#4a6838', '#c23b3b', '#e07030', '#ffffff']);
       Effects.spawnXpNumber(mx, mob.y - mob.height - 24, mob.xpReward);
@@ -599,9 +616,11 @@
       }
 
       drops.forEach(item => {
+        if (item.id === 'goblin_coin') Audio.playDrop();
         Hud.logEvent(`Item obtido: ${item.name} (${item.rarity})`, 'drop');
       });
       leveledUp.forEach(level => {
+        Audio.playLevelUp();
         Effects.spawnDamageNumber(
           CONFIG.hero.screenX, hero.y - hero.height - 30, `Nv.${level}`,
           { color: '#ffe040', outline: '#443300', size: 18, bold: true, prefix: '' }
@@ -1267,34 +1286,36 @@
   // LOOP PRINCIPAL
   // ============================================================
 
-  function loop(timestamp) {
-    const deltaMs = lastTimestamp ? timestamp - lastTimestamp : 0;
-    lastTimestamp = timestamp;
+  const TICK_MS = 1000 / 60; // ~60fps
 
-    // avança relógio de jogo (1s real = 1min jogo)
-    if (gameState === 'playing') DayCycle.tick(deltaMs);
-    // relógio sempre atualizado (visível em todas as telas)
-    Hud.updateClock(DayCycle.getCurrentPeriod());
+  function loop() {
+    try {
+      const now = performance.now();
+      const deltaMs = lastTimestamp ? Math.min(now - lastTimestamp, 100) : 0;
+      lastTimestamp = now;
 
-    if (gameState === 'classSelect') {
-      drawClassSelect(timestamp);
-    } else if (gameState === 'playing') {
-      update(deltaMs, Date.now());
-      // Período controlado pelo BG_STATE após primeiro crossfade (random lore)
-      const period = BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod();
-      draw(period, deltaMs);
-      Hud.updateHeroStats(hero);
-    } else {
-      // loading
-      ctx.fillStyle = '#080810';
-      ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
-      ctx.fillStyle = '#555';
-      ctx.font = '14px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('Carregando...', CONFIG.canvas.width / 2, CONFIG.canvas.height / 2);
+      if (gameState === 'playing') DayCycle.tick(deltaMs);
+      Hud.updateClock(DayCycle.getCurrentPeriod());
+
+      if (gameState === 'classSelect') {
+        drawClassSelect(now);
+      } else if (gameState === 'playing') {
+        update(deltaMs, Date.now());
+        const period = BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod();
+        draw(period, deltaMs);
+        Hud.updateHeroStats(hero);
+      } else {
+        ctx.fillStyle = '#080810';
+        ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+        ctx.fillStyle = '#555';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Carregando...', CONFIG.canvas.width / 2, CONFIG.canvas.height / 2);
+      }
+    } catch (e) {
+      console.error('[loop] erro capturado, jogo continua:', e);
     }
-
-    requestAnimationFrame(loop);
+    setTimeout(loop, TICK_MS);
   }
 
   // ── Balão de pensamento ───────────────────────────────────────
@@ -1363,7 +1384,7 @@
   function init() {
     Hud.init();
     loadBackgrounds();
-    requestAnimationFrame(loop);
+    loop();
     Bag.init(() => hero);
     _scheduleBubble();
 
@@ -1371,6 +1392,9 @@
       document.getElementById('death-overlay').classList.add('hidden');
       Bag.closeBag();
       Bag.closeEquip();
+      Bag.closeVault();
+      hero  = null;
+      mobs  = [];
       gameState = 'classSelect';
     });
 
@@ -1403,6 +1427,7 @@
     };
     // Tecla T — desativada
 
+    DayCycle.initForPeriod('Manhã');
     Sprites.load(() => {
       MobSprites.load(() => {
         gameState = 'classSelect';

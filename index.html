@@ -10,8 +10,13 @@
 
 
 
+  <div id="page-wrapper">
+  <div id="game-header">
+    <img id="game-logo" src="assets/ui/dqh_logo.png" alt="DailyQuestHero" />
+  </div>
   <div id="game-container">
     <canvas id="game-canvas" width="960" height="540"></canvas>
+    <div id="version-label">V0.1</div>
 
     <!-- HUD -->
     <div id="hud">
@@ -73,9 +78,29 @@
 
     <!-- Botões de menu (bottom-right) -->
     <div id="menu-btns">
-      <button id="bag-btn"   title="Mochila (B)">🎒</button>
-      <button id="equip-btn" title="Equipamentos (E)">⚔️</button>
+      <button id="bag-btn"   title="Mochila (B)"><img src="assets/ui/itm_bag.png" alt="Mochila" /></button>
+      <!-- <button id="equip-btn" title="Equipamentos (E)">⚔️</button> -->
     </div>
+
+    <!-- Controle de volume (bottom-left) -->
+    <div id="volume-ctrl" class="hidden">
+      <span id="volume-icon">🔊</span>
+      <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" />
+    </div>
+
+    <!-- Quick-use bar (bottom-center) -->
+    <div id="quickbar" class="hidden">
+      <div class="qslot" id="qslot-1" data-slot="1">
+        <span class="qslot-key">1</span>
+      </div>
+      <div class="qslot" id="qslot-2" data-slot="2">
+        <span class="qslot-key">2</span>
+      </div>
+      <div class="qslot" id="qslot-3" data-slot="3">
+        <span class="qslot-key">3</span>
+      </div>
+    </div>
+    <div id="quickbar-msg" class="hidden">Apenas consumíveis</div>
 
     <!-- Popup de morte -->
     <div id="death-overlay" class="hidden">
@@ -116,10 +141,52 @@
     <div id="bag-overlay" class="hidden">
       <div id="bag-modal">
         <div id="bag-modal-title">
-          <span>Items Bag</span>
+          <div id="bag-tabs">
+            <button class="bag-tab active" id="tab-bag">Mochila</button>
+            <button class="bag-tab" id="tab-vault">Baú 🔒</button>
+          </div>
           <button id="bag-close">✕</button>
         </div>
         <div id="bag-grid"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MODAL: BAÚ GLOBAL                       -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="vault-overlay" class="hidden">
+      <div id="vault-modal">
+        <div id="vault-modal-title">
+          <span>🔒 Baú Seguro</span>
+          <button id="vault-close">✕</button>
+        </div>
+        <div id="vault-subtitle">Itens aqui não são perdidos ao morrer. Clique para retirar.</div>
+        <div id="vault-grid"></div>
+      </div>
+    </div>
+
+    <!-- Popup: confirmação de exclusão de item -->
+    <div id="delete-overlay" class="hidden">
+      <div id="delete-box">
+        <div id="del-title">🗑 Excluir Item</div>
+        <div id="del-msg"></div>
+        <div id="del-actions">
+          <button id="del-confirm">Excluir tudo</button>
+          <button id="del-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popup: confirmação de saque do baú -->
+    <div id="vault-withdraw-overlay" class="hidden">
+      <div id="vault-withdraw-box">
+        <div id="vw-title">🔒 Saque do Baú Seguro</div>
+        <div id="vw-msg"></div>
+        <div id="vw-fee"></div>
+        <div id="vw-actions">
+          <button id="vw-confirm">Confirmar Saque</button>
+          <button id="vw-cancel">Cancelar</button>
+        </div>
       </div>
     </div>
 
@@ -135,6 +202,8 @@
         <div id="ip-actions">
           <button id="ip-equip"   class="hidden">Equipar</button>
           <button id="ip-unequip" class="hidden">Desequipar</button>
+          <button id="ip-vault"   class="hidden">Enviar ao Baú 🔒</button>
+          <button id="ip-delete">Excluir 🗑</button>
         </div>
       </div>
     </div>
@@ -187,8 +256,11 @@
     </div>
 
   </div>
+  </div><!-- /page-wrapper -->
 
+  <script src="js/audio.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/vault.js"></script>
   <script src="js/gems.js"></script>
   <script src="js/sprites.js"></script>
   <script src="js/dayCycle.js"></script>
