@@ -1147,13 +1147,6 @@
       const period = BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod();
       draw(period, deltaMs);
       Hud.updateHeroStats(hero);
-      const activeBoss = mobs.find(m => m.type?.isBoss && m.state !== 'dead');
-      Hud.updateZone(
-        hero.worldX,
-        PORTAL_WORLD_X,
-        activeBoss ? activeBoss.worldX : null,
-        portalIsOpen(Date.now())
-      );
     } else {
       // loading
       ctx.fillStyle = '#080810';

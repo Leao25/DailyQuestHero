@@ -35,25 +35,18 @@ const Hud = {
     this.els.classLabel    = document.getElementById('hero-class-label');
     this.els.atkValue      = document.getElementById('atk-value');
     this.els.passiveInd    = document.getElementById('passive-indicator');
-    this.els.zoneFill      = document.getElementById('zone-fill');
-    this.els.zoneHeroDot   = document.getElementById('zone-hero-dot');
-    this.els.zoneBoss      = document.getElementById('zone-boss-marker');
-    this.els.zonePortal    = document.getElementById('zone-portal-marker');
-    this.els.zoneDistLabel = document.getElementById('zone-dist-label');
-    this.els.zoneBarWrap   = document.getElementById('zone-bar-wrap');
+    // zone bar removida
     this.hideStats();
   },
 
   hideStats() {
-    if (this.els.heroStats)   this.els.heroStats.style.visibility   = 'hidden';
-    if (this.els.eventLog)    this.els.eventLog.style.visibility    = 'hidden';
-    if (this.els.zoneBarWrap) this.els.zoneBarWrap.style.visibility = 'hidden';
+    if (this.els.heroStats) this.els.heroStats.style.visibility = 'hidden';
+    if (this.els.eventLog)  this.els.eventLog.style.visibility  = 'hidden';
   },
 
   showStats() {
-    if (this.els.heroStats)   this.els.heroStats.style.visibility   = 'visible';
-    if (this.els.eventLog)    this.els.eventLog.style.visibility    = 'visible';
-    if (this.els.zoneBarWrap) this.els.zoneBarWrap.style.visibility = 'visible';
+    if (this.els.heroStats) this.els.heroStats.style.visibility = 'visible';
+    if (this.els.eventLog)  this.els.eventLog.style.visibility  = 'visible';
   },
 
   // Chamado uma vez ao iniciar o jogo (troca de classe ou start)
