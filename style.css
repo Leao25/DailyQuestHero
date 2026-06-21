@@ -51,6 +51,8 @@ body {
 
 #game-canvas {
   display: block;
+  width: 1152px;
+  height: 648px;
   background: #1a1a1a;
 }
 
