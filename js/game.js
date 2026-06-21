@@ -320,7 +320,7 @@
   function spawnMobIfNeeded(now) {
     mobs = mobs.filter(m => !m.markedForRemoval);
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
-    const period    = DayCycle.getCurrentPeriod().name;
+    const period    = (BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod()).name;
 
     // tenta spawnar o boss se condições forem atendidas
     if (
