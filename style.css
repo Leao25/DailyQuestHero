@@ -171,6 +171,8 @@ body {
 }
 #atk-stat { color: #c09050; }
 #atk-stat strong { color: #ffc040; }
+#gold-stat { color: #c09050; }
+#gold-stat strong { color: #ffd700; }
 #passive-indicator {
   font-size: 9px; color: #e0a030;
   letter-spacing: 0.5px;
