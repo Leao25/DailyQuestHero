@@ -20,7 +20,7 @@ class Hero {
     // alcance, cadência e dano base por classe
     const attackByClass   = { hunter: 7, mage: 18, warrior: 15, cleric: 9 };
     const rangeByClass    = { hunter: 280, mage: 320, warrior: 60, cleric: 65 };
-    const cooldownByClass = { hunter: 1100, mage: 1600, warrior: 900, cleric: 1100 };
+    const cooldownByClass = { hunter: 1000, mage: 1600, warrior: 900, cleric: 1100 };
     this.attack     = attackByClass[heroClass] ?? CONFIG.hero.baseAttack;
     this.attackRange      = rangeByClass[heroClass]    ?? CONFIG.hero.attackRange;
     this.attackCooldownMs = cooldownByClass[heroClass] ?? CONFIG.hero.attackCooldownMs;
