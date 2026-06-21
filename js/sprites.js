@@ -65,11 +65,16 @@ const Sprites = {
     Object.entries(defs).forEach(([animName, def]) => {
       const img = new Image();
       img.onload = () => {
-        const oc = document.createElement('canvas');
-        oc.width  = img.naturalWidth;
-        oc.height = img.naturalHeight;
-        oc.getContext('2d').drawImage(img, 0, 0);
-        this.animSheets[key][animName] = oc;
+        // Extrai cada frame em canvas separado para evitar bleeding entre frames
+        const frames = [];
+        for (let i = 0; i < def.count; i++) {
+          const fc = document.createElement('canvas');
+          fc.width  = def.frameW;
+          fc.height = def.frameH;
+          fc.getContext('2d').drawImage(img, i * def.frameW, 0, def.frameW, def.frameH, 0, 0, def.frameW, def.frameH);
+          frames.push(fc);
+        }
+        this.animSheets[key][animName] = frames;
       };
       img.onerror = () => {};
       img.src = `assets/sprites/${def.file}.png`;
@@ -84,9 +89,10 @@ const Sprites = {
     const def   = this.ANIM_DEFS[key]?.[animName];
 
     if (anims && def && anims[animName]) {
-      const sheet = anims[animName];
-      const fi    = Math.min(frameIdx, def.count - 1);
-      const sx    = fi * def.frameW;
+      const frames = anims[animName];
+      const fi     = Math.min(frameIdx, def.count - 1);
+      const frame  = frames[fi];
+      if (!frame) return;
       const scale = targetH / def.frameH;
       const dw    = def.frameW * scale;
       const dh    = def.frameH * scale;
@@ -98,9 +104,9 @@ const Sprites = {
       if (options.flipX) {
         ctx.translate(cx, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, -dw / 2, drawY, dw, dh);
+        ctx.drawImage(frame, -dw / 2, drawY, dw, dh);
       } else {
-        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, cx - dw / 2, drawY, dw, dh);
+        ctx.drawImage(frame, cx - dw / 2, drawY, dw, dh);
       }
       ctx.restore();
       return;
