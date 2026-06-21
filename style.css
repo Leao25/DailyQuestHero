@@ -181,7 +181,7 @@ body {
   color: #e0a030; min-width: 28px;
 }
 #passive-bar-bg {
-  width: 72px; height: 7px;
+  width: 48px; height: 7px;
   background: rgba(0,0,0,0.5);
   border-radius: 5px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.12);
