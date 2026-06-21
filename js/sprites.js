@@ -50,7 +50,7 @@ const Sprites = {
   ANIM_DEFS: {
     hunter: {
       walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 50 },
-      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 314, fps: [420, 420], groundOffset: 43 },
+      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 314, fps: [420, 420], groundOffset: 43, heightScale: 1.15 },
       block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
       dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 353, frameH: 353, fps: [80,  120], groundOffset: 30 },
       death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
@@ -97,7 +97,7 @@ const Sprites = {
       const fi     = Math.min(frameIdx, def.count - 1);
       const frame  = frames[fi];
       if (!frame) return;
-      const scale = targetH / def.frameH;
+      const scale = (targetH * (def.heightScale ?? 1)) / def.frameH;
       const dw    = def.frameW * scale;
       const dh    = def.frameH * scale;
       const drawY = baseY - dh + (def.groundOffset ?? 0);
