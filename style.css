@@ -701,7 +701,7 @@ body {
 #hero-bubble {
   position: absolute;
   left: 210px;
-  bottom: 200px;
+  bottom: 240px;
   background: rgba(255, 255, 255, 0.72);
   color: #1a1a1a;
   font-family: 'Courier New', monospace;
