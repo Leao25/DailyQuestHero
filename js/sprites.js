@@ -49,11 +49,11 @@ const Sprites = {
   // ─────────────────────────────────────────────────────────────
   ANIM_DEFS: {
     hunter: {
-      walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420] },
-      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 353, fps: [100, 180] },
-      block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180] },
-      dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 353, frameH: 353, fps: [80,  120] },
-      death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400] },
+      walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 30 },
+      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
+      block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
+      dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 353, frameH: 353, fps: [80,  120], groundOffset: 30 },
+      death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
     },
     // outros heróis usarão ANIM_DEFS quando tiverem assets
   },
@@ -90,6 +90,7 @@ const Sprites = {
       const scale = targetH / def.frameH;
       const dw    = def.frameW * scale;
       const dh    = def.frameH * scale;
+      const drawY = baseY - dh + (def.groundOffset ?? 0);
 
       ctx.save();
       ctx.imageSmoothingEnabled = false;
@@ -97,9 +98,9 @@ const Sprites = {
       if (options.flipX) {
         ctx.translate(cx, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, -dw / 2, baseY - dh, dw, dh);
+        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, -dw / 2, drawY, dw, dh);
       } else {
-        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, cx - dw / 2, baseY - dh, dw, dh);
+        ctx.drawImage(sheet, sx, 0, def.frameW, def.frameH, cx - dw / 2, drawY, dw, dh);
       }
       ctx.restore();
       return;
