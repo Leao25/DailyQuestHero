@@ -203,10 +203,11 @@ class Hero {
     const bob  = this.state === 'walking' ? Math.sin(this.walkAnimTimer / 90) * 3 : 0;
     const baseY = fy + bob;
 
-    // sombra
+    // sombra — alinhada com os pés (baseY + 44)
+    const shadowY = fy + 44;
     ctx.fillStyle = 'rgba(0,0,0,0.32)';
-    ctx.fillRect(sx - 22, fy + 2, 44, 8);
-    ctx.fillRect(sx - 18, fy,     36, 4);
+    ctx.fillRect(sx - 22, shadowY,     44, 8);
+    ctx.fillRect(sx - 18, shadowY - 2, 36, 4);
 
     const anim      = this._animName();
     const hasAnims  = !!Sprites.animSheets[this.heroClass];
