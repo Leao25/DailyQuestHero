@@ -146,8 +146,8 @@ const MobSprites = {
   // ── Animações individuais por arquivo (novo sistema) ─────────
   ANIM_DEFS: {
     mob_goblin: {
-      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 60 },
-      attack: { file: 'mob_goblin_attack', count: 2, frameW: 289, frameH: 353, fps: [300, 420], groundOffset: 60 },
+      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 62 },
+      attack: { file: 'mob_goblin_attack', count: 2, frameW: 316, frameH: 353, fps: [300, 420], groundOffset: 62 },
     },
   },
 
