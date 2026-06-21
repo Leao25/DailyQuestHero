@@ -1303,22 +1303,32 @@
     hunter:    ['Karine me disse que a floresta fala... até agora só ouvi vento.'],
     mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
     cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
-    // Frases disparadas na mudança de período (crossfade)
+    // Frases genéricas de mudança de período
     periodChange: [
       'O tempo aqui não segue nenhuma lógica...',
-      'Espera... já anoiteceu?',
       'Essa floresta dobra o tempo como quer.',
       'Sinto que o mundo pulou algumas horas.',
       'Algo mudou no ar...',
       'Nem percebi a hora passar.',
       'Essa luz... isso é madrugada ou entardecer?',
+    ],
+    // Frases exclusivas por período de destino
+    periodChangeNoite: [
+      'Espera... já anoiteceu?',
+      'O sol sumiu rápido demais.',
+    ],
+    periodChangeEntardecer: [
       'O sol sumiu rápido demais.',
     ],
   };
 
   function _showPeriodChangeBubble() {
     if (!hero) return;
-    const pool = BUBBLE_PHRASES.periodChange;
+    const newPeriod = BG_STATE.currentPeriod?.name;
+    const extra = newPeriod === 'Noite'      ? BUBBLE_PHRASES.periodChangeNoite
+                : newPeriod === 'Entardecer' ? BUBBLE_PHRASES.periodChangeEntardecer
+                : [];
+    const pool = [...BUBBLE_PHRASES.periodChange, ...extra];
     const text = pool[Math.floor(Math.random() * pool.length)];
     const el   = document.getElementById('hero-bubble');
     document.getElementById('hero-bubble-text').textContent = text;
