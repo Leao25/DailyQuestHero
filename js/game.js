@@ -578,7 +578,7 @@
           { color: '#ffd700', outline: '#996600', size: 13 });
       }
       const goldStr = goldEarned > 0 ? `  +${goldEarned}g` : '';
-      Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP${goldStr}`, 'info');
+      Hud.logEvent(`${mob.type.label} derrotado! +${mob.xpReward} XP${goldStr}`, 'info');
 
       // boost de velocidade nos mobs que estavam atrás do mob morto
       mobs.forEach(m => {
