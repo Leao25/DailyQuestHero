@@ -577,7 +577,8 @@
         Effects.spawnDamageNumber(mx + 18, mob.y - mob.height - 40, `+${goldEarned}g`,
           { color: '#ffd700', outline: '#996600', size: 13 });
       }
-      Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP  +${goldEarned}g`, 'info');
+      const goldStr = goldEarned > 0 ? `  +${goldEarned}g` : '';
+      Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP${goldStr}`, 'info');
 
       // boost de velocidade nos mobs que estavam atrás do mob morto
       mobs.forEach(m => {
