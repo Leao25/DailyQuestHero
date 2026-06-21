@@ -41,8 +41,8 @@ body {
 
 #game-container {
   position: relative;
-  width: 960px;
-  height: 540px;
+  width: 1152px;
+  height: 648px;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
   border: none;
   transform-origin: center center;

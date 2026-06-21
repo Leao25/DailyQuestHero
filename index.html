@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <button id="fullscreen-btn" title="Tela cheia">⛶</button>
+
 
   <div id="game-container">
     <canvas id="game-canvas" width="960" height="540"></canvas>
@@ -201,32 +201,5 @@
   <script src="js/bag.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/game.js"></script>
-  <script>
-    const btn       = document.getElementById('fullscreen-btn');
-    const container = document.getElementById('game-container');
-    let isScaled    = false;
-
-    function applyScale() {
-      const scaleX = window.innerWidth  / 960;
-      const scaleY = window.innerHeight / 540;
-      container.style.transform = `scale(${Math.min(scaleX, scaleY)})`;
-    }
-    function enterFullscreen() {
-      isScaled = true;
-      document.body.style.overflow = 'hidden';
-      applyScale();
-      window.addEventListener('resize', applyScale);
-      btn.textContent = '✕'; btn.title = 'Sair da tela cheia';
-    }
-    function exitFullscreen() {
-      isScaled = false;
-      document.body.style.overflow = '';
-      container.style.transform = '';
-      window.removeEventListener('resize', applyScale);
-      btn.textContent = '⛶'; btn.title = 'Tela cheia';
-    }
-    btn.addEventListener('click', () => isScaled ? exitFullscreen() : enterFullscreen());
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && isScaled) exitFullscreen(); });
-  </script>
 </body>
 </html>
