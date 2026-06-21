@@ -52,7 +52,7 @@ const Audio = (() => {
 
   // ── Música de fundo (<audio> element, loop com pausa) ───
   const music = new window.Audio(BASE + 'bg_forest.mp3');
-  music.volume = 0.5 * _masterVolume;
+  music.volume = 0.5 * _musicVolume;
   music.loop   = false;
 
   let _pauseTimer = null;
