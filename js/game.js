@@ -1037,6 +1037,11 @@
   // ============================================================
 
   function draw(period, deltaMs) {
+    // reset completo do contexto antes de cada frame
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
