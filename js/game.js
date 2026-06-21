@@ -579,6 +579,13 @@
       }
       Hud.logEvent(`Mob derrotado! +${mob.xpReward} XP  +${goldEarned}g`, 'info');
 
+      // boost de velocidade nos mobs que estavam atrás do mob morto
+      mobs.forEach(m => {
+        if (m !== mob && m.state !== 'dead' && m.worldX > mob.worldX) {
+          m.speedBoostTimer = 1000;
+        }
+      });
+
       // boss drop — keygem da classe atual
       if (mob.type.isBoss) {
         const gemId   = `keygem_${hero.heroClass}`;

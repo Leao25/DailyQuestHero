@@ -374,6 +374,7 @@ class Mob {
     this.markedForRemoval = false;
     this.walkAnimTimer    = 0;
     this.flashTimer       = 0;
+    this.speedBoostTimer  = 0; // ms restantes do boost de velocidade pós-morte do mob à frente
 
     // animação por frames
     this.animFrame = 0;
@@ -426,7 +427,8 @@ class Mob {
   }
 
   update(deltaMs, hero, allMobs) {
-    if (this.flashTimer > 0) this.flashTimer = Math.max(0, this.flashTimer - deltaMs);
+    if (this.flashTimer    > 0) this.flashTimer    = Math.max(0, this.flashTimer    - deltaMs);
+    if (this.speedBoostTimer > 0) this.speedBoostTimer = Math.max(0, this.speedBoostTimer - deltaMs);
     if (this.state === 'dead') return;
 
     const distance = Math.abs(this.worldX - hero.worldX);
@@ -456,7 +458,8 @@ class Mob {
     this.walkAnimTimer += deltaMs;
     this._advanceAnim(deltaMs);
     const dir = hero.worldX > this.worldX ? 1 : -1;
-    this.worldX += dir * this.approachSpeed * (deltaMs / 16.67);
+    const speed = this.approachSpeed * (this.speedBoostTimer > 0 ? 2.0 : 1.0);
+    this.worldX += dir * speed * (deltaMs / 16.67);
     const minDist = this.attackRange - 2;
     if (this.worldX < hero.worldX + minDist) this.worldX = hero.worldX + minDist;
   }
