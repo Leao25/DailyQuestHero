@@ -49,11 +49,11 @@ const Sprites = {
   // ─────────────────────────────────────────────────────────────
   ANIM_DEFS: {
     hunter: {
-      walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [180, 180] },
-      attack: { file: 'hero_hunter_attack', count: 2, frameW: 128, frameH: 128, fps: [100, 180] },
-      block:  { file: 'hero_hunter_block',  count: 2, frameW: 128, frameH: 128, fps: [100, 180] },
-      dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 128, frameH: 128, fps: [80,  120] },
-      death:  { file: 'hero_hunter_death',  count: 2, frameW: 128, frameH: 128, fps: [150, 400] },
+      walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [350, 350] },
+      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 353, fps: [100, 180] },
+      block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180] },
+      dodge:  { file: 'hero_hunter_dodge',  count: 2, frameW: 353, frameH: 353, fps: [80,  120] },
+      death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400] },
     },
     // outros heróis usarão ANIM_DEFS quando tiverem assets
   },

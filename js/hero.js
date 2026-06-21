@@ -4,7 +4,7 @@ class Hero {
     this.worldX = 0;
     this.y      = CONFIG.canvas.groundY;
     this.width  = 40;
-    const heightByClass = { warrior: 130, hunter: 120, mage: 125, cleric: 120 };
+    const heightByClass = { warrior: 160, hunter: 160, mage: 160, cleric: 160 };
     this.height = heightByClass[heroClass] ?? 130;
 
     this.level      = 1;
