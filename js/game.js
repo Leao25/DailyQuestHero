@@ -626,6 +626,7 @@
         BG_STATE.offset        = 0;
         BG_STATE.currentPeriod = BG_STATE.nextPeriod;
         BG_STATE.nextPeriod    = null;
+        _showPeriodChangeBubble();
       }
     } else {
       ctx.drawImage(curImg, -BG_STATE.offset, drawY, W, H);
@@ -1180,7 +1181,28 @@
     hunter:    ['Karine me disse que a floresta fala... até agora só ouvi vento.'],
     mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
     cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
+    // Frases disparadas na mudança de período (crossfade)
+    periodChange: [
+      'O tempo aqui não segue nenhuma lógica...',
+      'Espera... já anoiteceu?',
+      'Essa floresta dobra o tempo como quer.',
+      'Sinto que o mundo pulou algumas horas.',
+      'Algo mudou no ar...',
+      'Nem percebi a hora passar.',
+      'Essa luz... isso é madrugada ou entardecer?',
+      'O sol sumiu rápido demais.',
+    ],
   };
+
+  function _showPeriodChangeBubble() {
+    if (!hero) return;
+    const pool = BUBBLE_PHRASES.periodChange;
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    const el   = document.getElementById('hero-bubble');
+    document.getElementById('hero-bubble-text').textContent = text;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 4500);
+  }
 
   let _bubbleTimer = null;
 
