@@ -10,7 +10,7 @@ const MOB_TYPES = {
     key:          'goblin',
     label:        'Goblin',
     spriteKey:    'mob_goblin',
-    spriteH:      110,
+    spriteH:      72,
     hp:           30,
     attack:       5,
     xpReward:     18,
@@ -496,23 +496,14 @@ class Mob {
     ctx.fillRect(sx - 14, fy,     28, 4);
 
     // sprite (animado ou estático)
-    if (hasSheet) {
-      MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, baseY, this.spriteH);
-    } else {
-      const drew = MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
-      if (!drew) this._drawFallback(ctx, sx, fy);
-    }
+    drawSprite();
 
     // flash de dano — glow branco
     if (this.flashTimer > 0) {
       ctx.save();
       ctx.shadowColor = `rgba(255,255,255,${this.flashTimer / 150})`;
       ctx.shadowBlur  = 14;
-      if (hasSheet) {
-        MobSprites.drawFrame(ctx, this.spriteKey, anim, this.animFrame, sx, baseY, this.spriteH);
-      } else {
-        MobSprites.draw(ctx, this.spriteKey, sx, baseY, this.spriteH);
-      }
+      drawSprite();
       ctx.restore();
     }
 
