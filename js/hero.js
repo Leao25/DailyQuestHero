@@ -17,7 +17,7 @@ class Hero {
     this.inventory      = [];
 
     // alcance, cadência e dano base por classe
-    const attackByClass   = { hunter: 12, mage: 18, warrior: 15, cleric: 9 };
+    const attackByClass   = { hunter: 7, mage: 18, warrior: 15, cleric: 9 };
     const rangeByClass    = { hunter: 280, mage: 320, warrior: 60, cleric: 65 };
     const cooldownByClass = { hunter: 1100, mage: 1600, warrior: 900, cleric: 1100 };
     this.attack     = attackByClass[heroClass] ?? CONFIG.hero.baseAttack;
@@ -203,11 +203,14 @@ class Hero {
     const bob  = this.state === 'walking' ? Math.sin(this.walkAnimTimer / 90) * 3 : 0;
     const baseY = fy + bob;
 
-    // sombra — alinhada com os pés (baseY + 44)
-    const shadowY = fy + 44;
+    // sombra — pulsa com o bob da animação
+    const shadowY     = fy + 44;
+    const shadowScale = 1 + bob * 0.04; // bob ±3 → escala ±12%
+    const sw1 = Math.round(44 * shadowScale);
+    const sw2 = Math.round(36 * shadowScale);
     ctx.fillStyle = 'rgba(0,0,0,0.32)';
-    ctx.fillRect(sx - 22, shadowY,     44, 8);
-    ctx.fillRect(sx - 18, shadowY - 2, 36, 4);
+    ctx.fillRect(sx - sw1 / 2, shadowY,     sw1, 8);
+    ctx.fillRect(sx - sw2 / 2, shadowY - 2, sw2, 4);
 
     const anim      = this._animName();
     const hasAnims  = !!Sprites.animSheets[this.heroClass];
