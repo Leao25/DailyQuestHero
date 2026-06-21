@@ -222,18 +222,14 @@ var Bag = {
 
     // posicionamento fixo relativo ao viewport
     popup.classList.remove('hidden');
-    const slotRect = slotEl.getBoundingClientRect();
-    const popupW   = 210;
-    const popupH   = popup.offsetHeight || 280;
-    const vw       = window.innerWidth;
-    const vh       = window.innerHeight;
+    const popupW  = 210;
+    const popupH  = popup.offsetHeight || 280;
+    const vh      = window.innerHeight;
+    const bagRect = document.getElementById('bag-modal').getBoundingClientRect();
 
-    // tenta à direita do slot; se não couber, vai à esquerda
-    let left = slotRect.right + 8;
-    if (left + popupW > vw - 8) left = slotRect.left - popupW - 8;
-
-    // alinha pelo topo do slot; se sair por baixo, sobe
-    let top = slotRect.top;
+    // sempre à esquerda da bag modal
+    const left = bagRect.left - popupW - 12;
+    let top = bagRect.top;
     if (top + popupH > vh - 8) top = vh - popupH - 8;
 
     popup.style.left = `${Math.max(8, left)}px`;
