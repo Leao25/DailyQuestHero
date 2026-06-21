@@ -48,9 +48,9 @@ body {
 #game-header {
   width: 1152px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 14px 0 0;
+  padding: 10px 24px 0;
   background: linear-gradient(180deg, #0a0610 0%, #100c1a 60%, #0e0b16 100%);
   border-left: 1px solid rgba(180,130,40,0.25);
   border-right: 1px solid rgba(180,130,40,0.25);
@@ -61,6 +61,7 @@ body {
     inset 0 1px 0 rgba(255,210,80,0.07),
     0 4px 24px rgba(180,120,20,0.12);
   position: relative;
+  transition: background 3s ease;
 }
 
 #game-header::after {
@@ -78,7 +79,7 @@ body {
 }
 
 #game-logo {
-  height: 180px;
+  height: 150px;
   width: auto;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -106,14 +107,28 @@ body {
 }
 
 #version-label {
-  position: absolute;
-  top: 6px;
-  right: 8px;
   font-family: 'Courier New', monospace;
   font-size: 10px;
-  color: rgba(255,255,255,0.22);
+  color: rgba(180,160,100,0.7);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   pointer-events: none;
-  z-index: 10;
+}
+
+#header-left {
+  min-width: 140px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: 6px;
+}
+
+#header-right {
+  min-width: 140px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding-bottom: 80px;
 }
 
 /* ---------- HUD ---------- */
@@ -281,13 +296,12 @@ body {
   background: none;
   border: none;
   box-shadow: none;
-  padding: 8px 4px;
-  height: fit-content;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 1px;
-  opacity: 0.72;
+  opacity: 0.85;
   pointer-events: none;
 }
 

@@ -296,13 +296,6 @@
       dy += gap;
     }
 
-    // versão
-    ctx.save();
-    ctx.font      = '10px monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.textAlign = 'right';
-    ctx.fillText('V0.1', CONFIG.canvas.width - 8, 14);
-    ctx.restore();
   }
 
   // mouse: hover e clique na tela de seleção

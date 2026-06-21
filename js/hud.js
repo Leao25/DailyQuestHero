@@ -169,6 +169,16 @@ const Hud = {
     };
     this.els.arcFill.style.width      = `${Math.round(Math.min(pct, 1) * 100)}%`;
     this.els.arcFill.style.background = arcColors[period.name] ?? '#888';
+
+    // gradiente do header muda com o período do dia
+    const headerBg = {
+      'Manhã':      'linear-gradient(180deg, #0a0e1a 0%, #0e1628 55%, #0a1020 100%)',
+      'Tarde':      'linear-gradient(180deg, #1a0e04 0%, #2a1608 55%, #1a0e04 100%)',
+      'Entardecer': 'linear-gradient(180deg, #1a0810 0%, #200a1a 55%, #140616 100%)',
+      'Noite':      'linear-gradient(180deg, #04060e 0%, #06080e 55%, #020408 100%)',
+    };
+    const header = document.getElementById('game-header');
+    if (header) header.style.background = headerBg[period.name] ?? headerBg['Noite'];
   },
 
   logEvent(message, type = 'info') {
