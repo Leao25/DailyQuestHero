@@ -92,7 +92,6 @@ const Sprites = {
       const dh    = def.frameH * scale;
       const drawY = baseY - dh + (def.groundOffset ?? 0);
 
-      ctx.clearRect(cx - dw / 2, drawY, dw, dh);
       ctx.save();
       ctx.imageSmoothingEnabled = false;
       if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;

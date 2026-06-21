@@ -1038,6 +1038,8 @@
 
   function draw(period, deltaMs) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
 
     const shake = Effects.getShakeOffset();
     ctx.save();
