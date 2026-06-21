@@ -56,7 +56,7 @@
 
   const CLASS_KEYS = Object.keys(Sprites.CLASSES);
   const SLOT_W     = CONFIG.canvas.width / CLASS_KEYS.length; // 192px
-  const SPRITE_H   = 100; // altura de exibição na tela de seleção
+  const SPRITE_H   = 180; // altura de exibição na tela de seleção
   const CONFIRM_BTN = { x: 380, y: 490, w: 200, h: 38 };
 
   function drawClassSelect(timestamp) {
