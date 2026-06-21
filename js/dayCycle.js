@@ -1,19 +1,14 @@
 // ============================================================
-// dayCycle.js — 4 períodos: Manhã · Tarde · Entardecer · Noite
+// dayCycle.js — Relógio de jogo: 1s real = 1min de jogo
+// Hora inicial sorteada dentro do período, com margem de 55min
+// para nunca ultrapassar o fim do período no mesmo BG.
 // ============================================================
 
 const DayCycle = {
 
-  // ----------------------------------------------------------
-  // MODO DE TESTE: ciclo de 4 minutos (1 min por período)
-  // Para versão final, comente o bloco TEST e descomente REAL
-  // ----------------------------------------------------------
-
-  // REAL — hora do relógio do PC
-  _getSimulatedHour() { return new Date().getHours(); },
-
-  // REAL — descomente para versão final
-  // _getRealHour() { return new Date().getHours(); },
+  // Hora atual em minutos (ex: 11h30 = 690)
+  _gameMinutes: 0,
+  _lastRealMs:  0,
 
   PERIODS: {
     'Manhã':      { name: 'Manhã',      key: 'morning',   icon: '🌅', skyTop: '#ffd89b', skyBottom: '#f9a857', groundTint: '#3a5a32', ambientAlpha: 0 },
@@ -22,17 +17,45 @@ const DayCycle = {
     'Noite':      { name: 'Noite',      key: 'night',     icon: '🌙', skyTop: '#05050f', skyBottom: '#101030', groundTint: '#10180f', ambientAlpha: 0.45 },
   },
 
+  // Limites de sorteio por período (início e máximo = fim - 55min)
+  _PERIOD_RANGES: {
+    'Manhã':      { startH: 6,  startM: 0,  endH: 11, endM: 5  },
+    'Tarde':      { startH: 12, startM: 0,  endH: 17, endM: 5  },
+    'Entardecer': { startH: 18, startM: 0,  endH: 21, endM: 5  },
+    'Noite':      { startH: 22, startM: 0,  endH: 29, endM: 5  }, // 29h = 05h05 do dia seguinte
+  },
+
+  // Sorteia hora inicial para um período e inicializa o relógio
+  initForPeriod(periodName) {
+    const r = this._PERIOD_RANGES[periodName];
+    if (!r) return;
+    const startMin = r.startH * 60 + r.startM;
+    const endMin   = r.endH   * 60 + r.endM;
+    this._gameMinutes = startMin + Math.floor(Math.random() * (endMin - startMin));
+    this._lastRealMs  = performance.now();
+  },
+
+  // Avança o relógio — chamar a cada frame com deltaMs
+  tick(deltaMs) {
+    // 1000ms real = 1 minuto de jogo
+    this._gameMinutes += deltaMs / 1000;
+  },
+
+  // Retorna o período atual com base nos minutos de jogo
   getCurrentPeriod() {
-    const hour = this._getSimulatedHour();
+    const h = (this._gameMinutes / 60) % 24;
     const C = CONFIG.dayCycle;
-    if (hour >= C.morningStart && hour < C.afternoonStart) return this.PERIODS['Manhã'];
-    if (hour >= C.afternoonStart && hour < C.duskStart)    return this.PERIODS['Tarde'];
-    if (hour >= C.duskStart && hour < C.nightStart)        return this.PERIODS['Entardecer'];
+    if (h >= C.morningStart   && h < C.afternoonStart) return this.PERIODS['Manhã'];
+    if (h >= C.afternoonStart && h < C.duskStart)      return this.PERIODS['Tarde'];
+    if (h >= C.duskStart      && h < C.nightStart)     return this.PERIODS['Entardecer'];
     return this.PERIODS['Noite'];
   },
 
+  // Formata HH:MM para exibição no HUD
   getFormattedTime() {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  }
+    const totalMin = Math.floor(this._gameMinutes) % (24 * 60);
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  },
 };

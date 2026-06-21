@@ -395,6 +395,8 @@
     gameState = 'playing';
     canvas.style.cursor = 'default';
     scheduleNextSpawn(Date.now());
+    // inicializa relógio de jogo no período atual do BG
+    DayCycle.initForPeriod(DayCycle.getCurrentPeriod().name);
     Hud.showStats();
     Hud.setClass(selectedClass);
     Hud.updateHeroStats(hero);
@@ -742,6 +744,8 @@
         BG_STATE.offset        = 0;
         BG_STATE.currentPeriod = BG_STATE.nextPeriod;
         BG_STATE.nextPeriod    = null;
+        // reinicia relógio com hora aleatória dentro do novo período
+        DayCycle.initForPeriod(BG_STATE.currentPeriod.name);
         _showPeriodChangeBubble();
       }
     } else {
@@ -1259,6 +1263,8 @@
     const deltaMs = lastTimestamp ? timestamp - lastTimestamp : 0;
     lastTimestamp = timestamp;
 
+    // avança relógio de jogo (1s real = 1min jogo)
+    if (gameState === 'playing') DayCycle.tick(deltaMs);
     // relógio sempre atualizado (visível em todas as telas)
     Hud.updateClock(DayCycle.getCurrentPeriod());
 

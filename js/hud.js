@@ -145,22 +145,19 @@ const Hud = {
   },
 
   updateClock(period) {
-    const now = DayCycle._forcedHour !== null
-      ? DayCycle._forcedHour
-      : new Date().getHours() + new Date().getMinutes() / 60;
     this.els.clockTime.textContent  = DayCycle.getFormattedTime();
-
     this.els.periodName.textContent = period.name;
 
-    // Progresso dentro do período atual (0–1)
+    // Progresso dentro do período atual usando minutos de jogo
     const C = CONFIG.dayCycle;
     const PERIODS = [
-      { start: C.morningStart,   end: C.afternoonStart }, // Manhã      06–12
-      { start: C.afternoonStart, end: C.duskStart      }, // Tarde      12–18
-      { start: C.duskStart,      end: C.nightStart     }, // Entardecer 18–22
-      { start: C.nightStart,     end: 24               }, // Noite      22–24
+      { start: C.morningStart,   end: C.afternoonStart },
+      { start: C.afternoonStart, end: C.duskStart      },
+      { start: C.duskStart,      end: C.nightStart     },
+      { start: C.nightStart,     end: 24               },
     ];
-    const h = new Date().getHours() + new Date().getMinutes() / 60;
+    const totalMin = Math.floor(DayCycle._gameMinutes) % (24 * 60);
+    const h = (totalMin / 60) % 24;
     const seg = PERIODS.find(p => h >= p.start && h < p.end) ?? PERIODS[3];
     const pct = (h - seg.start) / (seg.end - seg.start);
 
