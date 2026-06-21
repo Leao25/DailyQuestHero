@@ -109,7 +109,7 @@ const MOB_TYPES = {
 };
 
 // Pool disponível na Fase 1 (sem demônio)
-const PHASE1_POOL = ['goblin', 'wolf', 'orc', 'skeleton'];
+const PHASE1_POOL = ['goblin']; // wolf, orc, skeleton desativados temporariamente
 
 function pickMobType(heroLevel, period) {
   const eligible = PHASE1_POOL
