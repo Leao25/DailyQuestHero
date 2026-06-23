@@ -136,9 +136,9 @@ const ITEM_CATALOG = {
   leather_armor: {
     id: 'leather_armor', name: 'Armadura de Couro',
     type: 'armor', rarity: 'comum', slot: 'armor',
-    desc: 'Proteção básica de couro curtido. Reduz 1–3 de dano por ataque recebido.',
+    desc: 'Proteção básica de couro curtido.',
     value: 18, tradable: true, icon: '🧥', img: 'itm_brown_leather_armor.png',
-    bonus: { armorReduction: 3 },
+    bonus: { maxHp: 15 },
   },
   wolf_cape: {
     id: 'wolf_cape', name: 'Capa de Lobo',
@@ -197,8 +197,8 @@ const ITEM_CATALOG = {
     id: 'fang_necklace', name: 'Colar de Presas',
     type: 'accessory', rarity: 'raro', slot: 'accessory',
     desc: 'Colar feito de presas de lobo. Aumenta a ferocidade.',
-    value: 75, tradable: true, icon: '📿', img: 'itm_fangs_necklace.png',
-    bonus: { maxHp: 20 },
+    value: 75, tradable: true, icon: '📿', img: 'itm_wolf_fangs_necklace.png',
+    bonus: { attack: 4, maxHp: 5 },
   },
   forest_key: {
     id: 'forest_key', name: 'Chave do Portão da Floresta',
@@ -220,17 +220,17 @@ const ITEM_CATALOG = {
 // ── Tabela de drops por tipo de mob ──────────────────────────
 const MOB_DROP_TABLE = {
   goblin: [
-    { itemId: 'forest_herb',   chance: 0.10 },
-    { itemId: 'goblin_coin',   chance: 0.05 },
+    { itemId: 'forest_herb',   chance: 0.05 },
+    { itemId: 'goblin_coin',   chance: 0.02 },
     //{ itemId: 'forest_key',    chance: 0.00 },
     //{ itemId: 'wooden_sword',  chance: 0.12 },
     //{ itemId: 'minor_potion',  chance: 0.08 },
     //{ itemId: 'ancient_coin',  chance: 0.02 },
   ],
   wolf: [
-    { itemId: 'forest_herb',   chance: 0.10 },
-    { itemId: 'wolf_pelt',     chance: 0.05 },
-    { itemId: 'wolf_fang',     chance: 0.05 },
+    { itemId: 'forest_herb',   chance: 0.05 },
+    { itemId: 'wolf_pelt',     chance: 0.02 },
+    { itemId: 'wolf_fang',     chance: 0.02 },
     //{ itemId: 'wolf_cape',     chance: 0.10 },
     { itemId: 'minor_potion',  chance: 0.02 },
     //{ itemId: 'fang_necklace', chance: 0.05 },
@@ -256,32 +256,10 @@ const MOB_DROP_TABLE = {
 };
 
 // ── Receitas de craft ─────────────────────────────────────────
-// id: identificador único da receita (usado para descobertas)
-// ingredients: [{ id, qty }] — até 3 ingredientes
-// result: id do item resultante
-// successChance: 0-1
+// { ingredient, qty, result, successChance (0-1) }
 const CRAFT_RECIPES = [
-  {
-    id: 'recipe_minor_potion',
-    ingredients: [{ id: 'forest_herb', qty: 10 }],
-    result: 'minor_potion',
-    successChance: 0.02,
-  },
-  {
-    id: 'recipe_leather_armor',
-    ingredients: [{ id: 'wolf_pelt', qty: 10 }],
-    result: 'leather_armor',
-    successChance: 1.00,
-  },
-  {
-    id: 'recipe_fang_necklace',
-    ingredients: [
-      { id: 'forest_herb', qty: 5  },
-      { id: 'wolf_fang',   qty: 10 },
-    ],
-    result: 'fang_necklace',
-    successChance: 1.00,
-  },
+  { ingredient: 'forest_herb', qty: 10, result: 'minor_potion',  successChance: 0.02 },
+  { ingredient: 'wolf_pelt',   qty: 10, result: 'leather_armor', successChance: 1.00 },
 ];
 
 // ── API pública ───────────────────────────────────────────────
@@ -311,15 +289,14 @@ const Items = {
   // Aplica bônus de um equipável no hero
   applyBonus(hero, item) {
     if (!item.bonus) return;
-    if (item.bonus.attack)        hero.attack        += item.bonus.attack;
-    if (item.bonus.maxHp)         { hero.maxHp += item.bonus.maxHp; hero.hp += item.bonus.maxHp; }
-    if (item.bonus.armorReduction) hero.armorReduction = (hero.armorReduction ?? 0) + item.bonus.armorReduction;
+    if (item.bonus.attack) hero.attack  += item.bonus.attack;
+    if (item.bonus.maxHp)  { hero.maxHp += item.bonus.maxHp; hero.hp += item.bonus.maxHp; }
   },
 
+  // Remove bônus ao desequipar
   removeBonus(hero, item) {
     if (!item.bonus) return;
-    if (item.bonus.attack)        hero.attack        = Math.max(1, hero.attack - item.bonus.attack);
-    if (item.bonus.maxHp)         { hero.maxHp = Math.max(1, hero.maxHp - item.bonus.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); }
-    if (item.bonus.armorReduction) hero.armorReduction = Math.max(0, (hero.armorReduction ?? 0) - item.bonus.armorReduction);
+    if (item.bonus.attack) hero.attack  = Math.max(1, hero.attack - item.bonus.attack);
+    if (item.bonus.maxHp)  { hero.maxHp = Math.max(1, hero.maxHp  - item.bonus.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); }
   },
 };

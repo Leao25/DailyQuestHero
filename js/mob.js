@@ -15,7 +15,7 @@ const MOB_TYPES = {
     hp:           30,
     attack:       5,
     xpReward:     5,
-    goldReward:   5,
+    goldReward:   2,
     attackRange:  100,
     approachSpeed:0.7,
     weight:       40,
@@ -27,16 +27,16 @@ const MOB_TYPES = {
     label:        'Lobo',
     spriteKey:    'mob_wolf',
     spriteH:      320,
-    hpBarOffset:  260,
+    hpBarOffset:  280,
     hp:           50,
     attack:       8,
-    xpReward:     30,
-    goldReward:   8,
+    xpReward:     10,
+    goldReward:   5,
     attackRange:  120,
     approachSpeed:1.0,
     weight:       25,
     periods:      ['Tarde', 'Entardecer', 'Noite'],
-    minLevel:     2,
+    minLevel:     4,
   },
   orc: {
     key:          'orc',
@@ -70,32 +70,38 @@ const MOB_TYPES = {
     periods:      ['Entardecer', 'Noite'],
     minLevel:     3,
   },
-  // Boss da Fase 1 — Guardião da Vila
-  village_guardian: {
-    key:          'village_guardian',
-    label:        'Guardião da Vila',
-    spriteKey:    'mob_orc',
-    spriteH:      110,
-    hpBarOffset:  0,
-    hp:           400,
-    attack:       22,
-    xpReward:     200,
-    goldReward:   100,
-    attackRange:  60,
-    approachSpeed:0.4,
+  goblin_rider: {
+    key:          'goblin_rider',
+    label:        'Chefe Goblin',
+    spriteKey:    'mob_goblin_rider',
+    spriteH:      360,
+    hpBarOffset:  230,
+    hp:           100,
+    attack:       18,
+    xpReward:     150,
+    goldReward:   50,
+    attackRange:  400,
+    approachSpeed:0.8,
     weight:       0,
     periods:      ['Noite'],
     minLevel:     10,
-    drops:        [],
     isBoss:       true,
+    isRanged:     true,
+    arrowOffsetY: 60,
   },
 };
 
-// Pool disponível na Fase 1 (sem demônio)
+// Pool de mobs por fase
 const PHASE1_POOL = ['goblin', 'wolf'];
+const PHASE2_POOL = ['goblin', 'wolf']; // placeholder — trocar pelos mobs da floresta quando prontos
+
+let _currentPhasePool = PHASE1_POOL;
+function setMobPhasePool(phase) {
+  _currentPhasePool = phase === 'forest' ? PHASE2_POOL : PHASE1_POOL;
+}
 
 function pickMobType(heroLevel, period) {
-  const eligible = PHASE1_POOL
+  const eligible = _currentPhasePool
     .map(k => MOB_TYPES[k])
     .filter(t => heroLevel >= t.minLevel && t.periods.includes(period));
 
@@ -135,6 +141,11 @@ const MobSprites = {
     mob_wolf: {
       walk:   { file: 'mob_wolf_walk',   count: 4, frameH: 887, frameOffsets: [0, 473, 887, 1331], frameWidths: [473, 414, 444, 443], fps: [120, 120, 120, 120], groundOffset: 220, heightScale: 1.3 },
       attack: { file: 'mob_wolf_attack', count: 2, frameH: 887, frameOffsets: [0, 848], frameWidths: [848, 926], fps: [300, 300], groundOffset: 140, heightScale: 0.7 },
+    },
+    mob_goblin_rider: {
+      walk:   { file: 'mob_goblin_rider_walk',   count: 4, frameH: 887, frameOffsets: [0, 430, 866, 1338], frameWidths: [430, 436, 472, 436], fps: [130, 130, 130, 130], groundOffset: 240, heightScale: 1.4 },
+      attack: { file: 'mob_goblin_rider_attack', count: 2, frameH: 887, frameOffsets: [0, 887], frameWidths: [887, 887], fps: [300, 400], groundOffset: 120, heightScale: 0.7 },
+      idle:   { file: 'mob_goblin_rider',        count: 2, frameH: 887, frameOffsets: [0, 887], frameWidths: [887, 887], fps: [600, 600], groundOffset: 200, heightScale: 1.2 },
     },
   },
 
@@ -430,19 +441,20 @@ class Mob {
     const distance = Math.abs(this.worldX - hero.worldX);
     if (distance <= this.attackRange) {
       this.state = 'attacking';
-      this._advanceAnim(deltaMs);
-      return;
+    } else {
+      this.state = 'walking';
     }
 
-
-    this.state = 'walking';
-    this.walkAnimTimer += deltaMs;
     this._advanceAnim(deltaMs);
-    const dir = hero.worldX > this.worldX ? 1 : -1;
-    const speed = this.approachSpeed * (this.speedBoostTimer > 0 ? 2.0 : 1.0);
-    this.worldX += dir * speed * (deltaMs / 16.67);
-    const minDist = this.attackRange - 2;
-    if (this.worldX < hero.worldX + minDist) this.worldX = hero.worldX + minDist;
+
+    if (this.state === 'walking') {
+      this.walkAnimTimer += deltaMs;
+      const dir = hero.worldX > this.worldX ? 1 : -1;
+      const speed = this.approachSpeed * (this.speedBoostTimer > 0 ? 2.0 : 1.0);
+      this.worldX += dir * speed * (deltaMs / 16.67);
+      const minDist = this.attackRange - 2;
+      if (this.worldX < hero.worldX + minDist) this.worldX = hero.worldX + minDist;
+    }
   }
 
   canAttack(now)     { return now - this.lastAttackTime >= CONFIG.mob.attackCooldownMs; }
@@ -514,6 +526,10 @@ class Mob {
     this._drawHpBar(ctx, sx, fy);
   }
 
+  getHpBarY(fy) {
+    return fy - this.spriteH + (this.type.hpBarOffset ?? 0);
+  }
+
   _drawHpBar(ctx, sx, fy) {
     const segments  = Math.ceil(this.maxHp / 10);
     const segW      = 12;
@@ -521,7 +537,17 @@ class Mob {
     const barH      = 8;
     const totalW    = segments * segW + (segments - 1) * gap;
     const barX      = sx - totalW / 2;
-    const barY      = fy - this.spriteH + (this.type.hpBarOffset ?? 0);
+    const barY      = this.getHpBarY(fy);
+
+    // nome do mob acima da barra
+    ctx.save();
+    ctx.font = 'bold 10px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillText(this.type.label, sx + 1, barY - 3);
+    ctx.fillStyle = '#f0e0b0';
+    ctx.fillText(this.type.label, sx, barY - 4);
+    ctx.restore();
 
     for (let i = 0; i < segments; i++) {
       const segStart = i * 10;

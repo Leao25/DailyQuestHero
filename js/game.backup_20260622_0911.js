@@ -24,46 +24,26 @@
   let nextSpawnAt   = 0;
 
   // Portal da Fase 1
-  const PORTAL_WORLD_X  = 2800;   // posição fixa na vila
+  const PORTAL_WORLD_X  = 2800;   // posição fixa na floresta
   let   portalActive    = false;   // true após todas as gems consumidas
   let   portalOpenAt    = null;    // timestamp em que o portal apareceu
   let   bossSpawned     = false;   // uma vez por sessão
   let   phase2Triggered = false;
-  let   bossIntro       = null;   // { phase: 'sounds'|'walking'|'speech'|'done', t: 0, boss: Mob }
 
   // ============================================================
   // BACKGROUNDS — uma imagem por período do dia
   // ============================================================
 
   const BG_IMAGES = {};
-  const BG_MAPS = {
-    village: {
-      'Manhã':      'bg_village_morning',
-      'Tarde':      'bg_village_afternoon',
-      'Entardecer': 'bg_village_dusk',
-      'Noite':      'bg_village_night',
-    },
-    forest: {
-      'Manhã':      'bg_forest_morning',
-      'Tarde':      'bg_forest_afternoon',
-      'Entardecer': 'bg_forest_dusk',
-      'Noite':      'bg_forest_night',
-    },
+  const BG_MAP = {
+    'Manhã':      'bg_forest_morning',
+    'Tarde':      'bg_forest_afternoon',
+    'Entardecer': 'bg_forest_dusk',
+    'Noite':      'bg_forest_night',
   };
 
-  let currentPhase = 'village';
-  let BG_MAP = BG_MAPS.village;
-
-  // transição de fase
-  let phaseTransition = null; // { state: 'fadeOut'|'title'|'fadeIn', t: 0, phaseName: '' }
-
   function loadBackgrounds() {
-    Object.values(BG_MAPS.village).forEach(name => {
-      const img = new Image();
-      img.src = `assets/backgrounds/${name}.png`;
-      BG_IMAGES[name] = img;
-    });
-    Object.values(BG_MAPS.forest).forEach(name => {
+    Object.values(BG_MAP).forEach(name => {
       const img = new Image();
       img.src = `assets/backgrounds/${name}.png`;
       BG_IMAGES[name] = img;
@@ -77,14 +57,13 @@
   const CLASS_KEYS = Object.keys(Sprites.CLASSES);
   const SLOT_W     = CONFIG.canvas.width / CLASS_KEYS.length; // 192px
   const SPRITE_H   = 180; // altura de exibição na tela de seleção
-  const CONFIRM_BTN = { x: 476, y: 588, w: 200, h: 38 };
+  const CONFIRM_BTN = { x: 380, y: 490, w: 200, h: 38 };
 
   // Pop-up de confirmação de reset de progresso
   let deleteConfirmVisible = false;
-  const DELETE_YES = { x: 330, y: 310, w: 130, h: 36 };
-  const DELETE_NO  = { x: 500, y: 310, w: 130, h: 36 };
+  const DELETE_YES = { x: 350, y: 300, w: 100, h: 34 };
+  const DELETE_NO  = { x: 510, y: 300, w: 100, h: 34 };
   let deleteTrashHover = false;
-  const CS_OFFSET = 60;
 
   function drawClassSelect(timestamp) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
@@ -110,21 +89,22 @@
     ctx.save();
     ctx.textAlign = 'center';
     // barra de título
-    const titleGrad = ctx.createLinearGradient(280, 0, 680, 0);
+    const titleGrad = ctx.createLinearGradient(280, 28, 680, 28);
     titleGrad.addColorStop(0,   'rgba(90,60,20,0)');
     titleGrad.addColorStop(0.3, 'rgba(120,80,20,0.85)');
     titleGrad.addColorStop(0.7, 'rgba(120,80,20,0.85)');
     titleGrad.addColorStop(1,   'rgba(90,60,20,0)');
     ctx.fillStyle = titleGrad;
-    ctx.fillRect(0, CS_OFFSET, CONFIG.canvas.width, 46);
-    // borda inferior do título
+    ctx.fillRect(0, 14, CONFIG.canvas.width, 46);
+    // borda superior e inferior do título
     ctx.fillStyle = 'rgba(200,160,60,0.5)';
-    ctx.fillRect(0, CS_OFFSET + 44, CONFIG.canvas.width, 2);
+    ctx.fillRect(0, 14, CONFIG.canvas.width, 2);
+    ctx.fillRect(0, 58, CONFIG.canvas.width, 2);
     // texto
-    ctx.font      = 'bold 20px "Courier New", monospace';
+    ctx.font      = 'bold 15px "Courier New", monospace';
     ctx.fillStyle = '#f0d070';
     ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 10;
-    ctx.fillText('⚔  Seleção de Herói  ⚔', CONFIG.canvas.width / 2, CS_OFFSET + 30);
+    ctx.fillText('⚔  Seleção de Herói  ⚔', CONFIG.canvas.width / 2, 46);
     ctx.shadowBlur = 0;
     ctx.restore();
 
@@ -138,27 +118,27 @@
 
       // fundo do slot
       if (isSelected) {
-        const sg = ctx.createLinearGradient(slotX, CS_OFFSET + 70, slotX, CS_OFFSET + 440);
+        const sg = ctx.createLinearGradient(slotX, 70, slotX, 440);
         sg.addColorStop(0, `${cls.color}44`);
         sg.addColorStop(1, `${cls.color}11`);
         ctx.fillStyle = sg;
-        ctx.fillRect(slotX, CS_OFFSET + 70, SLOT_W, 370);
+        ctx.fillRect(slotX, 70, SLOT_W, 370);
         // borda lateral esquerda iluminada
         ctx.fillStyle = cls.color + 'cc';
-        ctx.fillRect(slotX, CS_OFFSET + 70, 2, 370);
+        ctx.fillRect(slotX, 70, 2, 370);
       } else if (isHovered) {
         ctx.fillStyle = 'rgba(255,255,255,0.04)';
-        ctx.fillRect(slotX, CS_OFFSET + 70, SLOT_W, 370);
+        ctx.fillRect(slotX, 70, SLOT_W, 370);
       }
 
       // separador entre slots
       if (idx > 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fillRect(slotX, CS_OFFSET + 70, 1, 370);
+        ctx.fillRect(slotX, 70, 1, 370);
       }
 
       // sprite do herói
-      const spriteBaseY = CS_OFFSET + 330;
+      const spriteBaseY = 330;
       const breathBob   = isSelected ? Math.sin(timestamp / 600) * 4 : 0;
       Sprites.drawHero(ctx, key, centerX, spriteBaseY + breathBob, SPRITE_H, {
         glow:      isSelected,
@@ -169,9 +149,9 @@
       if (isSelected) {
         ctx.fillStyle = '#f0d070';
         ctx.beginPath();
-        ctx.moveTo(centerX - 8, CS_OFFSET + 78);
-        ctx.lineTo(centerX + 8, CS_OFFSET + 78);
-        ctx.lineTo(centerX,     CS_OFFSET + 90);
+        ctx.moveTo(centerX - 8, 78);
+        ctx.lineTo(centerX + 8, 78);
+        ctx.lineTo(centerX,     90);
         ctx.fill();
       }
 
@@ -181,13 +161,13 @@
       ctx.font      = `${isSelected ? 'bold ' : ''}12px "Courier New", monospace`;
       ctx.fillStyle = isSelected ? '#f0d070' : '#aaaaaa';
       if (isSelected) { ctx.shadowColor = cls.color; ctx.shadowBlur = 8; }
-      ctx.fillText(cls.label, centerX, CS_OFFSET + 360);
+      ctx.fillText(cls.label, centerX, 360);
       ctx.shadowBlur = 0;
       ctx.restore();
 
       // mini barras de atributos (só no selecionado)
       if (isSelected) {
-        drawStatBars(ctx, centerX, CS_OFFSET + 375, cls.stat, cls.color);
+        drawStatBars(ctx, centerX, 375, cls.stat, cls.color);
       }
 
       // badge de keygem consumida
@@ -198,7 +178,7 @@
         ctx.fillStyle = '#4ade80';
         ctx.shadowColor = '#4ade80';
         ctx.shadowBlur  = 6;
-        ctx.fillText('✅ Keygem · Fase 1', centerX, CS_OFFSET + 430);
+        ctx.fillText('✅ Keygem · Fase 1', centerX, 430);
         ctx.shadowBlur  = 0;
         ctx.restore();
       }
@@ -208,7 +188,7 @@
         const saved = SaveSystem.load();
         if (saved && saved.heroClass === key) {
           const tx = slotX + SLOT_W - 28;
-          const ty = CS_OFFSET + 78;
+          const ty = 78;
           ctx.save();
           ctx.font      = '18px "Courier New", monospace';
           ctx.textAlign = 'center';
@@ -231,7 +211,7 @@
       ctx.fillStyle = '#1a1228';
       ctx.strokeStyle = '#883333';
       ctx.lineWidth = 2;
-      const bx = 280, by = 220, bw = 400, bh = 160;
+      const bx = 280, by = 220, bw = 400, bh = 140;
       ctx.fillRect(bx, by, bw, bh);
       ctx.strokeRect(bx, by, bw, bh);
       // texto
@@ -244,21 +224,21 @@
       ctx.fillText('Level, XP, HP, itens e equipamentos serão zerados.', bx + bw / 2, by + 62);
       // botão Sim
       const yBtn = DELETE_YES;
-      ctx.fillStyle = '#1a2a1a';
-      ctx.strokeStyle = '#448844';
+      ctx.fillStyle = '#6a1a1a';
+      ctx.strokeStyle = '#ff4444';
       ctx.lineWidth = 2;
       ctx.fillRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
       ctx.strokeRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
       ctx.font = 'bold 14px "Courier New", monospace';
-      ctx.fillStyle = '#88cc88';
+      ctx.fillStyle = '#ff6666';
       ctx.fillText('Sim, excluir', yBtn.x + yBtn.w / 2, yBtn.y + 22);
       // botão Não
       const nBtn = DELETE_NO;
-      ctx.fillStyle = '#6a1a1a';
-      ctx.strokeStyle = '#ff4444';
+      ctx.fillStyle = '#1a2a1a';
+      ctx.strokeStyle = '#448844';
       ctx.fillRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
       ctx.strokeRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
-      ctx.fillStyle = '#ff6666';
+      ctx.fillStyle = '#88cc88';
       ctx.fillText('Cancelar', nBtn.x + nBtn.w / 2, nBtn.y + 22);
       ctx.restore();
     }
@@ -269,7 +249,7 @@
     ctx.textAlign = 'center';
     ctx.font      = '13px "Courier New", monospace';
     ctx.fillStyle = '#c0b090';
-    ctx.fillText(selCls.desc, CONFIG.canvas.width / 2, CS_OFFSET + 450);
+    ctx.fillText(selCls.desc, CONFIG.canvas.width / 2, 450);
     ctx.restore();
 
     // botão Confirmar
@@ -341,7 +321,7 @@
     const selIdx = CLASS_KEYS.indexOf(selectedClass);
     const trashX = selIdx * SLOT_W + SLOT_W - 28;
     deleteTrashHover = !deleteConfirmVisible &&
-      mx >= trashX - 14 && mx <= trashX + 14 && my >= CS_OFFSET + 78 && my <= CS_OFFSET + 102;
+      mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102;
 
     canvas.style.cursor = (hoveredClass || confirmHover || deleteTrashHover ||
       (deleteConfirmVisible && (
@@ -375,7 +355,7 @@
     const trashX = selIdx * SLOT_W + SLOT_W - 28;
     const saved = SaveSystem.load();
     if (saved && saved.heroClass === selectedClass &&
-        mx >= trashX - 14 && mx <= trashX + 14 && my >= CS_OFFSET + 78 && my <= CS_OFFSET + 102) {
+        mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102) {
       deleteConfirmVisible = true;
       return;
     }
@@ -399,12 +379,6 @@
       e.preventDefault();
       startGame();
     }
-    if (e.code === 'KeyS' && gameState === 'playing' && hero && !bossIntro) {
-      mobs = mobs.filter(m => m.state === 'dead');
-      const boss = new Mob(hero, DayCycle.getCurrentPeriod().name, 'goblin_rider');
-      boss.worldX = hero.worldX + 950;
-      bossIntro = { phase: 'sounds', t: 0, boss };
-    }
   });
 
   function startGame() {
@@ -416,18 +390,7 @@
     const saved = SaveSystem.load();
     if (saved && saved.heroClass === selectedClass) {
       SaveSystem.applyToHero(hero, saved);
-      // restaura fase salva
-      const savedPhase = saved.phase ?? 'village';
-      currentPhase = savedPhase;
-      BG_MAP = BG_MAPS[currentPhase];
-      setMobPhasePool(currentPhase);
-      BG_STATE.currentPeriod = null;
-      BG_STATE.offset = 0;
       Hud.logEvent(`Bem-vindo de volta, Lv.${hero.level}!`, 'info');
-    } else {
-      currentPhase = 'village';
-      BG_MAP = BG_MAPS.village;
-      setMobPhasePool('village');
     }
 
     // portal já ativo se todas as gems foram consumidas antes de entrar
@@ -440,7 +403,6 @@
     canvas.style.cursor = 'default';
     document.getElementById('quickbar').classList.remove('hidden');
     document.getElementById('volume-ctrl').classList.remove('hidden');
-    document.getElementById('menu-btns').style.visibility = 'visible';
     Bag._gameActive = true;
     Audio.startMusic();
     scheduleNextSpawn(Date.now());
@@ -449,16 +411,7 @@
     Hud.showStats();
     Hud.setClass(selectedClass);
     Hud.updateHeroStats(hero);
-
-    const PHASE_LABELS = { village: 'VILA — FASE 1', forest: 'FLORESTA — FASE 2' };
-    document.getElementById('zone-label').textContent = PHASE_LABELS[currentPhase] ?? 'VILA — FASE 1';
-
-    const zoneName = currentPhase === 'forest' ? 'FLORESTA' : 'VILA';
-    Hud.logEvent(`${Sprites.CLASSES[selectedClass].label} entrou na ${zoneName}!`, 'info');
-    const zt = document.getElementById('zone-title');
-    zt.textContent = zoneName;
-    zt.classList.remove('hidden');
-    setTimeout(() => zt.classList.add('hidden'), 2800);
+    Hud.logEvent(`${Sprites.CLASSES[selectedClass].label} entrou na Floresta!`, 'info');
   }
 
   // ---------- Spawn de mobs ----------
@@ -480,23 +433,20 @@
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
     const period    = (BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod()).name;
 
-    // Boss da Vila — Chefe Goblin
-    if (!bossSpawned &&
-      currentPhase === 'village' &&
+    // tenta spawnar o boss se condições forem atendidas
+    if (
+      !bossSpawned &&
       aliveMobs === 0 &&
-      hero.level >= 5 &&
-      MOB_TYPES.goblin_rider.periods.includes(period) &&
-      !hero.inventory.some(i => i.id === 'forest_key')
+      period === 'Noite' &&
+      hero.level >= 10 &&
+      !GemSystem.isConsumed(hero.heroClass)
     ) {
-      const roll = Math.random();
-      if (roll < 0.08) {
-        bossSpawned = true;
-        const boss = new Mob(hero, period, 'goblin_rider');
-        boss.worldX = hero.worldX + 950;
-        bossIntro = { phase: 'sounds', t: 0, boss };
-        scheduleNextSpawn(now);
-        return;
-      }
+      bossSpawned = true;
+      const boss = new Mob(hero, 'Noite', 'forest_guardian');
+      mobs.push(boss);
+      Hud.logEvent('⚠️ O Guardião da Floresta surgiu das sombras!', 'damage');
+      scheduleNextSpawn(now);
+      return;
     }
 
     const forceSpawn = (now - nextSpawnAt) > 6000 && aliveMobs < 1;
@@ -530,19 +480,17 @@
         Effects.spawnDamageNumber(x, y, damage, dmgOpts);
       };
 
-      const dmgY = mob.getHpBarY(mob.y) - 20;
-
       if (cls === 'hunter') {
         Audio.playArrow();
         const snapMx = mx;
-        const arrowY = hero.y - hero.height * 0.2; // altura das mãos da hunter
+        const arrowY = hero.y - hero.height * 0.42; // altura das mãos da hunter
         const snapMy = arrowY;                       // voa em linha reta horizontal
         Effects.spawnProjectile('arrow',
           CONFIG.hero.screenX + 20, arrowY,
           snapMx, snapMy,
           () => {
             if (mob.state === 'dead') return;
-            showDamage(snapMx, dmgY);
+            showDamage(snapMx, mob.y - mob.height - 8);
             Effects.spawnHitSparks(snapMx, snapMy);
           }
         );
@@ -553,47 +501,30 @@
           snapMx, snapMy,
           () => {
             if (mob.state === 'dead') return;
-            showDamage(snapMx, dmgY);
+            showDamage(snapMx, mob.y - mob.height - 8);
             Effects.spawnDeathBurst(snapMx, snapMy, ['#ff4400','#ff8800','#ffcc00','#ffffff']);
           }
         );
       } else {
-        showDamage(mx, dmgY);
+        showDamage(mx, mob.y - mob.height - 8);
         Effects.spawnHitSparks(mx, my);
       }
     },
     onMobAttack(mob, damage) {
-      if (mob.type.isRanged) {
-        Audio.playArrow();
-        const fromX = mob.getScreenX(hero) - 30;
-        const fromY = mob.y - (mob.type.arrowOffsetY ?? 90);
-        const toX   = CONFIG.hero.screenX;
-        const toY   = fromY;
-        Effects.spawnProjectile('arrow', fromX, fromY, toX, toY, () => {
-          Audio.playHunterHurt();
-          Effects.spawnDamageNumber(
-            toX + (Math.random() - 0.5) * 18,
-            hero.y - hero.height + 10, damage,
-            { color: '#ff8844', outline: '#441100' }
-          );
-          Effects.triggerShake(5, 200);
-        });
-      } else {
-        Audio.playMobMeleeAttack();
-        Audio.playHunterHurt();
-        Effects.spawnDamageNumber(
-          CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
-          hero.y - hero.height + 10, damage,
-          { color: '#ff8844', outline: '#441100' }
-        );
-        Effects.triggerShake(5, 200);
-      }
-      Hud.logEvent(`[${mob.type?.label ?? 'Mob'}] Você sofreu ${damage} de dano.`, 'damage');
+      Audio.playGoblinAttack();
+      Effects.spawnDamageNumber(
+        CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
+        hero.y - hero.height - 8, damage,
+        { color: '#ff8844', outline: '#441100' }
+      );
+      Audio.playHunterHurt();
+      Effects.triggerShake(5, 200);
+      Hud.logEvent(`Você sofreu ${damage} de dano.`, 'damage');
     },
     onDodge(hero) {
       Audio.playDodge();
       Effects.spawnDamageNumber(
-        CONFIG.hero.screenX, hero.y - hero.height + 10, 'ESQUIVA',
+        CONFIG.hero.screenX, hero.y - hero.height - 8, 'ESQUIVA',
         { color: '#80e0ff', outline: '#004488', size: 13, bold: true, prefix: '' }
       );
       Hud.logEvent('Esquivou!', 'info');
@@ -601,18 +532,18 @@
     onBlock(hero, damage) {
       Effects.spawnDamageNumber(
         CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
-        hero.y - hero.height + 10, damage,
+        hero.y - hero.height - 8, damage,
         { color: '#80e0ff', outline: '#004488' }
       );
       Effects.spawnDamageNumber(
-        CONFIG.hero.screenX, hero.y - hero.height - 8, 'BLOQUEIO',
+        CONFIG.hero.screenX, hero.y - hero.height - 28, 'BLOQUEIO',
         { color: '#a0d0ff', outline: '#003366', size: 12, bold: true, prefix: '' }
       );
       Hud.logEvent(`Bloqueou! ${damage} de dano.`, 'info');
     },
     onPassiveTrigger(cls, value) {
       const hx = CONFIG.hero.screenX;
-      const hy = hero.y - hero.height - 8;
+      const hy = hero.y - hero.height - 28;
       if (cls === 'hunter' && value === 'bonus_arrow') {
         // flecha bônus disparada ~350ms depois
         const targetMob = mobs.find(m => m.state !== 'dead');
@@ -631,7 +562,7 @@
                 if (targetMob.state === 'dead') return;
                 const dmg = Math.round(hero.attack * 0.8);
                 targetMob.takeDamage(dmg);
-                Effects.spawnDamageNumber(bx, targetMob.getHpBarY(targetMob.y) - 20, dmg,
+                Effects.spawnDamageNumber(bx, by - 8, dmg,
                   { color: '#88ffaa', outline: '#226633', size: 13 });
                 Effects.spawnHitSparks(bx, by);
               }
@@ -654,26 +585,16 @@
       Hud.updateHeroStats(hero);
     },
     onMobDeath(mob, drops, leveledUp, goldEarned = 0) {
-      if (mob.type.key === 'goblin_rider') { Audio.playWolfDeath(); Audio.playGoblinHurt(); }
-      else if (mob.type.key === 'wolf') Audio.playWolfDeath();
-      else Audio.playGoblinHurt();
+      Audio.playGoblinHurt();
       const mx = mob.getScreenX(hero);
       Effects.spawnDeathBurst(mx, mob.y, ['#4a6838', '#c23b3b', '#e07030', '#ffffff']);
-      const deathBarY = mob.getHpBarY(mob.y);
-      Effects.spawnXpNumber(mx, deathBarY - 20, mob.xpReward);
+      Effects.spawnXpNumber(mx, mob.y - mob.height - 24, mob.xpReward);
       if (goldEarned > 0) {
-        Effects.spawnDamageNumber(mx + 18, deathBarY - 35, `+${goldEarned}g`,
+        Effects.spawnDamageNumber(mx + 18, mob.y - mob.height - 40, `+${goldEarned}g`,
           { color: '#ffd700', outline: '#996600', size: 13 });
       }
       const goldStr = goldEarned > 0 ? `  +${goldEarned}g` : '';
       Hud.logEvent(`${mob.type.label} derrotado! +${mob.xpReward} XP${goldStr}`, 'info');
-
-      // boss morreu — efeito especial e permite respawn se chave não foi usada
-      if (mob.type.isBoss && mob.type.key === 'goblin_rider') {
-        Effects.spawnDeathBurst(mx, mob.y, ['#ffd700','#ff8800','#ffffff','#ffd700']);
-        bossSpawned = false;
-        Audio.stopBossMusic();
-      }
 
       // boost de velocidade nos mobs que estavam atrás do mob morto
       mobs.forEach(m => {
@@ -694,7 +615,7 @@
       }
 
       drops.forEach(item => {
-        if (item.id === 'forest_key') Audio.playDrop();
+        if (item.id === 'goblin_coin') Audio.playDrop();
         Hud.logEvent(`Item obtido: ${item.name} (${item.rarity})`, 'drop');
       });
       leveledUp.forEach(level => {
@@ -707,13 +628,12 @@
       });
 
       // salva progresso e atualiza bag
-      SaveSystem.save(hero, currentPhase);
+      SaveSystem.save(hero);
       Bag.refresh();
     },
     onHeroDeath() {
       Effects.triggerShake(10, 400);
 
-      Audio.stopBossMusic();
       setTimeout(() => {
         SaveSystem.delete();
         document.getElementById('death-overlay').classList.remove('hidden');
@@ -728,162 +648,15 @@
     return alive[0];
   }
 
-  function updateBossIntro(deltaMs) {
-    const bi = bossIntro;
-    bi.t += deltaMs;
-
-    if (bi.phase === 'sounds') {
-      if (bi.t === deltaMs) { // primeiro frame
-        Audio.stopMusic();
-        Audio.playBossSpawn();
-        Audio.playWolfSpawn();
-      }
-      if (bi.t >= 1800) { bi.phase = 'walking'; bi.t = 0; }
-
-    } else if (bi.phase === 'walking') {
-      const dist = bi.boss.worldX - hero.worldX;
-      if (dist > 600) {
-        // ainda longe — anda em direção ao herói
-        bi.boss.worldX -= 0.4 * (deltaMs / 16.67);
-        bi.boss.state = 'walking';
-        bi.boss._advanceAnim(deltaMs);
-      } else {
-        // chegou perto o suficiente — aguarda 1s parado e dispara fala
-        bi.boss.state = 'idle';
-        bi.boss._advanceAnim(deltaMs);
-        if (bi.t >= 1000) { bi.phase = 'speech'; bi.t = 0; }
-      }
-
-    } else if (bi.phase === 'speech') {
-      if (bi.t === deltaMs) { // primeiro frame da fala
-        Audio.playBossMusic();
-        // spawna 2 goblins atrás do boss
-        const period = (BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod()).name;
-        for (let i = 0; i < 2; i++) {
-          const g = new Mob(hero, period, 'goblin');
-          g.worldX = bi.boss.worldX + 100 + i * 120;
-          mobs.push(g);
-        }
-        mobs.push(bi.boss);
-        Hud.logEvent('⚠️ O Chefe Goblin apareceu!', 'damage');
-      }
-      if (bi.t >= 3200) { bi.phase = 'done'; bossIntro = null; }
-    }
-  }
-
-  function drawBossIntro(ctx, period) {
-    if (!bossIntro) return;
-    const bi = bossIntro;
-
-    // desenha o boss na tela durante a intro
-    if (bi.phase === 'walking' || bi.phase === 'speech') {
-      bi.boss.draw(ctx, hero, period);
-    }
-
-    // balão de fala na fase 'speech'
-    if (bi.phase === 'speech') {
-      const sx = bi.boss.getScreenX(hero);
-      const sy = bi.boss.getHpBarY(bi.boss.y) - 36;
-      const text = bi.t < 1600
-        ? 'Ah! Um forasteiro desavisado...'
-        : 'ATACAR!';
-      const pad = 10;
-      ctx.font = 'bold 11px "Courier New", monospace';
-      const tw = ctx.measureText(text).width;
-      const bw = tw + pad * 2;
-      const bh = 22;
-      const bx = sx - bw / 2;
-      const by = sy - bh;
-
-      ctx.save();
-      ctx.fillStyle = 'rgba(255,255,230,0.95)';
-      ctx.strokeStyle = '#443300';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(bx, by, bw, bh, 4);
-      ctx.fill();
-      ctx.stroke();
-      // ponteiro
-      ctx.beginPath();
-      ctx.moveTo(sx - 6, by + bh);
-      ctx.lineTo(sx + 6, by + bh);
-      ctx.lineTo(sx, by + bh + 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#221100';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, sx, by + bh / 2);
-      ctx.restore();
-    }
-  }
-
   function update(deltaMs, now) {
-    if (phaseTransition) { updatePhaseTransition(deltaMs); return; }
-    if (bossIntro) {
-      updateBossIntro(deltaMs);
-      if (bossIntro?.phase === 'walking') hero.update(deltaMs, null);
-      Effects.update(deltaMs);
-      return;
-    }
     spawnMobIfNeeded(now);
     const target = findActiveMobTarget();
     hero.update(deltaMs, target);
     mobs.forEach(mob => mob.update(deltaMs, hero, mobs));
     if (target) Combat.resolveTick(hero, target, now, combatCallbacks);
-    mobs.filter(m => m !== target && m.state !== 'dead' && Math.abs(m.worldX - hero.worldX) <= m.attackRange)
-        .forEach(m => Combat.resolveTick(hero, m, now, combatCallbacks));
     mobs = mobs.filter(m => !m.markedForRemoval);
     Effects.update(deltaMs);
     updatePortal(now);
-  }
-
-  function triggerPhaseTransition(newPhase, phaseName) {
-    mobs = [];
-    phaseTransition = { state: 'fadeOut', t: 0, newPhase, phaseName };
-  }
-
-  function updatePhaseTransition(deltaMs) {
-    const tr = phaseTransition;
-    tr.t += deltaMs;
-
-    if (tr.state === 'fadeOut' && tr.t >= 600) {
-      currentPhase = tr.newPhase;
-      BG_MAP = BG_MAPS[currentPhase];
-      setMobPhasePool(currentPhase);
-      BG_STATE.currentPeriod = null;
-      BG_STATE.offset = 0;
-      const PHASE_LABELS = { village: 'VILA — FASE 1', forest: 'FLORESTA — FASE 2' };
-      document.getElementById('zone-label').textContent = PHASE_LABELS[currentPhase] ?? 'VILA — FASE 1';
-      SaveSystem.save(hero, currentPhase);
-      tr.state = 'fadeIn';
-      tr.t = 0;
-    } else if (tr.state === 'fadeIn') {
-      if (tr.t >= 200 && !tr.titleShown) {
-        // mostra o título assim que o bg começa a aparecer
-        tr.titleShown = true;
-        const zt = document.getElementById('zone-title');
-        zt.textContent = tr.phaseName;
-        zt.classList.remove('hidden');
-        setTimeout(() => zt.classList.add('hidden'), 2800);
-      }
-      if (tr.t >= 800) phaseTransition = null;
-    }
-  }
-
-  function drawPhaseTransition() {
-    if (!phaseTransition) return;
-    const tr = phaseTransition;
-    let alpha = 0;
-    if (tr.state === 'fadeOut') alpha = Math.min(tr.t / 600, 1);
-    else if (tr.state === 'fadeIn') alpha = 1 - Math.min(tr.t / 800, 1);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
-    ctx.restore();
   }
 
   function portalIsOpen(now) {
@@ -927,13 +700,11 @@
     crossfading:   false,
     fromOffset:    0,
     crossfadeT:    0,
-    currentPeriod: null,
-    nextPeriod:    null,
-    lastTile:      0,
-    periodTimer:   0,   // ms desde última mudança de período
+    currentPeriod: null, // período sendo exibido agora
+    nextPeriod:    null, // período que vai entrar no crossfade
   };
   const CROSSFADE_MS      = 800;
-  const PERIOD_CHANGE_MS  = 120000; // muda período a cada 120s
+  const CROSSFADE_TRIGGER = 0.82;
 
   function _pickRandomPeriod(excludeName) {
     const options = PERIOD_KEYS.filter(k => k !== excludeName);
@@ -955,34 +726,22 @@
 
     const CW    = CONFIG.canvas.width;
     const CH    = CONFIG.canvas.height;
-    const W     = CW * 1.0;
+    const W     = CW * 1.4;
     const H     = curImg.naturalHeight * (W / curImg.naturalWidth);
     const drawY = (CH - H) / 2;
+    const maxOff = W - CW;
+
     const sf    = 0.06;
     const speed = (hero && hero.walkSpeed) ? hero.walkSpeed : CONFIG.hero.walkSpeed;
     const advance = speed * (deltaMs / 16.67) * sf;
     if (!BG_STATE.crossfading) BG_STATE.offset += advance;
 
-    // Tiling infinito com módulo
-    const tileOff = BG_STATE.offset % W;
-
-    // Muda período a cada PERIOD_CHANGE_MS
-    if (!BG_STATE.crossfading) BG_STATE.periodTimer += deltaMs;
-    if (!BG_STATE.crossfading && BG_STATE.periodTimer >= PERIOD_CHANGE_MS) {
-      BG_STATE.periodTimer = 0;
-      BG_STATE.crossfading = true;
-      BG_STATE.fromOffset  = tileOff;
-      BG_STATE.crossfadeT  = 0;
-      BG_STATE.nextPeriod  = _pickRandomPeriod(cur.name);
-    }
-
-    function _drawTiled(img, xOff, alpha) {
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      const x1 = Math.floor(-xOff);
-      ctx.drawImage(img, x1, drawY, W + 1, H);
-      if (xOff > 0) ctx.drawImage(img, Math.floor(W - xOff), drawY, W + 1, H);
-      ctx.restore();
+    // Dispara crossfade com período aleatório
+    if (!BG_STATE.crossfading && BG_STATE.offset >= maxOff * CROSSFADE_TRIGGER) {
+      BG_STATE.crossfading  = true;
+      BG_STATE.fromOffset   = BG_STATE.offset;
+      BG_STATE.crossfadeT   = 0;
+      BG_STATE.nextPeriod   = _pickRandomPeriod(cur.name);
     }
 
     if (BG_STATE.crossfading) {
@@ -992,20 +751,31 @@
       const nxt    = BG_STATE.nextPeriod;
       const nxtImg = BG_IMAGES[BG_MAP[nxt.name] ?? BG_MAP['Tarde']];
 
-      _drawTiled(curImg, tileOff, 1 - t);
+      // BG atual saindo
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.drawImage(curImg, -BG_STATE.fromOffset, drawY, W, H);
+      ctx.restore();
+
+      // Novo BG entrando (se já carregou)
       if (nxtImg && nxtImg.complete && nxtImg.naturalWidth) {
-        _drawTiled(nxtImg, tileOff, t);
+        ctx.save();
+        ctx.globalAlpha = t;
+        ctx.drawImage(nxtImg, 0, drawY, W, H);
+        ctx.restore();
       }
 
       if (t >= 1) {
         BG_STATE.crossfading   = false;
+        BG_STATE.offset        = 0;
         BG_STATE.currentPeriod = BG_STATE.nextPeriod;
         BG_STATE.nextPeriod    = null;
+        // reinicia relógio com hora aleatória dentro do novo período
         DayCycle.initForPeriod(BG_STATE.currentPeriod.name);
         _showPeriodChangeBubble();
       }
     } else {
-      _drawTiled(curImg, tileOff, 1);
+      ctx.drawImage(curImg, -BG_STATE.offset, drawY, W, H);
     }
   }
 
@@ -1417,13 +1187,16 @@
     return `#${rr}${gg}${bb}`;
   }
 
+  function darken(hex, factor) {
+    return shadeColor(hex, factor);
+  }
+
   // ============================================================
   // RENDER PRINCIPAL
   // ============================================================
 
   function draw(period, deltaMs) {
     // reset completo do contexto antes de cada frame
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.shadowBlur = 0;
@@ -1449,9 +1222,6 @@
     Effects.draw(ctx);
 
     ctx.restore();
-
-    drawPhaseTransition();
-    drawBossIntro(ctx, period);
   }
 
   function drawPortal(camX) {
@@ -1557,14 +1327,14 @@
       'Quantos goblins já derrubei hoje?',
       'Preciso de um descanso.',
     ],
-    warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa vila vai precisar de mim?'],
-    hunter:    ['Sophia me disse que a vila guarda segredos... até agora só ouvi vento.'],
+    warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa floresta vai durar?'],
+    hunter:    ['Karine me disse que a floresta fala... até agora só ouvi vento.'],
     mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
     cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
     // Frases genéricas de mudança de período
     periodChange: [
       'O tempo aqui não segue nenhuma lógica...',
-      'Essa vila dobra o tempo como quer.',
+      'Essa floresta dobra o tempo como quer.',
       'Sinto que o mundo pulou algumas horas.',
       'Algo mudou no ar...',
       'Nem percebi a hora passar.',
@@ -1597,7 +1367,7 @@
   let _bubbleTimer = null;
 
   function _scheduleBubble() {
-    const delay = 40000 + Math.random() * 10000; // 40–50s
+    const delay = 18000 + Math.random() * 20000; // 18–38s
     _bubbleTimer = setTimeout(() => {
       if (gameState !== 'playing' || !hero) { _scheduleBubble(); return; }
       const pool = [...BUBBLE_PHRASES.all, ...(BUBBLE_PHRASES[hero.heroClass] ?? [])];
@@ -1622,17 +1392,8 @@
       Bag.closeBag();
       Bag.closeEquip();
       Bag.closeVault();
-      Hud.hideStats();
-      document.getElementById('hero-bubble').classList.add('hidden');
-      document.getElementById('quickbar').classList.add('hidden');
-      document.getElementById('volume-ctrl').classList.add('hidden');
-      document.getElementById('menu-btns').style.visibility = 'hidden';
       hero  = null;
       mobs  = [];
-      BG_STATE.offset = 0;
-      Effects._shake.timer = 0;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
       gameState = 'classSelect';
     });
 
@@ -1657,18 +1418,6 @@
       gameState       = 'classSelect';
     });
 
-    // hook para usar a chave da floresta via bag.js
-    window._onForestKeyUsed = () => {
-      if (currentPhase === 'forest') {
-        Hud.logEvent('Você já está na Floresta.', 'info');
-        return;
-      }
-      Bag.closeBag();
-      Bag.closeEquip();
-      triggerPhaseTransition('forest', 'FLORESTA');
-      Hud.logEvent('🗝️ O portão da floresta se abre...', 'levelup');
-    };
-
     // hook para quando todas as gems forem consumidas via bag.js
     window._onAllGemsConsumed = () => {
       portalActive = true;
@@ -1680,11 +1429,6 @@
     DayCycle.initForPeriod('Manhã');
     Sprites.load(() => {
       MobSprites.load(() => {
-        // mostra fase salva no header antes de entrar no jogo
-        const savedInit = SaveSystem.load();
-        const savedPhase = savedInit?.phase ?? 'village';
-        const PHASE_LABELS = { village: 'VILA — FASE 1', forest: 'FLORESTA — FASE 2' };
-        document.getElementById('zone-label').textContent = PHASE_LABELS[savedPhase] ?? 'VILA — FASE 1';
         gameState = 'classSelect';
       });
     });

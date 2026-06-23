@@ -5,7 +5,6 @@
 // ============================================================
 
 const SAVE_KEY = 'dqh_save_v1';
-const CRAFT_DISCOVERIES_KEY = 'dqh_craft_discoveries';
 
 const SaveSystem = {
 
@@ -40,24 +39,6 @@ const SaveSystem = {
 
   delete() {
     localStorage.removeItem(SAVE_KEY);
-  },
-
-  // ── Receitas descobertas ──────────────────────────────────
-  getDiscoveries() {
-    try { return JSON.parse(localStorage.getItem(CRAFT_DISCOVERIES_KEY)) ?? []; }
-    catch { return []; }
-  },
-
-  addDiscovery(recipeId) {
-    const list = this.getDiscoveries();
-    if (!list.includes(recipeId)) {
-      list.push(recipeId);
-      localStorage.setItem(CRAFT_DISCOVERIES_KEY, JSON.stringify(list));
-    }
-  },
-
-  clearDiscoveries() {
-    localStorage.removeItem(CRAFT_DISCOVERIES_KEY);
   },
 
   // Aplica dados salvos em uma instância de Hero já criada

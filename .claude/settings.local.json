@@ -20,7 +20,8 @@
       "Bash(npm install *)",
       "Bash(rm \"C:/Users/Pichau/DailyQuestHero/assets/backgrounds/\"*.png && echo \"Deletados\")",
       "Bash(node --check \"C:/Users/Pichau/DailyQuestHero/js/dayCycle.js\")",
-      "Bash(ls \"C:/Users/Pichau/Downloads/\" | grep -i hunter 2>/dev/null || ls \"C:/Users/Pichau/Desktop/\" | grep -i hunter 2>/dev/null)"
+      "Bash(ls \"C:/Users/Pichau/Downloads/\" | grep -i hunter 2>/dev/null || ls \"C:/Users/Pichau/Desktop/\" | grep -i hunter 2>/dev/null)",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\(\"C:\\\\Users\\\\Pichau\\\\DailyQuestHero\\\\assets\\\\sprites\\\\mob_goblin_attack.png\"\\); \"$\\($img.Width\\)x$\\($img.Height\\)\")"
     ]
   }
 }

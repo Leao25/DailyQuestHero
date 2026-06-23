@@ -67,8 +67,7 @@ var Bag = {
       if (e.key === 'b' || e.key === 'B') this.toggleBag();
       if (e.key === 'e' || e.key === 'E') this.toggleEquip();
       if (e.key === 'v' || e.key === 'V') this.toggleVault();
-      if (e.key === 'c' || e.key === 'C') this.toggleCraft();
-      if (e.key === 'Escape') { this.closeBag(); this.closeEquip(); this.closeVault(); this.closeCraft(); }
+      if (e.key === 'Escape') { this.closeBag(); this.closeEquip(); this.closeVault(); }
       if (e.key === '1' && this._gameActive) this._useQuickSlot(1);
       if (e.key === '2' && this._gameActive) this._useQuickSlot(2);
       if (e.key === '3' && this._gameActive) this._useQuickSlot(3);
@@ -89,8 +88,6 @@ var Bag = {
     // quick-use bar — drag & drop
     this._quickSlots = { 1: null, 2: null, 3: null };
     this._initQuickBar();
-
-    this._initCraft();
   },
 
   _initQuickBar() {
@@ -681,23 +678,9 @@ var Bag = {
       }
     });
 
-    // stats — destaca em dourado se há bônus de equipamento ativo
-    const baseAtk = CONFIG.hero.baseAttack;
-    const baseHp  = CONFIG.hero.baseMaxHp;
-
-    const atkEl = document.getElementById('equip-atk-val');
-    const hpEl  = document.getElementById('equip-hp-val');
-    const defEl = document.getElementById('equip-def-val');
-
-    atkEl.textContent = hero.attack ?? '—';
-    atkEl.classList.toggle('stat-boosted', (hero.attack ?? 0) > baseAtk);
-
-    hpEl.textContent = hero.maxHp ?? '—';
-    hpEl.classList.toggle('stat-boosted', (hero.maxHp ?? 0) > baseHp);
-
-    const def = hero.armorReduction ?? 0;
-    defEl.textContent = def > 0 ? `1–${def}` : '0';
-    defEl.classList.toggle('stat-boosted', def > 0);
+    // stats
+    document.getElementById('equip-atk-val').textContent = hero.attack ?? '—';
+    document.getElementById('equip-hp-val').textContent  = hero.maxHp  ?? '—';
 
     // desenha sprite do hero no canvas central
     this._drawHeroCanvas(hero);
@@ -719,264 +702,6 @@ var Bag = {
     ctx.scale(scale, scale);
     hero.draw(ctx);
     ctx.restore();
-  },
-
-  // ══════════════════════════════════════════════════════════
-  // CRAFT MENU
-  // ══════════════════════════════════════════════════════════
-
-  _craftOpen:  false,
-  _craftSlots: [null, null, null], // { item, qty }
-  _craftQtyPending: null, // { slotIdx, item }
-
-  _initCraft() {
-    document.getElementById('craft-btn')?.addEventListener('click', () => this.toggleCraft());
-    document.getElementById('craft-close').addEventListener('click', () => this.closeCraft());
-    document.getElementById('craft-overlay').addEventListener('click', e => {
-      if (e.target === document.getElementById('craft-overlay')) this.closeCraft();
-    });
-    document.getElementById('craft-execute-btn').addEventListener('click', () => this._executeCraftMenu());
-
-    // qty popup
-    document.querySelectorAll('.craft-qty-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const q = parseInt(btn.dataset.qty);
-        this._setCraftQty(q);
-        document.querySelectorAll('.craft-qty-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-    document.getElementById('craft-qty-ok').addEventListener('click',     () => this._confirmCraftQty());
-    document.getElementById('craft-qty-cancel').addEventListener('click', () => this._closeCraftQtyPopup());
-
-    // slots — clique para remover item
-    [0,1,2].forEach(i => {
-      document.getElementById(`craft-slot-${i}`).addEventListener('click', () => {
-        if (this._craftSlots[i]) { this._craftSlots[i] = null; this._renderCraftSlots(); }
-      });
-    });
-  },
-
-  toggleCraft() { this._craftOpen ? this.closeCraft() : this.openCraft(); },
-
-  openCraft() {
-    this._craftOpen = true;
-    this._craftSlots = [null, null, null];
-    document.getElementById('craft-overlay').classList.remove('hidden');
-    this._renderCraftBag();
-    this._renderCraftSlots();
-    this._renderCraftBook();
-  },
-
-  closeCraft() {
-    this._craftOpen = false;
-    document.getElementById('craft-overlay').classList.add('hidden');
-    this._closeCraftQtyPopup();
-  },
-
-  _renderCraftBag() {
-    const hero = this._getHero();
-    const grid = document.getElementById('craft-bag-grid');
-    grid.innerHTML = '';
-    if (!hero) return;
-
-    // agrupa por id
-    const counts = {};
-    hero.inventory.forEach(it => { counts[it.id] = (counts[it.id] ?? 0) + 1; });
-
-    Object.entries(counts).forEach(([id, qty]) => {
-      const item = Items.get(id);
-      if (!item) return;
-      const slot = document.createElement('div');
-      slot.className = 'craft-bag-slot';
-      slot.title = item.name;
-      if (item.img) {
-        const img = document.createElement('img');
-        img.src = `assets/items/${item.img}`;
-        slot.appendChild(img);
-      } else {
-        slot.textContent = item.icon ?? '?';
-      }
-      const qtyEl = document.createElement('span');
-      qtyEl.className = 'cbslot-qty';
-      qtyEl.textContent = qty > 1 ? qty : '';
-      slot.appendChild(qtyEl);
-
-      slot.addEventListener('click', () => this._onCraftBagSlotClick(item, qty));
-      grid.appendChild(slot);
-    });
-  },
-
-  _onCraftBagSlotClick(item, availQty) {
-    // encontra slot vazio
-    const freeIdx = this._craftSlots.findIndex(s => s === null);
-    if (freeIdx === -1) return;
-    this._craftQtyPending = { slotIdx: freeIdx, item, availQty };
-    this._craftQtyPending.selected = 1;
-    document.getElementById('craft-qty-title').textContent = item.name;
-    document.querySelectorAll('.craft-qty-btn').forEach(b => b.classList.remove('active'));
-    this._updateCraftQtyInfo();
-    document.getElementById('craft-qty-overlay').classList.remove('hidden');
-  },
-
-  _setCraftQty(qty) {
-    if (!this._craftQtyPending) return;
-    this._craftQtyPending.selected = qty;
-    this._updateCraftQtyInfo();
-  },
-
-  _updateCraftQtyInfo() {
-    const p = this._craftQtyPending;
-    const over = p.selected > p.availQty;
-    const info = document.getElementById('craft-qty-info');
-    info.textContent = `Selecionado: ${p.selected} / ${p.availQty} disponíveis`;
-    info.style.color = over ? '#ff5555' : '#888';
-    const ok = document.getElementById('craft-qty-ok');
-    ok.disabled = over;
-    ok.style.opacity = over ? '0.4' : '1';
-    ok.style.cursor  = over ? 'not-allowed' : 'pointer';
-  },
-
-  _confirmCraftQty() {
-    const p = this._craftQtyPending;
-    if (!p || p.selected < 1) { this._closeCraftQtyPopup(); return; }
-    this._craftSlots[p.slotIdx] = { item: p.item, qty: p.selected };
-    this._closeCraftQtyPopup();
-    this._renderCraftSlots();
-  },
-
-  _closeCraftQtyPopup() {
-    this._craftQtyPending = null;
-    document.getElementById('craft-qty-overlay').classList.add('hidden');
-  },
-
-  _renderCraftSlots() {
-    [0,1,2].forEach(i => {
-      const slot    = document.getElementById(`craft-slot-${i}`);
-      const qtyEl   = document.getElementById(`craft-slot-qty-${i}`);
-      const entry   = this._craftSlots[i];
-      slot.innerHTML = '';
-      slot.classList.remove('filled');
-      if (entry) {
-        slot.classList.add('filled');
-        if (entry.item.img) {
-          const img = document.createElement('img');
-          img.src = `assets/items/${entry.item.img}`;
-          slot.appendChild(img);
-        } else {
-          slot.textContent = entry.item.icon ?? '?';
-        }
-        qtyEl.textContent = `x${entry.qty}`;
-      } else {
-        slot.textContent = '+';
-        qtyEl.textContent = '—';
-      }
-    });
-    this._checkCraftMatch();
-  },
-
-  _checkCraftMatch() {
-    const filled = this._craftSlots.filter(Boolean);
-    const resultSlot = document.getElementById('craft-result-slot');
-    const resultName = document.getElementById('craft-result-name');
-    const btn = document.getElementById('craft-execute-btn');
-
-    const match = CRAFT_RECIPES.find(recipe => {
-      if (recipe.ingredients.length !== filled.length) return false;
-      return recipe.ingredients.every(ing =>
-        filled.some(s => s.item.id === ing.id && s.qty >= ing.qty)
-      );
-    });
-
-    if (match) {
-      const result = Items.get(match.result);
-      resultSlot.innerHTML = '';
-      if (result?.img) {
-        const img = document.createElement('img');
-        img.src = `assets/items/${result.img}`;
-        resultSlot.appendChild(img);
-      } else {
-        resultSlot.textContent = result?.icon ?? '?';
-      }
-      resultName.textContent = result?.name ?? match.result;
-      btn.classList.add('ready');
-      btn.disabled = false;
-      btn.dataset.recipeId = match.id;
-    } else {
-      resultSlot.textContent = '?';
-      resultName.textContent = '—';
-      btn.classList.remove('ready');
-      btn.disabled = true;
-      delete btn.dataset.recipeId;
-    }
-  },
-
-  _executeCraftMenu() {
-    const hero = this._getHero();
-    const recipeId = document.getElementById('craft-execute-btn').dataset.recipeId;
-    if (!hero || !recipeId) return;
-
-    const recipe = CRAFT_RECIPES.find(r => r.id === recipeId);
-    if (!recipe) return;
-
-    // verifica ingredientes no inventário
-    for (const ing of recipe.ingredients) {
-      const have = hero.inventory.filter(i => i.id === ing.id).length;
-      if (have < ing.qty) {
-        Hud.logEvent(`Ingredientes insuficientes: ${ing.qty}x ${Items.get(ing.id)?.name}`, 'damage');
-        return;
-      }
-    }
-
-    // consome ingredientes
-    for (const ing of recipe.ingredients) {
-      let removed = 0;
-      while (removed < ing.qty) {
-        const idx = hero.inventory.findIndex(i => i.id === ing.id);
-        if (idx === -1) break;
-        hero.inventory.splice(idx, 1);
-        removed++;
-      }
-    }
-
-    const resultItem = Items.get(recipe.result);
-    if (Math.random() < recipe.successChance) {
-      hero.inventory.push({ ...resultItem });
-      SaveSystem.addDiscovery(recipe.id);
-      Hud.logEvent(`✅ Craft: ${resultItem?.name} criado!`, 'info');
-    } else {
-      Hud.logEvent(`❌ Craft falhou! Materiais consumidos.`, 'damage');
-    }
-
-    SaveSystem.save(hero);
-    this._craftSlots = [null, null, null];
-    this._renderCraftBag();
-    this._renderCraftSlots();
-    this._renderCraftBook();
-    Hud.updateHeroStats(hero);
-  },
-
-  _renderCraftBook() {
-    const list = document.getElementById('craft-book-list');
-    list.innerHTML = '';
-    const discoveries = SaveSystem.getDiscoveries();
-    if (discoveries.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'craft-book-entry';
-      empty.textContent = 'Nenhuma receita descoberta ainda.';
-      list.appendChild(empty);
-      return;
-    }
-    discoveries.forEach(recipeId => {
-      const recipe = CRAFT_RECIPES.find(r => r.id === recipeId);
-      if (!recipe) return;
-      const entry = document.createElement('div');
-      entry.className = 'craft-book-entry';
-      const ings = recipe.ingredients.map(i => `${i.qty}x ${Items.get(i.id)?.name ?? i.id}`).join(' + ');
-      const result = Items.get(recipe.result)?.name ?? recipe.result;
-      entry.innerHTML = `${ings} → <span>${result}</span>`;
-      list.appendChild(entry);
-    });
   },
 
   _onEquipSlotClick(slot) {

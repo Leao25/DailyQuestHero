@@ -36,7 +36,10 @@ const Combat = {
 
     // ── Mob ataca herói ──────────────────────────────────────
     if (mobInRange && mob.state !== 'dead' && mob.canAttack(now)) {
-      const rawDamage = mob.performAttack(now);
+      let rawDamage = mob.performAttack(now);
+      if (hero.armorReduction) {
+        rawDamage = Math.max(1, rawDamage - (1 + Math.floor(Math.random() * hero.armorReduction)));
+      }
 
       // Esquiva (SPD): evita o dano completamente
       const dodgeRoll = Math.random();

@@ -81,7 +81,6 @@
     <!-- Botões de menu (bottom-right) -->
     <div id="menu-btns">
       <button id="equip-btn" title="Equipamentos (E)">⚔️</button>
-      <button id="craft-btn" title="Craft (C)">⚗️</button>
       <button id="bag-btn"   title="Mochila (B)">💼</button>
     </div>
 
@@ -220,73 +219,6 @@
     <!-- ═══════════════════════════════════════ -->
     <!-- MODAL: EQUIPAMENTOS                     -->
     <!-- ═══════════════════════════════════════ -->
-    <!-- ── Craft Menu ── -->
-    <div id="craft-overlay" class="hidden">
-      <div id="craft-modal">
-        <div id="craft-modal-title">
-          <span>⚗️ CRAFT</span>
-          <button id="craft-close">✕</button>
-        </div>
-        <div id="craft-modal-body">
-          <!-- Bag grid no topo -->
-          <div id="craft-bag-section">
-            <div id="craft-bag-label">Mochila — arraste itens para os slots</div>
-            <div id="craft-bag-grid"></div>
-          </div>
-          <!-- Slots de ingredientes + botão -->
-          <div id="craft-slots-section">
-            <div id="craft-slots">
-              <div class="craft-slot-wrap">
-                <div class="craft-slot-label">Slot 1</div>
-                <div class="craft-slot" id="craft-slot-0" data-idx="0">+</div>
-                <div class="craft-slot-qty" id="craft-slot-qty-0">—</div>
-              </div>
-              <div class="craft-slot-wrap">
-                <div class="craft-slot-label">Slot 2</div>
-                <div class="craft-slot" id="craft-slot-1" data-idx="1">+</div>
-                <div class="craft-slot-qty" id="craft-slot-qty-1">—</div>
-              </div>
-              <div class="craft-slot-wrap">
-                <div class="craft-slot-label">Slot 3</div>
-                <div class="craft-slot" id="craft-slot-2" data-idx="2">+</div>
-                <div class="craft-slot-qty" id="craft-slot-qty-2">—</div>
-              </div>
-            </div>
-            <div id="craft-arrow">➜</div>
-            <div id="craft-result-wrap">
-              <div id="craft-result-label">Resultado</div>
-              <div id="craft-result-slot">?</div>
-              <div id="craft-result-name">—</div>
-            </div>
-            <button id="craft-execute-btn" disabled>Craftar</button>
-          </div>
-          <!-- Livro de receitas -->
-          <div id="craft-book-section">
-            <div id="craft-book-label">📖 Receitas Descobertas</div>
-            <div id="craft-book-list"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Qty picker popup -->
-    <div id="craft-qty-overlay" class="hidden">
-      <div id="craft-qty-popup">
-        <div id="craft-qty-title">Quantidade</div>
-        <div id="craft-qty-btns">
-          <button class="craft-qty-btn" data-qty="5">+5</button>
-          <button class="craft-qty-btn" data-qty="10">+10</button>
-          <button class="craft-qty-btn" data-qty="50">+50</button>
-          <button class="craft-qty-btn" data-qty="100">+100</button>
-        </div>
-        <div id="craft-qty-info"></div>
-        <div id="craft-qty-actions">
-          <button id="craft-qty-ok">OK</button>
-          <button id="craft-qty-cancel">Cancelar</button>
-        </div>
-      </div>
-    </div>
-
     <div id="equip-overlay" class="hidden">
       <div id="equip-modal">
         <div id="equip-modal-title">
@@ -312,8 +244,6 @@
               <span id="equip-atk-val">—</span><span class="equip-stat-label"> ATK</span>
               &nbsp;·&nbsp;
               <span id="equip-hp-val">—</span><span class="equip-stat-label"> HP</span>
-              &nbsp;·&nbsp;
-              <span id="equip-def-val">0</span><span class="equip-stat-label"> DEF</span>
             </div>
           </div>
           <!-- Coluna direita -->
