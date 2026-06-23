@@ -110,11 +110,11 @@
     ctx.save();
     ctx.textAlign = 'center';
     // barra de título
-    const titleGrad = ctx.createLinearGradient(280, 0, 680, 0);
-    titleGrad.addColorStop(0,   'rgba(90,60,20,0)');
-    titleGrad.addColorStop(0.3, 'rgba(120,80,20,0.85)');
-    titleGrad.addColorStop(0.7, 'rgba(120,80,20,0.85)');
-    titleGrad.addColorStop(1,   'rgba(90,60,20,0)');
+    const titleGrad = ctx.createLinearGradient(0, 0, CONFIG.canvas.width, 0);
+    titleGrad.addColorStop(0,    'rgba(90,60,20,0)');
+    titleGrad.addColorStop(0.25, 'rgba(120,80,20,0.85)');
+    titleGrad.addColorStop(0.75, 'rgba(120,80,20,0.85)');
+    titleGrad.addColorStop(1,    'rgba(90,60,20,0)');
     ctx.fillStyle = titleGrad;
     ctx.fillRect(0, CS_OFFSET, CONFIG.canvas.width, 46);
     // borda inferior do título
