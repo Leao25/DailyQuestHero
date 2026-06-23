@@ -24,7 +24,7 @@
   let nextSpawnAt   = 0;
 
   // Portal da Fase 1
-  const PORTAL_WORLD_X  = 2800;   // posição fixa na floresta
+  const PORTAL_WORLD_X  = 2800;   // posição fixa na vila
   let   portalActive    = false;   // true após todas as gems consumidas
   let   portalOpenAt    = null;    // timestamp em que o portal apareceu
   let   bossSpawned     = false;   // uma vez por sessão
@@ -36,10 +36,10 @@
 
   const BG_IMAGES = {};
   const BG_MAP = {
-    'Manhã':      'bg_forest_morning',
-    'Tarde':      'bg_forest_afternoon',
-    'Entardecer': 'bg_forest_dusk',
-    'Noite':      'bg_forest_night',
+    'Manhã':      'bg_village_morning',
+    'Tarde':      'bg_village_afternoon',
+    'Entardecer': 'bg_village_dusk',
+    'Noite':      'bg_village_night',
   };
 
   function loadBackgrounds() {
@@ -57,12 +57,12 @@
   const CLASS_KEYS = Object.keys(Sprites.CLASSES);
   const SLOT_W     = CONFIG.canvas.width / CLASS_KEYS.length; // 192px
   const SPRITE_H   = 180; // altura de exibição na tela de seleção
-  const CONFIRM_BTN = { x: 380, y: 490, w: 200, h: 38 };
+  const CONFIRM_BTN = { x: 476, y: 588, w: 200, h: 38 };
 
   // Pop-up de confirmação de reset de progresso
   let deleteConfirmVisible = false;
-  const DELETE_YES = { x: 350, y: 300, w: 100, h: 34 };
-  const DELETE_NO  = { x: 510, y: 300, w: 100, h: 34 };
+  const DELETE_YES = { x: 426, y: 360, w: 100, h: 34 };
+  const DELETE_NO  = { x: 626, y: 360, w: 100, h: 34 };
   let deleteTrashHover = false;
 
   function drawClassSelect(timestamp) {
@@ -101,7 +101,7 @@
     ctx.fillRect(0, 14, CONFIG.canvas.width, 2);
     ctx.fillRect(0, 58, CONFIG.canvas.width, 2);
     // texto
-    ctx.font      = 'bold 26px monospace';
+    ctx.font      = 'bold 20px "Courier New", monospace';
     ctx.fillStyle = '#f0d070';
     ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 10;
     ctx.fillText('⚔  Seleção de Herói  ⚔', CONFIG.canvas.width / 2, 46);
@@ -158,7 +158,7 @@
       // nome da classe
       ctx.save();
       ctx.textAlign = 'center';
-      ctx.font      = `${isSelected ? 'bold ' : ''}16px monospace`;
+      ctx.font      = `${isSelected ? 'bold ' : ''}12px "Courier New", monospace`;
       ctx.fillStyle = isSelected ? '#f0d070' : '#aaaaaa';
       if (isSelected) { ctx.shadowColor = cls.color; ctx.shadowBlur = 8; }
       ctx.fillText(cls.label, centerX, 360);
@@ -173,7 +173,7 @@
       // badge de keygem consumida
       if (GemSystem.isConsumed(key)) {
         ctx.save();
-        ctx.font      = 'bold 10px monospace';
+        ctx.font      = 'bold 10px "Courier New", monospace';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#4ade80';
         ctx.shadowColor = '#4ade80';
@@ -190,7 +190,7 @@
           const tx = slotX + SLOT_W - 28;
           const ty = 78;
           ctx.save();
-          ctx.font      = '18px monospace';
+          ctx.font      = '18px "Courier New", monospace';
           ctx.textAlign = 'center';
           ctx.globalAlpha = deleteTrashHover ? 1.0 : 0.55;
           ctx.fillStyle   = deleteTrashHover ? '#ff4444' : '#cc8888';
@@ -216,10 +216,10 @@
       ctx.strokeRect(bx, by, bw, bh);
       // texto
       ctx.textAlign = 'center';
-      ctx.font = 'bold 15px monospace';
+      ctx.font = 'bold 15px "Courier New", monospace';
       ctx.fillStyle = '#f0d0d0';
       ctx.fillText('Excluir progresso deste herói?', bx + bw / 2, by + 38);
-      ctx.font = '12px monospace';
+      ctx.font = '12px "Courier New", monospace';
       ctx.fillStyle = '#aa8888';
       ctx.fillText('Level, XP, HP, itens e equipamentos serão zerados.', bx + bw / 2, by + 62);
       // botão Sim
@@ -229,7 +229,7 @@
       ctx.lineWidth = 2;
       ctx.fillRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
       ctx.strokeRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold 14px "Courier New", monospace';
       ctx.fillStyle = '#ff6666';
       ctx.fillText('Sim, excluir', yBtn.x + yBtn.w / 2, yBtn.y + 22);
       // botão Não
@@ -247,7 +247,7 @@
     const selCls = Sprites.CLASSES[selectedClass];
     ctx.save();
     ctx.textAlign = 'center';
-    ctx.font      = '13px monospace';
+    ctx.font      = '13px "Courier New", monospace';
     ctx.fillStyle = '#c0b090';
     ctx.fillText(selCls.desc, CONFIG.canvas.width / 2, 450);
     ctx.restore();
@@ -269,7 +269,7 @@
     ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
     ctx.save();
     ctx.textAlign = 'center';
-    ctx.font      = 'bold 16px monospace';
+    ctx.font      = 'bold 16px "Courier New", monospace';
     ctx.fillStyle = confirmHover ? '#ffe060' : '#d0a040';
     ctx.fillText('Confirmar', btn.x + btn.w / 2, btn.y + 25);
     ctx.restore();
@@ -290,7 +290,7 @@
       ctx.fillStyle = color;
       ctx.fillRect(bx, dy, barW * (val / maxVal), barH);
       ctx.fillStyle = '#888';
-      ctx.font = '10px monospace';
+      ctx.font = '10px "Courier New", monospace';
       ctx.textAlign = 'left';
       ctx.fillText(labels[key], bx - 28, dy + barH);
       dy += gap;
@@ -374,6 +374,12 @@
     }
   });
 
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && gameState === 'classSelect' && !deleteConfirmVisible) {
+      e.preventDefault();
+      startGame();
+    }
+  });
 
   function startGame() {
     hero          = new Hero(selectedClass);
@@ -405,7 +411,11 @@
     Hud.showStats();
     Hud.setClass(selectedClass);
     Hud.updateHeroStats(hero);
-    Hud.logEvent(`${Sprites.CLASSES[selectedClass].label} entrou na Floresta!`, 'info');
+    Hud.logEvent(`${Sprites.CLASSES[selectedClass].label} entrou na Vila!`, 'info');
+    const zt = document.getElementById('zone-title');
+    zt.textContent = 'VILA';
+    zt.classList.remove('hidden');
+    setTimeout(() => zt.classList.add('hidden'), 2800);
   }
 
   // ---------- Spawn de mobs ----------
@@ -436,9 +446,9 @@
       !GemSystem.isConsumed(hero.heroClass)
     ) {
       bossSpawned = true;
-      const boss = new Mob(hero, 'Noite', 'forest_guardian');
+      const boss = new Mob(hero, 'Noite', 'village_guardian');
       mobs.push(boss);
-      Hud.logEvent('⚠️ O Guardião da Floresta surgiu das sombras!', 'damage');
+      Hud.logEvent('⚠️ O Guardião da Vila surgiu das sombras!', 'damage');
       scheduleNextSpawn(now);
       return;
     }
@@ -694,11 +704,13 @@
     crossfading:   false,
     fromOffset:    0,
     crossfadeT:    0,
-    currentPeriod: null, // período sendo exibido agora
-    nextPeriod:    null, // período que vai entrar no crossfade
+    currentPeriod: null,
+    nextPeriod:    null,
+    lastTile:      0,
+    periodTimer:   0,   // ms desde última mudança de período
   };
   const CROSSFADE_MS      = 800;
-  const CROSSFADE_TRIGGER = 0.82;
+  const PERIOD_CHANGE_MS  = 120000; // muda período a cada 120s
 
   function _pickRandomPeriod(excludeName) {
     const options = PERIOD_KEYS.filter(k => k !== excludeName);
@@ -720,22 +732,34 @@
 
     const CW    = CONFIG.canvas.width;
     const CH    = CONFIG.canvas.height;
-    const W     = CW * 1.4;
+    const W     = CW * 1.0;
     const H     = curImg.naturalHeight * (W / curImg.naturalWidth);
     const drawY = (CH - H) / 2;
-    const maxOff = W - CW;
-
     const sf    = 0.06;
     const speed = (hero && hero.walkSpeed) ? hero.walkSpeed : CONFIG.hero.walkSpeed;
     const advance = speed * (deltaMs / 16.67) * sf;
     if (!BG_STATE.crossfading) BG_STATE.offset += advance;
 
-    // Dispara crossfade com período aleatório
-    if (!BG_STATE.crossfading && BG_STATE.offset >= maxOff * CROSSFADE_TRIGGER) {
-      BG_STATE.crossfading  = true;
-      BG_STATE.fromOffset   = BG_STATE.offset;
-      BG_STATE.crossfadeT   = 0;
-      BG_STATE.nextPeriod   = _pickRandomPeriod(cur.name);
+    // Tiling infinito com módulo
+    const tileOff = BG_STATE.offset % W;
+
+    // Muda período a cada PERIOD_CHANGE_MS
+    if (!BG_STATE.crossfading) BG_STATE.periodTimer += deltaMs;
+    if (!BG_STATE.crossfading && BG_STATE.periodTimer >= PERIOD_CHANGE_MS) {
+      BG_STATE.periodTimer = 0;
+      BG_STATE.crossfading = true;
+      BG_STATE.fromOffset  = tileOff;
+      BG_STATE.crossfadeT  = 0;
+      BG_STATE.nextPeriod  = _pickRandomPeriod(cur.name);
+    }
+
+    function _drawTiled(img, xOff, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const x1 = Math.floor(-xOff);
+      ctx.drawImage(img, x1, drawY, W + 1, H);
+      if (xOff > 0) ctx.drawImage(img, Math.floor(W - xOff), drawY, W + 1, H);
+      ctx.restore();
     }
 
     if (BG_STATE.crossfading) {
@@ -745,31 +769,20 @@
       const nxt    = BG_STATE.nextPeriod;
       const nxtImg = BG_IMAGES[BG_MAP[nxt.name] ?? BG_MAP['Tarde']];
 
-      // BG atual saindo
-      ctx.save();
-      ctx.globalAlpha = 1 - t;
-      ctx.drawImage(curImg, -BG_STATE.fromOffset, drawY, W, H);
-      ctx.restore();
-
-      // Novo BG entrando (se já carregou)
+      _drawTiled(curImg, tileOff, 1 - t);
       if (nxtImg && nxtImg.complete && nxtImg.naturalWidth) {
-        ctx.save();
-        ctx.globalAlpha = t;
-        ctx.drawImage(nxtImg, 0, drawY, W, H);
-        ctx.restore();
+        _drawTiled(nxtImg, tileOff, t);
       }
 
       if (t >= 1) {
         BG_STATE.crossfading   = false;
-        BG_STATE.offset        = 0;
         BG_STATE.currentPeriod = BG_STATE.nextPeriod;
         BG_STATE.nextPeriod    = null;
-        // reinicia relógio com hora aleatória dentro do novo período
         DayCycle.initForPeriod(BG_STATE.currentPeriod.name);
         _showPeriodChangeBubble();
       }
     } else {
-      ctx.drawImage(curImg, -BG_STATE.offset, drawY, W, H);
+      _drawTiled(curImg, tileOff, 1);
     }
   }
 
@@ -1181,10 +1194,6 @@
     return `#${rr}${gg}${bb}`;
   }
 
-  function darken(hex, factor) {
-    return shadeColor(hex, factor);
-  }
-
   // ============================================================
   // RENDER PRINCIPAL
   // ============================================================
@@ -1268,7 +1277,7 @@
     ctx.shadowBlur  = 10;
     ctx.shadowColor = '#4ade80';
     ctx.fillStyle   = `rgba(134,239,172,${pulse})`;
-    ctx.font        = 'bold 11px monospace';
+    ctx.font        = 'bold 11px "Courier New", monospace';
     ctx.textAlign   = 'center';
     ctx.fillText('PORTAL', px, py - 10);
 
@@ -1301,7 +1310,7 @@
         ctx.fillStyle = '#080810';
         ctx.fillRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
         ctx.fillStyle = '#555';
-        ctx.font = '14px monospace';
+        ctx.font = '14px "Courier New", monospace';
         ctx.textAlign = 'center';
         ctx.fillText('Carregando...', CONFIG.canvas.width / 2, CONFIG.canvas.height / 2);
       }
@@ -1321,14 +1330,14 @@
       'Quantos goblins já derrubei hoje?',
       'Preciso de um descanso.',
     ],
-    warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa floresta vai durar?'],
-    hunter:    ['Karine me disse que a floresta fala... até agora só ouvi vento.'],
+    warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa vila vai precisar de mim?'],
+    hunter:    ['Karine me disse que a vila guarda segredos... até agora só ouvi vento.'],
     mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
     cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
     // Frases genéricas de mudança de período
     periodChange: [
       'O tempo aqui não segue nenhuma lógica...',
-      'Essa floresta dobra o tempo como quer.',
+      'Essa vila dobra o tempo como quer.',
       'Sinto que o mundo pulou algumas horas.',
       'Algo mudou no ar...',
       'Nem percebi a hora passar.',
@@ -1361,7 +1370,7 @@
   let _bubbleTimer = null;
 
   function _scheduleBubble() {
-    const delay = 18000 + Math.random() * 20000; // 18–38s
+    const delay = 40000 + Math.random() * 10000; // 40–50s
     _bubbleTimer = setTimeout(() => {
       if (gameState !== 'playing' || !hero) { _scheduleBubble(); return; }
       const pool = [...BUBBLE_PHRASES.all, ...(BUBBLE_PHRASES[hero.heroClass] ?? [])];

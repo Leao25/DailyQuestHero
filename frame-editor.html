@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Frame Editor</title>
+<style>
+  body { background: #1a1a2e; color: #eee; font-family: monospace; margin: 0; padding: 20px; user-select: none; }
+  h2 { color: #f0d070; margin-top: 0; }
+  #controls { margin-bottom: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  #controls label { color: #aaa; font-size: 13px; }
+  #controls input[type=number] { width: 70px; background: #333; color: #fff; border: 1px solid #555; padding: 4px 6px; border-radius: 4px; }
+  #controls input[type=file] { color: #ccc; font-size: 13px; }
+  #canvas-wrap { position: relative; display: inline-block; overflow: visible; }
+  canvas { display: block; image-rendering: pixelated; cursor: default; }
+  .divider {
+    position: absolute; top: 0;
+    width: 10px; margin-left: -5px;
+    cursor: ew-resize;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .divider-line {
+    width: 2px; height: 100%;
+    pointer-events: none;
+  }
+  .divider-handle {
+    position: absolute; top: 0;
+    width: 14px; height: 100%;
+    opacity: 0;
+  }
+  .divider-label {
+    position: absolute; top: 6px; left: 14px;
+    font-size: 11px; padding: 2px 5px;
+    border-radius: 3px; white-space: nowrap;
+    pointer-events: none; font-weight: bold;
+    background: rgba(0,0,0,0.75);
+  }
+  #output { margin-top: 20px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 14px; font-size: 13px; }
+  #out-frames-list { margin-top: 8px; }
+  .frame-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .frame-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  #out-line { margin-top: 10px; color: #a5d6ff; word-break: break-all; }
+  #copy-btn { margin-top: 10px; background: #238636; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 13px; }
+  #copy-btn:hover { background: #2ea043; }
+  #zoom-ctrl { display: flex; align-items: center; gap: 8px; }
+  #zoom-range { width: 100px; }
+  .apply-btn { background: #1f6feb; color: #fff; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 13px; }
+  .apply-btn:hover { background: #388bfd; }
+</style>
+</head>
+<body>
+<h2>🎞 Frame Editor</h2>
+
+<div id="controls">
+  <div>
+    <label>Imagem: </label>
+    <input type="file" id="file-input" accept="image/png,image/jpeg">
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <label>Frames: </label>
+    <input type="number" id="frame-count" value="4" min="1" max="20">
+    <button class="apply-btn" onclick="applyFrames()">Aplicar</button>
+  </div>
+  <div id="zoom-ctrl">
+    <label>Zoom: </label>
+    <input type="range" id="zoom-range" min="0.25" max="3" step="0.05" value="1" oninput="setZoom(this.value)">
+    <span id="zoom-label">1.0x</span>
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="main-canvas"></canvas>
+</div>
+
+<div id="output">
+  <div style="color:#888">Arraste as linhas coloridas para ajustar cada frame:</div>
+  <div id="out-frames-list"></div>
+  <div id="out-line">— carregue uma imagem —</div>
+  <button id="copy-btn" onclick="copyLine()">📋 Copiar frameW para sprites.js</button>
+</div>
+
+<script>
+const COLORS = ['#ff5555','#55aaff','#55ff99','#ffaa33','#dd55ff','#ff55aa'];
+
+let img = null;
+let zoom = 1;
+let dividers = [];
+let frameCount = 4;
+let dragging = null;
+let dragStartClientX = 0;
+let dragStartX = 0;
+
+const canvas = document.getElementById('main-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => { img = image; applyFrames(); };
+  image.src = url;
+});
+
+function applyFrames() {
+  if (!img) return;
+  frameCount = parseInt(document.getElementById('frame-count').value) || 4;
+  const fw = img.width / frameCount;
+  dividers = [];
+  for (let i = 1; i < frameCount; i++) dividers.push(Math.round(fw * i));
+  redraw();
+}
+
+function setZoom(v) {
+  zoom = parseFloat(v);
+  document.getElementById('zoom-label').textContent = zoom.toFixed(2) + 'x';
+  if (img) redraw();
+}
+
+function redraw() {
+  canvas.width  = Math.round(img.width  * zoom);
+  canvas.height = Math.round(img.height * zoom);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // faixas coloridas semitransparentes por frame
+  const boundaries = [0, ...dividers, img.width];
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    const x1 = boundaries[i] * zoom;
+    const x2 = boundaries[i+1] * zoom;
+    const col = COLORS[i % COLORS.length];
+    ctx.fillStyle = col + '18';
+    ctx.fillRect(x1, 0, x2 - x1, canvas.height);
+  }
+
+  // linhas divisórias no canvas (decorativas, drag é via div)
+  dividers.forEach((x, i) => {
+    const sx = x * zoom;
+    ctx.strokeStyle = COLORS[i % COLORS.length];
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, canvas.height); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  updateDividerEls();
+  updateOutput();
+}
+
+function updateDividerEls() {
+  wrap.querySelectorAll('.divider').forEach(el => el.remove());
+  dividers.forEach((x, i) => {
+    const color = COLORS[i % COLORS.length];
+    const el = document.createElement('div');
+    el.className = 'divider';
+    el.style.left  = Math.round(x * zoom) + 'px';
+    el.style.height = canvas.height + 'px';
+
+    const line = document.createElement('div');
+    line.className = 'divider-line';
+    line.style.background = color;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'divider-label';
+    lbl.style.color = color;
+    lbl.textContent = `linha ${i+1}  x=${x}px`;
+
+    el.appendChild(line);
+    el.appendChild(lbl);
+
+    el.addEventListener('mousedown', ev => {
+      dragging = i;
+      dragStartClientX = ev.clientX;
+      dragStartX = dividers[i];
+      ev.preventDefault();
+      ev.stopPropagation();
+    });
+
+    wrap.appendChild(el);
+  });
+}
+
+document.addEventListener('mousemove', ev => {
+  if (dragging === null) return;
+  const delta = ev.clientX - dragStartClientX;
+  let newX = Math.round(dragStartX + delta / zoom);
+  // clamp entre vizinhos
+  const minX = dragging > 0 ? dividers[dragging - 1] + 4 : 4;
+  const maxX = dragging < dividers.length - 1 ? dividers[dragging + 1] - 4 : img.width - 4;
+  newX = Math.max(minX, Math.min(maxX, newX));
+  dividers[dragging] = newX;
+  redraw();
+});
+
+document.addEventListener('mouseup', () => { dragging = null; });
+
+function updateOutput() {
+  if (!img) return;
+  const boundaries = [0, ...dividers, img.width];
+  const widths = [];
+  for (let i = 0; i < boundaries.length - 1; i++) widths.push(boundaries[i+1] - boundaries[i]);
+
+  const listEl = document.getElementById('out-frames-list');
+  listEl.innerHTML = '';
+  widths.forEach((w, i) => {
+    const row = document.createElement('div');
+    row.className = 'frame-row';
+    const swatch = document.createElement('div');
+    swatch.className = 'frame-swatch';
+    swatch.style.background = COLORS[i % COLORS.length];
+    row.appendChild(swatch);
+    row.innerHTML += `<span style="color:#ccc">Frame ${i+1}:</span> <span style="color:#fff;font-weight:bold">${w}px</span> <span style="color:#666">(x: ${boundaries[i]} → ${boundaries[i+1]})</span>`;
+    row.prepend(swatch);
+    listEl.appendChild(row);
+  });
+
+  const maxW = Math.max(...widths);
+  document.getElementById('out-line').textContent = `frameW: ${maxW}, frameH: ${img.height}`;
+}
+
+function copyLine() {
+  const text = document.getElementById('out-line').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copiado!';
+    setTimeout(() => btn.textContent = '📋 Copiar frameW para sprites.js', 1500);
+  });
+}
+</script>
+</body>
+</html>

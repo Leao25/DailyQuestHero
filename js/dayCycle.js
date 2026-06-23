@@ -8,7 +8,6 @@ const DayCycle = {
 
   // Hora atual em minutos (ex: 11h30 = 690)
   _gameMinutes: 0,
-  _lastRealMs:  0,
 
   PERIODS: {
     'Manhã':      { name: 'Manhã',      key: 'morning',   icon: '🌅', skyTop: '#ffd89b', skyBottom: '#f9a857', groundTint: '#3a5a32', ambientAlpha: 0 },
@@ -32,7 +31,6 @@ const DayCycle = {
     const startMin = r.startH * 60 + r.startM;
     const endMin   = r.endH   * 60 + r.endM;
     this._gameMinutes = startMin + Math.floor(Math.random() * (endMin - startMin));
-    this._lastRealMs  = performance.now();
   },
 
   // Avança o relógio — chamar a cada frame com deltaMs

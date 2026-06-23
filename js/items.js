@@ -1,5 +1,5 @@
 // ============================================================
-// items.js — Catálogo completo de itens da Fase 1 (Floresta)
+// items.js — Catálogo completo de itens da Fase 1 (Vila)
 // Tipos: material | consumable | weapon | armor | accessory
 // Raridade: comum | incomum | raro | épico
 // Todos os itens são tradable (preparado para marketplace futuro)
@@ -17,9 +17,9 @@ const ITEM_CATALOG = {
 
   // ── Materiais (drops de mobs, sem efeito agora) ───────────
   forest_herb: {
-    id: 'forest_herb', name: 'Erva da Floresta',
+    id: 'forest_herb', name: 'Erva da Vila',
     type: 'material', rarity: 'comum',
-    desc: 'Erva medicinal encontrada na floresta. Útil para alquimia.',
+    desc: 'Erva medicinal encontrada nos arredores da vila. Útil para alquimia.',
     value: 5, tradable: true, icon: '🌿', img: 'itm_herb.png',
   },
   goblin_coin: {
@@ -37,7 +37,7 @@ const ITEM_CATALOG = {
   wolf_pelt: {
     id: 'wolf_pelt', name: 'Pele de Lobo',
     type: 'material', rarity: 'incomum',
-    desc: 'Pele espessa de lobo da floresta. Boa para fabricar armaduras.',
+    desc: 'Pele espessa de lobo dos arredores da vila. Boa para fabricar armaduras.',
     value: 20, tradable: true, icon: '🐺', img: 'itm_wolf_pelt.png',
   },
   wolf_fang: {
@@ -69,9 +69,9 @@ const ITEM_CATALOG = {
   minor_potion: {
     id: 'minor_potion', name: 'Poção Menor de Vida',
     type: 'consumable', rarity: 'comum',
-    desc: 'Restaura 20 HP imediatamente.',
+    desc: 'Restaura 40 HP imediatamente.',
     value: 12, tradable: true, icon: '🧪', img: 'itm_small_health_potion.png', imgSize: 60, quickbarSize: 60,
-    effect: { type: 'heal', amount: 20 },
+    effect: { type: 'heal', amount: 40 },
   },
   health_potion: {
     id: 'health_potion', name: 'Poção de Vida',
@@ -187,9 +187,9 @@ const ITEM_CATALOG = {
 
   // ── Acessórios (slot: accessory) ──────────────────────────
   forest_amulet: {
-    id: 'forest_amulet', name: 'Amuleto da Floresta',
+    id: 'forest_amulet', name: 'Amuleto da Vila',
     type: 'accessory', rarity: 'incomum', slot: 'accessory',
-    desc: 'Amuleto imbuído com energia da floresta.',
+    desc: 'Amuleto imbuído com energia protetora da vila.',
     value: 40, tradable: true, icon: '📿', img: 'itm_green_forest_amulet.png',
     bonus: { attack: 2, maxHp: 10 },
   },

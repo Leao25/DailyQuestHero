@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DailyQuestHero — Protótipo</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -17,7 +19,7 @@
     <div id="header-right">
       <div id="clock-display">
         <div id="version-label">V0.1</div>
-        <div id="zone-label">FLORESTA — FASE 1</div>
+        <div id="zone-label">VILA — FASE 1</div>
         <div id="clock-top">
           <span id="period-name">--</span>
         </div>
@@ -27,7 +29,8 @@
     </div>
   </div>
   <div id="game-container">
-    <canvas id="game-canvas" width="960" height="540"></canvas>
+    <canvas id="game-canvas" width="1152" height="648"></canvas>
+    <div id="zone-title" class="hidden"></div>
 
     <!-- HUD -->
     <div id="hud">

@@ -173,7 +173,7 @@ class Hero {
       this.level       += 1;
       this.maxHp        = Math.round(this.maxHp  * 1.12);
       this.attack       = Math.round(this.attack * 1.10);
-      this.hp           = Math.min(this.hp + Math.round(this.maxHp * 0.30), this.maxHp);
+      this.hp           = this.maxHp;
       this.xpToNextLevel = Math.round(this.xpToNextLevel * CONFIG.hero.xpToLevelGrowth);
       leveledUp.push(this.level);
     }
@@ -207,7 +207,7 @@ class Hero {
     const baseY = fy + bob;
 
     // sombra — pulsa com o bob da animação
-    const shadowY     = fy + 44;
+    const shadowY     = fy + 74;
     const shadowScale = 1 + bob * 0.04; // bob ±3 → escala ±12%
     const sw1 = Math.round(44 * shadowScale);
     const sw2 = Math.round(36 * shadowScale);

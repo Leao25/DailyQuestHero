@@ -1,6 +1,6 @@
 // ============================================================
 // mob.js — Inimigos por tipo, com sprites PNG e spawn dinâmico.
-// Fase 1 (Floresta): Goblin, Lobo, Orc, Esqueleto.
+// Fase 1 (Vila): Goblin, Lobo, Orc, Esqueleto.
 // Demônio reservado para fases futuras.
 // ============================================================
 
@@ -10,12 +10,12 @@ const MOB_TYPES = {
     key:          'goblin',
     label:        'Goblin',
     spriteKey:    'mob_goblin',
-    spriteH:      120,
+    spriteH:      200,
     hp:           30,
     attack:       5,
     xpReward:     5,
     goldReward:   5,
-    attackRange:  45,
+    attackRange:  100,
     approachSpeed:0.7,
     weight:       40,
     periods:      ['Manhã', 'Tarde', 'Entardecer', 'Noite'],
@@ -70,28 +70,10 @@ const MOB_TYPES = {
     minLevel:     3,
     drops:        ['bone', 'gem'],
   },
-  // Demônio reservado — não entra no pool da Fase 1
-  demon: {
-    key:          'demon',
-    label:        'Demônio',
-    spriteKey:    'mob_demon',
-    spriteH:      96,
-    hp:           120,
-    attack:       20,
-    xpReward:     80,
-    goldReward:   30,
-    attackRange:  60,
-    approachSpeed:0.8,
-    weight:       5,
-    periods:      ['Noite'],
-    minLevel:     8,
-    drops:        ['rune', 'rare_item'],
-  },
-
-  // Boss da Fase 1 — Guardião da Floresta
-  forest_guardian: {
-    key:          'forest_guardian',
-    label:        'Guardião da Floresta',
+  // Boss da Fase 1 — Guardião da Vila
+  village_guardian: {
+    key:          'village_guardian',
+    label:        'Guardião da Vila',
     spriteKey:    'mob_orc',
     spriteH:      110,
     hp:           400,
@@ -146,8 +128,8 @@ const MobSprites = {
   // ── Animações individuais por arquivo (novo sistema) ─────────
   ANIM_DEFS: {
     mob_goblin: {
-      walk:   { file: 'mob_goblin_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 62 },
-      attack: { file: 'mob_goblin_attack', count: 2, frameW: 316, frameH: 353, fps: [300, 420], groundOffset: 62 },
+      walk:   { file: 'mob_goblin_walk',   count: 4, frameW: 444, frameH: 887, fps: [120, 120, 120, 120], groundOffset: 140 },
+      attack: { file: 'mob_goblin_attack', count: 2, frameOffsets: [0, 779], frameWidths: [779, 995], frameH: 1200, fps: [300, 420], groundOffset: 155 },
     },
   },
 
@@ -160,10 +142,12 @@ const MobSprites = {
       img.onload = () => {
         const frames = [];
         for (let i = 0; i < def.count; i++) {
+          const srcX = def.frameOffsets ? def.frameOffsets[i] : i * def.frameW;
+          const srcW = def.frameWidths  ? def.frameWidths[i]  : def.frameW;
           const fc = document.createElement('canvas');
-          fc.width  = def.frameW;
+          fc.width  = srcW;
           fc.height = def.frameH;
-          fc.getContext('2d').drawImage(img, i * def.frameW, 0, def.frameW, def.frameH, 0, 0, def.frameW, def.frameH);
+          fc.getContext('2d').drawImage(img, srcX, 0, srcW, def.frameH, 0, 0, srcW, def.frameH);
           frames.push(fc);
         }
         this.animSheets[spriteKey][animName] = frames;
@@ -185,7 +169,7 @@ const MobSprites = {
     const frame = frames[fi];
     if (!frame) return false;
     const scale = (targetH * (resolvedDef.heightScale ?? 1)) / resolvedDef.frameH;
-    const dw    = resolvedDef.frameW * scale;
+    const dw    = frame.width * scale;
     const dh    = resolvedDef.frameH * scale;
     const drawY = baseY - dh + (resolvedDef.groundOffset ?? 0);
     ctx.save();
@@ -511,8 +495,7 @@ class Mob {
     const bob   = Math.sin(this.walkAnimTimer / 80) * 2;
     const baseY = fy + bob;
 
-    // sombra — mesma altura da hunter (groundOffset 50)
-    const shadowY = fy + 44;
+    const shadowY = fy + 74;
     ctx.fillStyle = 'rgba(0,0,0,0.30)';
     ctx.fillRect(sx - 18, shadowY + 2, 36, 6);
     ctx.fillRect(sx - 14, shadowY,     28, 4);

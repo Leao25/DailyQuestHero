@@ -113,37 +113,6 @@ const Hud = {
     }
   },
 
-  // Atualiza a barra de progresso da zona
-  // heroWorldX: posição atual do herói
-  // portalX: posição do portal (world units)
-  // bossWorldX: posição do boss (null se não ativo)
-  // portalOpen: boolean
-  updateZone(heroWorldX, portalX, bossWorldX, portalOpen) {
-    const pct    = Math.min(heroWorldX / portalX, 1);
-    const pctPx  = `${(pct * 100).toFixed(1)}%`;
-
-    this.els.zoneFill.style.width    = pctPx;
-    this.els.zoneHeroDot.style.left  = pctPx;
-
-    // marcador do boss
-    if (bossWorldX !== null) {
-      const bossPct = Math.min(bossWorldX / portalX, 1);
-      this.els.zoneBoss.style.left = `${(bossPct * 100).toFixed(1)}%`;
-      this.els.zoneBoss.classList.remove('hidden');
-    } else {
-      this.els.zoneBoss.classList.add('hidden');
-    }
-
-    // marcador do portal
-    if (portalOpen) {
-      this.els.zonePortal.classList.remove('hidden');
-    } else {
-      this.els.zonePortal.classList.add('hidden');
-    }
-
-    this.els.zoneDistLabel.textContent = '';
-  },
-
   updateClock(period) {
     this.els.clockTime.textContent  = DayCycle.getFormattedTime();
     this.els.periodName.textContent = period.name;

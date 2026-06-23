@@ -11,30 +11,13 @@ const Sprites = {
 
   // Metadados de cada classe (usados na tela de seleção)
   CLASSES: {
-    // warrior: {
-    //   label: 'Guerreiro',
-    //   desc:  'Combatente equilibrado com espada e escudo. Versátil e resistente.',
-    //   color: '#9a7040',
-    //   stat:  { atk: 3, def: 4, spd: 3 },
-    // },
     hunter: {
       label: 'Caçadora',
       desc:  'Ágil e precisa. Ataques rápidos com alta chance de crítico.',
       color: '#4a8050',
       stat:  { atk: 3, def: 2, spd: 5 },
     },
-    // mage: {
-    //   label: 'Mago',
-    //   desc:  'Feitiços devastadores de longa distância. Frágil mas letal.',
-    //   color: '#5050a0',
-    //   stat:  { atk: 5, def: 1, spd: 3 },
-    // },
-    // cleric: {
-    //   label: 'Clérigo',
-    //   desc:  'Guardião sagrado. Cura-se em combate e possui alta resistência.',
-    //   color: '#909060',
-    //   stat:  { atk: 2, def: 4, spd: 2 },
-    // },
+    // warrior, mage, cleric — adicionados em fases futuras
   },
 
   bounds:     {}, // tight pixel bounds por sprite key
@@ -49,8 +32,8 @@ const Sprites = {
   // ─────────────────────────────────────────────────────────────
   ANIM_DEFS: {
     hunter: {
-      walk:   { file: 'hero_hunter_walk',   count: 2, frameW: 353, frameH: 353, fps: [420, 420], groundOffset: 50 },
-      attack: { file: 'hero_hunter_attack', count: 2, frameW: 353, frameH: 314, fps: [420, 420], groundOffset: 43, heightScale: 1.10 },
+      walk:   { file: 'hero_hunter_walk',   count: 6, frameW: 362, frameH: 724, fps: [150, 150, 150, 150, 150, 150], groundOffset: 120, heightScale: 1.5 },
+      attack: { file: 'hero_hunter_attack', count: 4, frameH: 887, frameOffsets: [0, 417, 858, 1331], frameWidths: [417, 441, 473, 443], fps: [150, 150, 150, 150], groundOffset: 150, heightScale: 1.8 },
       // block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
       dodge:  { file: 'hero_hunter_dodge',  count: 1, frameW: 500, frameH: 500, fps: [200],       groundOffset: 110 },
       // death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
@@ -65,13 +48,14 @@ const Sprites = {
     Object.entries(defs).forEach(([animName, def]) => {
       const img = new Image();
       img.onload = () => {
-        // Extrai cada frame em canvas separado para evitar bleeding entre frames
         const frames = [];
         for (let i = 0; i < def.count; i++) {
+          const srcX = def.frameOffsets ? def.frameOffsets[i] : i * def.frameW;
+          const srcW = def.frameWidths  ? def.frameWidths[i]  : def.frameW;
           const fc = document.createElement('canvas');
-          fc.width  = def.frameW;
+          fc.width  = srcW;
           fc.height = def.frameH;
-          fc.getContext('2d').drawImage(img, i * def.frameW, 0, def.frameW, def.frameH, 0, 0, def.frameW, def.frameH);
+          fc.getContext('2d').drawImage(img, srcX, 0, srcW, def.frameH, 0, 0, srcW, def.frameH);
           frames.push(fc);
         }
         this.animSheets[key][animName] = frames;
@@ -98,7 +82,7 @@ const Sprites = {
       const frame  = frames[fi];
       if (!frame) return;
       const scale = (targetH * (def.heightScale ?? 1)) / def.frameH;
-      const dw    = def.frameW * scale;
+      const dw    = frame.width * scale;
       const dh    = def.frameH * scale;
       const drawY = baseY - dh + (def.groundOffset ?? 0);
 
@@ -176,99 +160,12 @@ const Sprites = {
 
   get(key) { return this.images[key] ?? null; },
 
-  /**
-   * Desenha um sprite de herói centralizado em (cx, baseY).
-   * baseY = linha do chão (pés do personagem).
-   * targetH = altura VISÍVEL desejada do personagem (sem espaço transparente).
-   * options: { alpha, flipX, glow, glowColor }
-   */
-  // Fallback desenhado a canvas para o hunter enquanto sprite não existe
-  _drawHunterFallback(ctx, cx, baseY, targetH, options = {}) {
-    const s = targetH / 72; // escala baseada na altura alvo
-    const x = cx;
-    const y = baseY;
-
-    ctx.save();
-    if (options.alpha !== undefined) ctx.globalAlpha = options.alpha;
-    if (options.flipX) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); }
-
-    // sombra no chão
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(x, y, 14 * s, 4 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // pernas
-    ctx.fillStyle = '#3b2a1a';
-    ctx.fillRect(x - 8 * s, y - 22 * s, 7 * s, 22 * s);
-    ctx.fillRect(x + 1 * s, y - 22 * s, 7 * s, 22 * s);
-
-    // botas
-    ctx.fillStyle = '#2a1a0a';
-    ctx.fillRect(x - 9 * s, y - 8 * s, 8 * s, 8 * s);
-    ctx.fillRect(x + 1 * s, y - 8 * s, 8 * s, 8 * s);
-
-    // corpo / armadura de couro
-    ctx.fillStyle = '#5a3d20';
-    ctx.fillRect(x - 10 * s, y - 46 * s, 20 * s, 24 * s);
-
-    // cinto
-    ctx.fillStyle = '#2a1a0a';
-    ctx.fillRect(x - 11 * s, y - 24 * s, 22 * s, 4 * s);
-
-    // capa / capuz (verde floresta)
-    ctx.fillStyle = '#2d4a20';
-    ctx.fillRect(x - 12 * s, y - 68 * s, 24 * s, 28 * s);
-
-    // cabeça
-    ctx.fillStyle = '#c8956a';
-    ctx.beginPath();
-    ctx.arc(x, y - 60 * s, 9 * s, 0, Math.PI * 2);
-    ctx.fill();
-
-    // capuz cobrindo parte da cabeça
-    ctx.fillStyle = '#2d4a20';
-    ctx.beginPath();
-    ctx.arc(x, y - 62 * s, 10 * s, Math.PI, 0);
-    ctx.fill();
-    ctx.fillRect(x - 10 * s, y - 68 * s, 20 * s, 10 * s);
-
-    // arco nas costas (linha curva)
-    ctx.strokeStyle = '#8b5e2a';
-    ctx.lineWidth = 3 * s;
-    ctx.beginPath();
-    ctx.arc(x + 13 * s, y - 45 * s, 18 * s, -1.0, 1.0);
-    ctx.stroke();
-
-    // corda do arco
-    ctx.strokeStyle = '#d4b87a';
-    ctx.lineWidth = 1 * s;
-    ctx.beginPath();
-    ctx.moveTo(x + 13 * s, y - 62 * s);
-    ctx.lineTo(x + 13 * s, y - 28 * s);
-    ctx.stroke();
-
-    // braço esquerdo
-    ctx.fillStyle = '#5a3d20';
-    ctx.fillRect(x - 18 * s, y - 46 * s, 8 * s, 18 * s);
-
-    // mão
-    ctx.fillStyle = '#c8956a';
-    ctx.fillRect(x - 18 * s, y - 30 * s, 7 * s, 7 * s);
-
-    ctx.restore();
-  },
-
   drawHero(ctx, key, cx, baseY, targetH, options = {}) {
     const img = this.images[key];
     const isCanvas = img instanceof HTMLCanvasElement;
     const hasImage = img && (isCanvas ? img.width > 0 : (img.complete && img.naturalWidth > 0));
 
-    // Fallback desenhado enquanto imagem não carregou
-    if (!hasImage) {
-      if (key === 'hunter') this._drawHunterFallback(ctx, cx, baseY, targetH, options);
-      return;
-    }
+    if (!hasImage) return;
 
     if (!isCanvas && (!img.complete || !img.naturalWidth)) return;
     const srcW = isCanvas ? img.width  : img.naturalWidth;

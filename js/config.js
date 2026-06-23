@@ -5,14 +5,14 @@
 
 const CONFIG = {
   canvas: {
-    width: 960,
-    height: 540,
-    groundY: 450, // linha onde os "pés" do hero/mob ficam (ajustado ao chão do BG)
+    width: 1152,
+    height: 648,
+    groundY: 510, // linha onde os "pés" do hero/mob ficam (ajustado ao chão do BG)
   },
 
   hero: {
     // posição FIXA do hero na tela (ele não anda lateralmente; quem se move é o mundo)
-    screenX: 260,
+    screenX: 312,
     walkSpeed: 1.6,        // velocidade com que o "mundo" avança (px por frame, ajustado por delta depois)
     baseMaxHp: 100,
     baseAttack: 12,
@@ -30,7 +30,7 @@ const CONFIG = {
     attackRange: 45,
     attackCooldownMs: 1200,
     baseXpReward: 18,
-    spawnAheadDistance: 760, // mob nasce fora da tela à direita (hero.screenX + 760 > 960px)
+    spawnAheadDistance: 912, // mob nasce fora da tela à direita (hero.screenX + 760 > 960px)
   },
 
   world: {
