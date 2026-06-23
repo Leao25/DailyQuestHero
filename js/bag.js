@@ -940,9 +940,9 @@ var Bag = {
     }
 
     const resultItem = Items.get(recipe.result);
+    SaveSystem.addDiscovery(recipe.id); // descobre ao tentar, independente do resultado
     if (Math.random() < recipe.successChance) {
       hero.inventory.push({ ...resultItem });
-      SaveSystem.addDiscovery(recipe.id);
       Hud.logEvent(`✅ Craft: ${resultItem?.name} criado!`, 'info');
     } else {
       Hud.logEvent(`❌ Craft falhou! Materiais consumidos.`, 'damage');

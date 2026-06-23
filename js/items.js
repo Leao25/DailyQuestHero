@@ -265,7 +265,7 @@ const CRAFT_RECIPES = [
     id: 'recipe_minor_potion',
     ingredients: [{ id: 'forest_herb', qty: 10 }],
     result: 'minor_potion',
-    successChance: 0.02,
+    successChance: 1.00,
   },
   {
     id: 'recipe_leather_armor',

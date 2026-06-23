@@ -484,7 +484,7 @@
     if (!bossSpawned &&
       currentPhase === 'village' &&
       aliveMobs === 0 &&
-      hero.level >= 5 &&
+      hero.level >= MOB_TYPES.goblin_rider.minLevel &&
       MOB_TYPES.goblin_rider.periods.includes(period) &&
       !hero.inventory.some(i => i.id === 'forest_key')
     ) {
