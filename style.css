@@ -43,14 +43,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 #game-header {
   width: 1152px;
+  height: 100px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 24px 0;
+  padding: 0 24px;
   background: linear-gradient(180deg, #0a0610 0%, #100c1a 60%, #0e0b16 100%);
   border-left: 1px solid rgba(180,130,40,0.25);
   border-right: 1px solid rgba(180,130,40,0.25);
@@ -79,11 +81,16 @@ body {
 }
 
 #game-logo {
-  height: 150px;
+  height: 200px;
   width: auto;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  filter: drop-shadow(0 4px 18px rgba(180,120,10,0.45));
+  filter: drop-shadow(0 6px 24px rgba(180,120,10,0.6));
+  pointer-events: none;
+  margin-top: -155px;
+  margin-bottom: -45px;
+  z-index: 20;
+  position: relative;
 }
 
 #game-container {
@@ -290,6 +297,7 @@ body {
 #zone-boss-marker.hidden, #zone-portal-marker.hidden { display: none; }
 
 #clock-display {
+  margin-left: auto;
   background: none;
   border: none;
   box-shadow: none;

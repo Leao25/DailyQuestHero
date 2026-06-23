@@ -11,6 +11,7 @@ const MOB_TYPES = {
     label:        'Goblin',
     spriteKey:    'mob_goblin',
     spriteH:      200,
+    hpBarOffset:  170,
     hp:           30,
     attack:       5,
     xpReward:     5,
@@ -20,29 +21,29 @@ const MOB_TYPES = {
     weight:       40,
     periods:      ['Manhã', 'Tarde', 'Entardecer', 'Noite'],
     minLevel:     1,
-    drops:        ['herb', 'coin'],
   },
   wolf: {
     key:          'wolf',
     label:        'Lobo',
     spriteKey:    'mob_wolf',
-    spriteH:      72,
+    spriteH:      320,
+    hpBarOffset:  260,
     hp:           50,
     attack:       8,
     xpReward:     30,
     goldReward:   8,
-    attackRange:  50,
+    attackRange:  120,
     approachSpeed:1.0,
     weight:       25,
-    periods:      ['Manhã', 'Tarde'],
+    periods:      ['Tarde', 'Entardecer', 'Noite'],
     minLevel:     2,
-    drops:        ['pelt', 'fang'],
   },
   orc: {
     key:          'orc',
     label:        'Orc',
     spriteKey:    'mob_orc',
     spriteH:      88,
+    hpBarOffset:  0,
     hp:           90,
     attack:       14,
     xpReward:     55,
@@ -52,13 +53,13 @@ const MOB_TYPES = {
     weight:       15,
     periods:      ['Tarde', 'Entardecer', 'Noite'],
     minLevel:     4,
-    drops:        ['weapon', 'gold'],
   },
   skeleton: {
     key:          'skeleton',
     label:        'Esqueleto',
     spriteKey:    'mob_skeleton',
     spriteH:      80,
+    hpBarOffset:  0,
     hp:           45,
     attack:       10,
     xpReward:     40,
@@ -68,7 +69,6 @@ const MOB_TYPES = {
     weight:       20,
     periods:      ['Entardecer', 'Noite'],
     minLevel:     3,
-    drops:        ['bone', 'gem'],
   },
   // Boss da Fase 1 — Guardião da Vila
   village_guardian: {
@@ -76,6 +76,7 @@ const MOB_TYPES = {
     label:        'Guardião da Vila',
     spriteKey:    'mob_orc',
     spriteH:      110,
+    hpBarOffset:  0,
     hp:           400,
     attack:       22,
     xpReward:     200,
@@ -91,7 +92,7 @@ const MOB_TYPES = {
 };
 
 // Pool disponível na Fase 1 (sem demônio)
-const PHASE1_POOL = ['goblin']; // wolf, orc, skeleton desativados temporariamente
+const PHASE1_POOL = ['goblin', 'wolf'];
 
 function pickMobType(heroLevel, period) {
   const eligible = PHASE1_POOL
@@ -130,6 +131,10 @@ const MobSprites = {
     mob_goblin: {
       walk:   { file: 'mob_goblin_walk',   count: 4, frameW: 444, frameH: 887, fps: [120, 120, 120, 120], groundOffset: 140 },
       attack: { file: 'mob_goblin_attack', count: 2, frameOffsets: [0, 779], frameWidths: [779, 995], frameH: 1200, fps: [300, 420], groundOffset: 155 },
+    },
+    mob_wolf: {
+      walk:   { file: 'mob_wolf_walk',   count: 4, frameH: 887, frameOffsets: [0, 473, 887, 1331], frameWidths: [473, 414, 444, 443], fps: [120, 120, 120, 120], groundOffset: 220, heightScale: 1.3 },
+      attack: { file: 'mob_wolf_attack', count: 2, frameH: 887, frameOffsets: [0, 848], frameWidths: [848, 926], fps: [300, 300], groundOffset: 140, heightScale: 0.7 },
     },
   },
 
@@ -346,9 +351,15 @@ class Mob {
     this.worldX = hero.worldX + CONFIG.mob.spawnAheadDistance;
     this.y      = CONFIG.canvas.groundY;
 
-    this.maxHp      = Math.round(def.hp * scale);
+    if (def.key === 'wolf')   Audio.playWolfSpawn();
+    else if (def.key === 'goblin') Audio.playGoblinSpawn();
+
+    this.maxHp      = def.hp;
     this.hp         = this.maxHp;
-    this.attack     = Math.round(def.attack * scale);
+    this.attack     = def.attack;
+    // scaling por nível desativado — dificuldade sobe via mobs mais fortes, não stats inflados
+    // this.maxHp  = Math.round(def.hp * scale);
+    // this.attack = Math.round(def.attack * scale);
     this.xpReward   = def.xpReward;
     this.goldReward = def.goldReward ?? 0;
     this.attackRange    = def.attackRange;
@@ -423,21 +434,6 @@ class Mob {
       return;
     }
 
-    // para atrás do mob mais próximo à frente (entre este e o hero)
-    if (allMobs) {
-      const frontMob = allMobs
-        .filter(m => m !== this && m.state !== 'dead' && m.worldX < this.worldX)
-        .sort((a, b) => b.worldX - a.worldX)[0];
-      if (frontMob) {
-        const distToFront = this.worldX - frontMob.worldX;
-        if (distToFront < 28) {
-          this.state = 'walking';
-          this.walkAnimTimer += deltaMs;
-          this._advanceAnim(deltaMs);
-          return;
-        }
-      }
-    }
 
     this.state = 'walking';
     this.walkAnimTimer += deltaMs;
@@ -519,16 +515,36 @@ class Mob {
   }
 
   _drawHpBar(ctx, sx, fy) {
-    const bw     = 36;
-    const hpRatio = this.hp / this.maxHp;
-    const barY   = fy - this.spriteH - 18;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(sx - bw / 2, barY, bw, 6);
-    ctx.fillStyle = hpRatio > 0.5 ? '#dd3333' : '#ff7700';
-    ctx.fillRect(sx - bw / 2, barY, bw * hpRatio, 6);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(sx - bw / 2, barY, bw, 6);
+    const segments  = Math.ceil(this.maxHp / 10);
+    const segW      = 12;
+    const gap       = 2;
+    const barH      = 8;
+    const totalW    = segments * segW + (segments - 1) * gap;
+    const barX      = sx - totalW / 2;
+    const barY      = fy - this.spriteH + (this.type.hpBarOffset ?? 0);
+
+    for (let i = 0; i < segments; i++) {
+      const segStart = i * 10;
+      const segEnd   = Math.min(segStart + 10, this.maxHp);
+      const segHp    = Math.max(0, Math.min(this.hp - segStart, segEnd - segStart));
+      const ratio    = segHp / (segEnd - segStart);
+      const x        = barX + i * (segW + gap);
+
+      // fundo
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(x, barY, segW, barH);
+
+      // preenchimento
+      if (ratio > 0) {
+        ctx.fillStyle = this.hp / this.maxHp > 0.5 ? '#dd3333' : '#ff7700';
+        ctx.fillRect(x, barY, Math.ceil(segW * ratio), barH);
+      }
+
+      // borda
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, barY, segW, barH);
+    }
   }
 
   // fallback canvas caso sprite não carregue

@@ -45,13 +45,17 @@ const Audio = (() => {
   _load('arrow',        'sfx_arrow.wav');
   _load('dodge',        'sfx_dodge.wav');
   _load('hunterHurt',   'sfx_hunter_hurt.wav');
-  _load('goblinAttack', 'sfx_goblin_attack.wav');
+  _load('mobMeleeAttack', 'sfx_mob_melee_attack.wav');
   _load('goblinHurt',   'sfx_goblin_hurt.mp3');
+  _load('goblinSpawn',  'sfx_goblin_spawn.wav');
+  _load('wolfAttack',   'sfx_wolf_attack.wav');
+  _load('wolfDeath',    'sfx_wolf_death.ogg');
+  _load('wolfSpawn',    'sfx_wolf_spawn.wav');
   _load('levelUp',      'sfx_levelup.wav');
   _load('drop',         'sfx_drop.wav');
 
   // ── Música de fundo (<audio> element, loop com pausa) ───
-  const music = new window.Audio(BASE + 'bg_forest.mp3');
+  const music = new window.Audio(BASE + 'bg_village.mp3');
   music.volume = 0.5 * _musicVolume;
   music.loop   = false;
 
@@ -80,8 +84,12 @@ const Audio = (() => {
     playArrow()        { _play('arrow',        0.7);  },
     playDodge()        { _play('dodge',        0.6);  },
     playHunterHurt()   { _play('hunterHurt',   0.6);  },
-    playGoblinAttack() { _play('goblinAttack', 0.65); },
-    playGoblinHurt()   { _play('goblinHurt',   0.55); },
+    playMobMeleeAttack() { _play('mobMeleeAttack', 0.65); },
+    playGoblinHurt()     { _play('goblinHurt',    0.55); },
+    playGoblinSpawn()    { _play('goblinSpawn',   0.70); },
+    playWolfAttack()     { _play('wolfAttack',    0.65); },
+    playWolfDeath()      { _play('wolfDeath',     0.60); },
+    playWolfSpawn()      { _play('wolfSpawn',     0.65); },
     playLevelUp()      { _play('levelUp',      0.8);  },
     playDrop()         { _play('drop',         0.6);  },
   };

@@ -43,24 +43,19 @@ const Combat = {
       if (dodgeRoll < hero.dodgeChance) {
         hero.triggerDodge();
         callbacks.onDodge?.(hero);
-        return;
-      }
-
-      // Bloqueio (DEF): reduz o dano pela metade
-      const blockRoll = Math.random();
-      if (blockRoll < hero.blockChance) {
+      } else if (Math.random() < hero.blockChance) {
+        // Bloqueio (DEF): reduz o dano pela metade
         const blocked = Math.max(1, Math.floor(rawDamage * 0.5));
         hero.triggerBlock();
         hero.takeDamage(blocked);
         callbacks.onBlock?.(hero, blocked);
         if (hero.state === 'dead') callbacks.onHeroDeath();
-        return;
+      } else {
+        // Dano normal
+        hero.takeDamage(rawDamage);
+        callbacks.onMobAttack(mob, rawDamage);
+        if (hero.state === 'dead') callbacks.onHeroDeath();
       }
-
-      // Dano normal
-      hero.takeDamage(rawDamage);
-      callbacks.onMobAttack(mob, rawDamage);
-      if (hero.state === 'dead') callbacks.onHeroDeath();
     }
   },
 

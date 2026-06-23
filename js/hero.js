@@ -29,7 +29,8 @@ class Hero {
     const critChanceByClass = { warrior: 0.15, hunter: 0.25, mage: 0.20, cleric: 0.08 };
     const critMultByClass   = { warrior: 1.8,  hunter: 2.0,  mage: 2.5,  cleric: 1.5  };
     const dodgeByClass      = { warrior: 0.08, hunter: 0.20, mage: 0.05, cleric: 0.12 };
-    const blockByClass      = { warrior: 0.30, hunter: 0.10, mage: 0.05, cleric: 0.20 };
+    const blockByClass      = { warrior: 0.30, mage: 0.05, cleric: 0.20 };
+    //hunter: 0.10,
     this.critChance     = critChanceByClass[heroClass] ?? 0.10;
     this.critMultiplier = critMultByClass[heroClass]   ?? 1.5;
     this.dodgeChance    = dodgeByClass[heroClass]      ?? 0.10;

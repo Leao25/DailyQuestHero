@@ -42,13 +42,13 @@ const Hud = {
   },
 
   hideStats() {
-    if (this.els.heroStats) this.els.heroStats.style.visibility = 'hidden';
-    if (this.els.eventLog)  this.els.eventLog.style.visibility  = 'hidden';
+    if (this.els.heroStats) this.els.heroStats.style.display = 'none';
+    if (this.els.eventLog)  this.els.eventLog.style.display  = 'none';
   },
 
   showStats() {
-    if (this.els.heroStats) this.els.heroStats.style.visibility = 'visible';
-    if (this.els.eventLog)  this.els.eventLog.style.visibility  = 'visible';
+    if (this.els.heroStats) this.els.heroStats.style.display = '';
+    if (this.els.eventLog)  this.els.eventLog.style.display  = '';
   },
 
   // Chamado uma vez ao iniciar o jogo (troca de classe ou start)

@@ -200,6 +200,14 @@ const ITEM_CATALOG = {
     value: 75, tradable: true, icon: '📿', img: 'itm_wolf_fangs_necklace.png',
     bonus: { attack: 4, maxHp: 5 },
   },
+  forest_key: {
+    id: 'forest_key', name: 'Chave do Portão da Floresta',
+    type: 'consumable', rarity: 'epico',
+    desc: 'Uma chave antiga que abre o caminho para a Floresta. Use para avançar para a Fase 2.',
+    value: 0, tradable: false, icon: '🗝️', img: 'itm_forest_key.png',
+    effect: { type: 'phase2' },
+  },
+
   soul_ring: {
     id: 'soul_ring', name: 'Anel da Alma',
     type: 'accessory', rarity: 'epico', slot: 'accessory',
@@ -214,16 +222,18 @@ const MOB_DROP_TABLE = {
   goblin: [
     { itemId: 'forest_herb',   chance: 0.10 },
     { itemId: 'goblin_coin',   chance: 0.05 },
+    //{ itemId: 'forest_key',    chance: 1.00 },
     //{ itemId: 'wooden_sword',  chance: 0.12 },
     //{ itemId: 'minor_potion',  chance: 0.08 },
     //{ itemId: 'ancient_coin',  chance: 0.02 },
   ],
   wolf: [
-    { itemId: 'wolf_pelt',     chance: 0.45 },
-    { itemId: 'wolf_fang',     chance: 0.30 },
-    { itemId: 'wolf_cape',     chance: 0.10 },
-    { itemId: 'minor_potion',  chance: 0.10 },
-    { itemId: 'fang_necklace', chance: 0.05 },
+    { itemId: 'forest_herb',   chance: 0.10 },
+    { itemId: 'wolf_pelt',     chance: 0.05 },
+    { itemId: 'wolf_fang',     chance: 0.05 },
+    //{ itemId: 'wolf_cape',     chance: 0.10 },
+    { itemId: 'minor_potion',  chance: 0.05 },
+    //{ itemId: 'fang_necklace', chance: 0.05 },
   ],
   orc: [
     { itemId: 'orc_tooth',     chance: 0.40 },

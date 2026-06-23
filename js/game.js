@@ -61,9 +61,10 @@
 
   // Pop-up de confirmação de reset de progresso
   let deleteConfirmVisible = false;
-  const DELETE_YES = { x: 426, y: 360, w: 100, h: 34 };
-  const DELETE_NO  = { x: 626, y: 360, w: 100, h: 34 };
+  const DELETE_YES = { x: 330, y: 310, w: 130, h: 36 };
+  const DELETE_NO  = { x: 500, y: 310, w: 130, h: 36 };
   let deleteTrashHover = false;
+  const CS_OFFSET = 60;
 
   function drawClassSelect(timestamp) {
     ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
@@ -89,22 +90,21 @@
     ctx.save();
     ctx.textAlign = 'center';
     // barra de título
-    const titleGrad = ctx.createLinearGradient(280, 28, 680, 28);
+    const titleGrad = ctx.createLinearGradient(280, 0, 680, 0);
     titleGrad.addColorStop(0,   'rgba(90,60,20,0)');
     titleGrad.addColorStop(0.3, 'rgba(120,80,20,0.85)');
     titleGrad.addColorStop(0.7, 'rgba(120,80,20,0.85)');
     titleGrad.addColorStop(1,   'rgba(90,60,20,0)');
     ctx.fillStyle = titleGrad;
-    ctx.fillRect(0, 14, CONFIG.canvas.width, 46);
-    // borda superior e inferior do título
+    ctx.fillRect(0, CS_OFFSET, CONFIG.canvas.width, 46);
+    // borda inferior do título
     ctx.fillStyle = 'rgba(200,160,60,0.5)';
-    ctx.fillRect(0, 14, CONFIG.canvas.width, 2);
-    ctx.fillRect(0, 58, CONFIG.canvas.width, 2);
+    ctx.fillRect(0, CS_OFFSET + 44, CONFIG.canvas.width, 2);
     // texto
     ctx.font      = 'bold 20px "Courier New", monospace';
     ctx.fillStyle = '#f0d070';
     ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 10;
-    ctx.fillText('⚔  Seleção de Herói  ⚔', CONFIG.canvas.width / 2, 46);
+    ctx.fillText('⚔  Seleção de Herói  ⚔', CONFIG.canvas.width / 2, CS_OFFSET + 30);
     ctx.shadowBlur = 0;
     ctx.restore();
 
@@ -118,27 +118,27 @@
 
       // fundo do slot
       if (isSelected) {
-        const sg = ctx.createLinearGradient(slotX, 70, slotX, 440);
+        const sg = ctx.createLinearGradient(slotX, CS_OFFSET + 70, slotX, CS_OFFSET + 440);
         sg.addColorStop(0, `${cls.color}44`);
         sg.addColorStop(1, `${cls.color}11`);
         ctx.fillStyle = sg;
-        ctx.fillRect(slotX, 70, SLOT_W, 370);
+        ctx.fillRect(slotX, CS_OFFSET + 70, SLOT_W, 370);
         // borda lateral esquerda iluminada
         ctx.fillStyle = cls.color + 'cc';
-        ctx.fillRect(slotX, 70, 2, 370);
+        ctx.fillRect(slotX, CS_OFFSET + 70, 2, 370);
       } else if (isHovered) {
         ctx.fillStyle = 'rgba(255,255,255,0.04)';
-        ctx.fillRect(slotX, 70, SLOT_W, 370);
+        ctx.fillRect(slotX, CS_OFFSET + 70, SLOT_W, 370);
       }
 
       // separador entre slots
       if (idx > 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fillRect(slotX, 70, 1, 370);
+        ctx.fillRect(slotX, CS_OFFSET + 70, 1, 370);
       }
 
       // sprite do herói
-      const spriteBaseY = 330;
+      const spriteBaseY = CS_OFFSET + 330;
       const breathBob   = isSelected ? Math.sin(timestamp / 600) * 4 : 0;
       Sprites.drawHero(ctx, key, centerX, spriteBaseY + breathBob, SPRITE_H, {
         glow:      isSelected,
@@ -149,9 +149,9 @@
       if (isSelected) {
         ctx.fillStyle = '#f0d070';
         ctx.beginPath();
-        ctx.moveTo(centerX - 8, 78);
-        ctx.lineTo(centerX + 8, 78);
-        ctx.lineTo(centerX,     90);
+        ctx.moveTo(centerX - 8, CS_OFFSET + 78);
+        ctx.lineTo(centerX + 8, CS_OFFSET + 78);
+        ctx.lineTo(centerX,     CS_OFFSET + 90);
         ctx.fill();
       }
 
@@ -161,13 +161,13 @@
       ctx.font      = `${isSelected ? 'bold ' : ''}12px "Courier New", monospace`;
       ctx.fillStyle = isSelected ? '#f0d070' : '#aaaaaa';
       if (isSelected) { ctx.shadowColor = cls.color; ctx.shadowBlur = 8; }
-      ctx.fillText(cls.label, centerX, 360);
+      ctx.fillText(cls.label, centerX, CS_OFFSET + 360);
       ctx.shadowBlur = 0;
       ctx.restore();
 
       // mini barras de atributos (só no selecionado)
       if (isSelected) {
-        drawStatBars(ctx, centerX, 375, cls.stat, cls.color);
+        drawStatBars(ctx, centerX, CS_OFFSET + 375, cls.stat, cls.color);
       }
 
       // badge de keygem consumida
@@ -178,7 +178,7 @@
         ctx.fillStyle = '#4ade80';
         ctx.shadowColor = '#4ade80';
         ctx.shadowBlur  = 6;
-        ctx.fillText('✅ Keygem · Fase 1', centerX, 430);
+        ctx.fillText('✅ Keygem · Fase 1', centerX, CS_OFFSET + 430);
         ctx.shadowBlur  = 0;
         ctx.restore();
       }
@@ -188,7 +188,7 @@
         const saved = SaveSystem.load();
         if (saved && saved.heroClass === key) {
           const tx = slotX + SLOT_W - 28;
-          const ty = 78;
+          const ty = CS_OFFSET + 78;
           ctx.save();
           ctx.font      = '18px "Courier New", monospace';
           ctx.textAlign = 'center';
@@ -211,7 +211,7 @@
       ctx.fillStyle = '#1a1228';
       ctx.strokeStyle = '#883333';
       ctx.lineWidth = 2;
-      const bx = 280, by = 220, bw = 400, bh = 140;
+      const bx = 280, by = 220, bw = 400, bh = 160;
       ctx.fillRect(bx, by, bw, bh);
       ctx.strokeRect(bx, by, bw, bh);
       // texto
@@ -224,21 +224,21 @@
       ctx.fillText('Level, XP, HP, itens e equipamentos serão zerados.', bx + bw / 2, by + 62);
       // botão Sim
       const yBtn = DELETE_YES;
-      ctx.fillStyle = '#6a1a1a';
-      ctx.strokeStyle = '#ff4444';
+      ctx.fillStyle = '#1a2a1a';
+      ctx.strokeStyle = '#448844';
       ctx.lineWidth = 2;
       ctx.fillRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
       ctx.strokeRect(yBtn.x, yBtn.y, yBtn.w, yBtn.h);
       ctx.font = 'bold 14px "Courier New", monospace';
-      ctx.fillStyle = '#ff6666';
+      ctx.fillStyle = '#88cc88';
       ctx.fillText('Sim, excluir', yBtn.x + yBtn.w / 2, yBtn.y + 22);
       // botão Não
       const nBtn = DELETE_NO;
-      ctx.fillStyle = '#1a2a1a';
-      ctx.strokeStyle = '#448844';
+      ctx.fillStyle = '#6a1a1a';
+      ctx.strokeStyle = '#ff4444';
       ctx.fillRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
       ctx.strokeRect(nBtn.x, nBtn.y, nBtn.w, nBtn.h);
-      ctx.fillStyle = '#88cc88';
+      ctx.fillStyle = '#ff6666';
       ctx.fillText('Cancelar', nBtn.x + nBtn.w / 2, nBtn.y + 22);
       ctx.restore();
     }
@@ -249,7 +249,7 @@
     ctx.textAlign = 'center';
     ctx.font      = '13px "Courier New", monospace';
     ctx.fillStyle = '#c0b090';
-    ctx.fillText(selCls.desc, CONFIG.canvas.width / 2, 450);
+    ctx.fillText(selCls.desc, CONFIG.canvas.width / 2, CS_OFFSET + 450);
     ctx.restore();
 
     // botão Confirmar
@@ -321,7 +321,7 @@
     const selIdx = CLASS_KEYS.indexOf(selectedClass);
     const trashX = selIdx * SLOT_W + SLOT_W - 28;
     deleteTrashHover = !deleteConfirmVisible &&
-      mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102;
+      mx >= trashX - 14 && mx <= trashX + 14 && my >= CS_OFFSET + 78 && my <= CS_OFFSET + 102;
 
     canvas.style.cursor = (hoveredClass || confirmHover || deleteTrashHover ||
       (deleteConfirmVisible && (
@@ -355,7 +355,7 @@
     const trashX = selIdx * SLOT_W + SLOT_W - 28;
     const saved = SaveSystem.load();
     if (saved && saved.heroClass === selectedClass &&
-        mx >= trashX - 14 && mx <= trashX + 14 && my >= 78 && my <= 102) {
+        mx >= trashX - 14 && mx <= trashX + 14 && my >= CS_OFFSET + 78 && my <= CS_OFFSET + 102) {
       deleteConfirmVisible = true;
       return;
     }
@@ -378,6 +378,10 @@
     if (e.code === 'Space' && gameState === 'classSelect' && !deleteConfirmVisible) {
       e.preventDefault();
       startGame();
+    }
+    if (e.code === 'KeyS' && gameState === 'playing' && hero) {
+      const m = new Mob(hero, DayCycle.getCurrentPeriod().name, 'wolf');
+      mobs.push(m);
     }
   });
 
@@ -403,6 +407,7 @@
     canvas.style.cursor = 'default';
     document.getElementById('quickbar').classList.remove('hidden');
     document.getElementById('volume-ctrl').classList.remove('hidden');
+    document.getElementById('menu-btns').style.visibility = 'visible';
     Bag._gameActive = true;
     Audio.startMusic();
     scheduleNextSpawn(Date.now());
@@ -437,9 +442,8 @@
     const aliveMobs = mobs.filter(m => m.state !== 'dead').length;
     const period    = (BG_STATE.currentPeriod ?? DayCycle.getCurrentPeriod()).name;
 
-    // tenta spawnar o boss se condições forem atendidas
-    if (
-      !bossSpawned &&
+    // boss desativado até ter assets próprios
+    if (false && !bossSpawned &&
       aliveMobs === 0 &&
       period === 'Noite' &&
       hero.level >= 10 &&
@@ -487,7 +491,7 @@
       if (cls === 'hunter') {
         Audio.playArrow();
         const snapMx = mx;
-        const arrowY = hero.y - hero.height * 0.42; // altura das mãos da hunter
+        const arrowY = hero.y - hero.height * 0.2; // altura das mãos da hunter
         const snapMy = arrowY;                       // voa em linha reta horizontal
         Effects.spawnProjectile('arrow',
           CONFIG.hero.screenX + 20, arrowY,
@@ -515,15 +519,15 @@
       }
     },
     onMobAttack(mob, damage) {
-      Audio.playGoblinAttack();
+      Audio.playMobMeleeAttack();
+      Audio.playHunterHurt();
       Effects.spawnDamageNumber(
         CONFIG.hero.screenX + (Math.random() - 0.5) * 18,
         hero.y - hero.height - 8, damage,
         { color: '#ff8844', outline: '#441100' }
       );
-      Audio.playHunterHurt();
       Effects.triggerShake(5, 200);
-      Hud.logEvent(`Você sofreu ${damage} de dano.`, 'damage');
+      Hud.logEvent(`[${mob.type?.label ?? 'Mob'}] Você sofreu ${damage} de dano.`, 'damage');
     },
     onDodge(hero) {
       Audio.playDodge();
@@ -589,7 +593,8 @@
       Hud.updateHeroStats(hero);
     },
     onMobDeath(mob, drops, leveledUp, goldEarned = 0) {
-      Audio.playGoblinHurt();
+      if (mob.type.key === 'wolf') Audio.playWolfDeath();
+      else Audio.playGoblinHurt();
       const mx = mob.getScreenX(hero);
       Effects.spawnDeathBurst(mx, mob.y, ['#4a6838', '#c23b3b', '#e07030', '#ffffff']);
       Effects.spawnXpNumber(mx, mob.y - mob.height - 24, mob.xpReward);
@@ -619,7 +624,7 @@
       }
 
       drops.forEach(item => {
-        if (item.id === 'goblin_coin') Audio.playDrop();
+        if (item.id === 'forest_key') Audio.playDrop();
         Hud.logEvent(`Item obtido: ${item.name} (${item.rarity})`, 'drop');
       });
       leveledUp.forEach(level => {
@@ -658,6 +663,9 @@
     hero.update(deltaMs, target);
     mobs.forEach(mob => mob.update(deltaMs, hero, mobs));
     if (target) Combat.resolveTick(hero, target, now, combatCallbacks);
+    // mobs adicionais também atacam o herói
+    mobs.filter(m => m !== target && m.state !== 'dead' && Math.abs(m.worldX - hero.worldX) <= m.attackRange)
+        .forEach(m => Combat.resolveTick(hero, m, now, combatCallbacks));
     mobs = mobs.filter(m => !m.markedForRemoval);
     Effects.update(deltaMs);
     updatePortal(now);
@@ -1200,6 +1208,7 @@
 
   function draw(period, deltaMs) {
     // reset completo do contexto antes de cada frame
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.shadowBlur = 0;
@@ -1331,7 +1340,7 @@
       'Preciso de um descanso.',
     ],
     warrior:   ['Pela honra de Karveth, o Inabalável... quanto tempo mais essa vila vai precisar de mim?'],
-    hunter:    ['Karine me disse que a vila guarda segredos... até agora só ouvi vento.'],
+    hunter:    ['Sophia me disse que a vila guarda segredos... até agora só ouvi vento.'],
     mage:      ['O Arconte Valdris passaria vergonha me vendo perdido assim...'],
     cleric:    ['Pela luz de Aelys... juro que já passei por essa árvore antes.'],
     // Frases genéricas de mudança de período
@@ -1395,8 +1404,17 @@
       Bag.closeBag();
       Bag.closeEquip();
       Bag.closeVault();
+      Hud.hideStats();
+      document.getElementById('hero-bubble').classList.add('hidden');
+      document.getElementById('quickbar').classList.add('hidden');
+      document.getElementById('volume-ctrl').classList.add('hidden');
+      document.getElementById('menu-btns').style.visibility = 'hidden';
       hero  = null;
       mobs  = [];
+      BG_STATE.offset = 0;
+      Effects._shake.timer = 0;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, CONFIG.canvas.width, CONFIG.canvas.height);
       gameState = 'classSelect';
     });
 

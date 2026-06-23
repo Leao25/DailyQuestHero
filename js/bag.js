@@ -554,7 +554,9 @@ var Bag = {
         ? `Cura ${item.effect.amount} HP`
         : item.effect.type === 'xp'
           ? `+${item.effect.amount} XP`
-          : `+${item.effect.amount} ATK por ${item.effect.duration / 1000}s`;
+          : item.effect.type === 'phase2'
+            ? 'Avança para a Fase 2'
+            : `+${item.effect.amount} ATK por ${item.effect.duration / 1000}s`;
     } else {
       bonusEl.textContent = '';
     }
@@ -835,6 +837,15 @@ var Bag = {
       setTimeout(() => { hero[ef.stat] -= ef.amount; Hud.updateHeroStats(hero); }, ef.duration);
       Hud.logEvent(`Usou ${item.name}: +${ef.amount} ${ef.stat} por ${ef.duration/1000}s`, 'info');
       Hud.updateHeroStats(hero);
+    } else if (ef.type === 'phase2') {
+      const idx2 = hero.inventory.findIndex(i => i.id === item.id);
+      if (idx2 !== -1) hero.inventory.splice(idx2, 1);
+      SaveSystem.save(hero);
+      this._hideItemPopup();
+      this._renderGrid();
+      this.refreshQuickBar();
+      document.getElementById('phase2-overlay').classList.remove('hidden');
+      return;
     }
 
     // remove uma unidade do inventário
