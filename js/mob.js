@@ -362,8 +362,8 @@ class Mob {
     this.worldX = hero.worldX + CONFIG.mob.spawnAheadDistance;
     this.y      = CONFIG.canvas.groundY;
 
-    if (def.key === 'wolf')   Audio.playWolfSpawn();
-    else if (def.key === 'goblin') Audio.playGoblinSpawn();
+    // if (def.key === 'wolf')   Audio.playWolfSpawn();
+    // else if (def.key === 'goblin') Audio.playGoblinSpawn();
 
     this.maxHp      = def.hp;
     this.hp         = this.maxHp;
