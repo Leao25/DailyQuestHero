@@ -84,7 +84,7 @@ const MOB_TYPES = {
     approachSpeed:0.8,
     weight:       0,
     periods:      ['Noite'],
-    minLevel:     10,
+    minLevel:     7,
     isBoss:       true,
     isRanged:     true,
     arrowOffsetY: 60,
