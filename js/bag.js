@@ -422,6 +422,7 @@ var Bag = {
     this._equipOpen = false;
     document.getElementById('equip-overlay').classList.add('hidden');
     this._stopHeroLoop();
+    this._hideItemPopup();
   },
 
   _startHeroLoop() {
@@ -627,7 +628,10 @@ var Bag = {
 
     // posicionamento relativo ao modal de referência
     popup.classList.remove('hidden');
-    const refId   = this._vaultOpen ? 'vault-modal' : 'bag-modal';
+    let refId = 'bag-modal';
+    if (this._vaultOpen)  refId = 'vault-modal';
+    if (this._craftOpen)  refId = 'craft-modal';
+    if (this._equipOpen)  refId = 'equip-modal';
     this._positionPopup(popup, refId);
   },
 
@@ -676,8 +680,12 @@ var Bag = {
         else el.textContent = item.icon ?? '?';
         el.classList.add('filled');
         el.style.borderColor = Items.getRarityColor(item.rarity);
+        el.onmouseenter = () => this._showItemPopup(item, hero, el);
+        el.onmouseleave = () => { if (!this._popupPinned) this._hideItemPopup(); };
       } else {
         el.textContent = placeholders[slot] ?? '?';
+        el.onmouseenter = null;
+        el.onmouseleave = null;
       }
     });
 
@@ -772,6 +780,7 @@ var Bag = {
     this._craftOpen = false;
     document.getElementById('craft-overlay').classList.add('hidden');
     this._closeCraftQtyPopup();
+    this._hideItemPopup();
   },
 
   _renderCraftBag() {
@@ -802,7 +811,9 @@ var Bag = {
       qtyEl.textContent = qty > 1 ? qty : '';
       slot.appendChild(qtyEl);
 
-      slot.addEventListener('click', () => this._onCraftBagSlotClick(item, qty));
+      slot.addEventListener('click',      () => this._onCraftBagSlotClick(item, qty));
+      slot.addEventListener('mouseenter', () => this._showItemPopup(item, null, slot));
+      slot.addEventListener('mouseleave', () => { if (!this._popupPinned) this._hideItemPopup(); });
       grid.appendChild(slot);
     });
   },
@@ -867,9 +878,13 @@ var Bag = {
           slot.textContent = entry.item.icon ?? '?';
         }
         qtyEl.textContent = `x${entry.qty}`;
+        slot.onmouseenter = () => this._showItemPopup(entry.item, null, slot);
+        slot.onmouseleave = () => { if (!this._popupPinned) this._hideItemPopup(); };
       } else {
         slot.textContent = '+';
         qtyEl.textContent = '—';
+        slot.onmouseenter = null;
+        slot.onmouseleave = null;
       }
     });
     this._checkCraftMatch();
