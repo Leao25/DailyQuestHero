@@ -601,6 +601,8 @@ var Bag = {
     const equipBtn   = document.getElementById('ip-equip');
     const unequipBtn = document.getElementById('ip-unequip');
     const vaultBtn   = document.getElementById('ip-vault');
+    const deleteBtn  = document.getElementById('ip-delete');
+    if (deleteBtn) deleteBtn.classList.toggle('hidden', this._equipOpen);
     equipBtn.textContent = 'Equipar';
     equipBtn.classList.add('hidden');
     unequipBtn.classList.add('hidden');
@@ -675,7 +677,7 @@ var Bag = {
       el.style.borderColor = '';
 
       if (item) {
-        const img = this._itemImg(item, 50);
+        const img = this._itemImg(item, 70);
         if (img) el.appendChild(img);
         else el.textContent = item.icon ?? '?';
         el.classList.add('filled');
