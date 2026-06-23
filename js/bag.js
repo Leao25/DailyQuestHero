@@ -602,7 +602,8 @@ var Bag = {
     const unequipBtn = document.getElementById('ip-unequip');
     const vaultBtn   = document.getElementById('ip-vault');
     const deleteBtn  = document.getElementById('ip-delete');
-    if (deleteBtn) deleteBtn.classList.toggle('hidden', this._equipOpen);
+    const hideDelete = this._equipOpen || this._craftOpen;
+    if (deleteBtn) deleteBtn.classList.toggle('hidden', hideDelete);
     equipBtn.textContent = 'Equipar';
     equipBtn.classList.add('hidden');
     unequipBtn.classList.add('hidden');
@@ -638,7 +639,7 @@ var Bag = {
   },
 
   _positionPopup(popup, refModalId) {
-    const popupW  = 210;
+    const popupW  = 280;
     const popupH  = popup.offsetHeight || 280;
     const vh      = window.innerHeight;
     const vw      = window.innerWidth;

@@ -697,10 +697,10 @@ body {
 #item-popup {
   position: fixed;
   z-index: 500;
-  width: 210px;
+  width: 280px;
   background: linear-gradient(160deg, #2a1f0e 0%, #120d06 100%);
   border: 2px solid #5a3e1b;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 0 0 1px #8b6030, 0 8px 32px rgba(0,0,0,0.95);
   font-family: 'Courier New', monospace;
   pointer-events: all;
@@ -716,32 +716,42 @@ body {
 }
 
 #ip-img-wrap {
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.45);
   border-bottom: 1px solid #3d2a0d;
   display: flex; align-items: center; justify-content: center;
-  padding: 14px 0;
+  padding: 18px 0;
+  min-height: 130px;
 }
 #ip-img {
-  width: 80px; height: 80px;
+  width: 110px; height: 110px;
   object-fit: contain; image-rendering: pixelated;
 }
 
-#ip-body { padding: 10px 12px 12px; }
-#ip-name   { font-size: 12px; font-weight: bold; margin-bottom: 2px; }
-#ip-rarity { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #6a5030; margin-bottom: 6px; }
-#ip-desc   { font-size: 10px; color: #8a7050; line-height: 1.5; margin-bottom: 6px; }
-#ip-bonus  { font-size: 10px; color: #5cff8f; margin-bottom: 2px; }
-#ip-value  { font-size: 10px; color: #d4a843; margin-bottom: 8px; }
-#ip-actions { display: flex; gap: 6px; }
-#ip-equip, #ip-unequip {
-  font-size: 10px; padding: 4px 12px; border-radius: 4px;
-  cursor: pointer; font-family: 'Courier New', monospace; border: 1px solid;
+#ip-body { padding: 14px 16px 16px; }
+#ip-name   { font-size: 15px; font-weight: bold; margin-bottom: 3px; }
+#ip-rarity { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #6a5030; margin-bottom: 8px; }
+#ip-desc   { font-size: 11px; color: #8a7050; line-height: 1.6; margin-bottom: 8px; }
+#ip-bonus  { font-size: 12px; color: #5cff8f; margin-bottom: 4px; font-weight: bold; }
+#ip-value  { font-size: 11px; color: #d4a843; margin-bottom: 12px; }
+#ip-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+#ip-actions button {
+  font-size: 11px; padding: 7px 6px; border-radius: 5px;
+  cursor: pointer; font-family: 'Courier New', monospace;
+  border: 1px solid; text-align: center; line-height: 1.2;
 }
 #ip-equip   { background: rgba(80,180,80,0.2); border-color: #5caa5c; color: #8eff8e; }
 #ip-equip:hover   { background: rgba(80,180,80,0.4); }
 #ip-unequip { background: rgba(180,60,60,0.2); border-color: #aa5c5c; color: #ff9090; }
 #ip-unequip:hover { background: rgba(180,60,60,0.4); }
-#ip-equip.hidden, #ip-unequip.hidden { display: none; }
+#ip-vault   { background: rgba(60,80,160,0.2); border-color: #5c6caa; color: #9090ff; }
+#ip-vault:hover   { background: rgba(60,80,160,0.4); }
+#ip-delete  { background: rgba(120,40,40,0.2); border-color: #883030; color: #ffaaaa; }
+#ip-delete:hover  { background: rgba(120,40,40,0.4); }
+#ip-actions button.hidden { display: none; }
 
 /* ═══════════════════════════════════════ */
 /* MODAL: EQUIPAMENTOS                     */

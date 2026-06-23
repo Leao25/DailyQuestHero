@@ -114,7 +114,7 @@ const ITEM_CATALOG = {
     id: 'wooden_bow', name: 'Arco de Madeira',
     type: 'weapon', rarity: 'comum', slot: 'weapon',
     desc: 'Arco simples de madeira. Ideal para caçadores.',
-    value: 18, tradable: true, icon: '🏹', img: 'itm_small_wooden_bow.png', imgSize: 200,
+    value: 18, tradable: true, icon: '🏹', img: 'itm_small_wooden_bow.png',
     bonus: { attack: 3 },
   },
   wooden_staff: {
