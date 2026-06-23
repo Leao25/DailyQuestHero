@@ -56,42 +56,59 @@ const Audio = (() => {
   _load('bossSpawn',       'sfx_goblin_rider_spawn.wav');
 
   // ── Música de fundo (<audio> element, loop com pausa) ───
-  const music     = new window.Audio(BASE + 'bg_village.mp3');
-  const bossMusic = new window.Audio(BASE + 'bg_village_boss.mp3');
-  music.volume     = 0.5 * _musicVolume;
-  bossMusic.volume = 0.5 * _musicVolume;
-  music.loop     = false;
-  bossMusic.loop = true;
+  const music       = new window.Audio(BASE + 'bg_village.mp3');
+  const forestMusic = new window.Audio(BASE + 'bg_forest.mp3');
+  const bossMusic   = new window.Audio(BASE + 'bg_village_boss.mp3');
+  music.volume       = 0.5 * _musicVolume;
+  forestMusic.volume = 0.5 * _musicVolume;
+  bossMusic.volume   = 0.5 * _musicVolume;
+  music.loop       = false;
+  forestMusic.loop = false;
+  bossMusic.loop   = true;
 
-  let _pauseTimer  = null;
-  let _bossPlaying = false;
+  let _pauseTimer   = null;
+  let _bossPlaying  = false;
+  let _currentPhase = 'village';
 
   music.addEventListener('ended', () => {
-    if (_bossPlaying) return;
+    if (_bossPlaying || _currentPhase !== 'village') return;
     _pauseTimer = setTimeout(() => music.play().catch(() => {}), 5 * 60 * 1000);
+  });
+
+  forestMusic.addEventListener('ended', () => {
+    if (_currentPhase !== 'forest') return;
+    _pauseTimer = setTimeout(() => forestMusic.play().catch(() => {}), 5 * 60 * 1000);
   });
 
   return {
     stopMusic() {
       if (_pauseTimer) { clearTimeout(_pauseTimer); _pauseTimer = null; }
-      music.pause();
-      music.currentTime = 0;
+      music.pause();       music.currentTime = 0;
+      forestMusic.pause(); forestMusic.currentTime = 0;
     },
 
-    startMusic() {
+    startMusic(phase = 'village') {
       if (_pauseTimer) { clearTimeout(_pauseTimer); _pauseTimer = null; }
-      _bossPlaying = false;
-      bossMusic.pause();
-      bossMusic.currentTime = 0;
+      _bossPlaying  = false;
+      _currentPhase = phase;
+      bossMusic.pause(); bossMusic.currentTime = 0;
       _ctx.resume();
-      music.currentTime = 0;
-      music.play().catch(() => {});
+      if (phase === 'forest') {
+        music.pause(); music.currentTime = 0;
+        forestMusic.currentTime = 0;
+        forestMusic.play().catch(() => {});
+      } else {
+        forestMusic.pause(); forestMusic.currentTime = 0;
+        music.currentTime = 0;
+        music.play().catch(() => {});
+      }
     },
 
     playBossMusic() {
       if (_bossPlaying) return;
       _bossPlaying = true;
       music.pause();
+      forestMusic.pause();
       bossMusic.volume = 0.5 * _musicVolume;
       bossMusic.currentTime = 0;
       bossMusic.play().catch(() => {});
@@ -102,14 +119,21 @@ const Audio = (() => {
       _bossPlaying = false;
       bossMusic.pause();
       bossMusic.currentTime = 0;
-      music.currentTime = 0;
-      music.play().catch(() => {});
+      // retoma música da fase atual
+      if (_currentPhase === 'forest') {
+        forestMusic.currentTime = 0;
+        forestMusic.play().catch(() => {});
+      } else {
+        music.currentTime = 0;
+        music.play().catch(() => {});
+      }
     },
 
     setMusicVolume(v) {
-      _musicVolume     = v;
-      music.volume     = 0.5 * v;
-      bossMusic.volume = 0.5 * v;
+      _musicVolume       = v;
+      music.volume       = 0.5 * v;
+      forestMusic.volume = 0.5 * v;
+      bossMusic.volume   = 0.5 * v;
     },
 
     setSfxVolume(v) {

@@ -196,9 +196,9 @@ const ITEM_CATALOG = {
   fang_necklace: {
     id: 'fang_necklace', name: 'Colar de Presas',
     type: 'accessory', rarity: 'raro', slot: 'accessory',
-    desc: 'Colar feito de presas de lobo. Aumenta a ferocidade.',
+    desc: 'Colar feito de presas de lobo. Aumenta o alcance de ataque com a experiência.',
     value: 75, tradable: true, icon: '📿', img: 'itm_fangs_necklace.png',
-    bonus: { maxHp: 20 },
+    bonus: { attackRangePercent: 1 },
   },
   forest_key: {
     id: 'forest_key', name: 'Chave do Portão da Floresta',
@@ -249,8 +249,8 @@ const MOB_DROP_TABLE = {
     { itemId: 'ancient_coin',  chance: 0.03 },
   ],
   goblin_rider: [
-    { itemId: 'forest_key',    chance: 0.30 },
-    { itemId: 'wooden_bow',    chance: 0.70 },
+    { itemId: 'forest_key',    chance: 0.50 },
+    { itemId: 'wooden_bow',    chance: 0.50 },
     { itemId: 'minor_potion',  chance: 0.40 },
   ],
 };
@@ -311,15 +311,17 @@ const Items = {
   // Aplica bônus de um equipável no hero
   applyBonus(hero, item) {
     if (!item.bonus) return;
-    if (item.bonus.attack)        hero.attack        += item.bonus.attack;
-    if (item.bonus.maxHp)         { hero.maxHp += item.bonus.maxHp; hero.hp += item.bonus.maxHp; }
-    if (item.bonus.armorReduction) hero.armorReduction = (hero.armorReduction ?? 0) + item.bonus.armorReduction;
+    if (item.bonus.attack)             hero.attack             += item.bonus.attack;
+    if (item.bonus.maxHp)              { hero.maxHp += item.bonus.maxHp; hero.hp += item.bonus.maxHp; }
+    if (item.bonus.armorReduction)     hero.armorReduction      = (hero.armorReduction ?? 0) + item.bonus.armorReduction;
+    if (item.bonus.attackRangePercent) hero.attackRangePercent  = (hero.attackRangePercent ?? 0) + item.bonus.attackRangePercent;
   },
 
   removeBonus(hero, item) {
     if (!item.bonus) return;
-    if (item.bonus.attack)        hero.attack        = Math.max(1, hero.attack - item.bonus.attack);
-    if (item.bonus.maxHp)         { hero.maxHp = Math.max(1, hero.maxHp - item.bonus.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); }
-    if (item.bonus.armorReduction) hero.armorReduction = Math.max(0, (hero.armorReduction ?? 0) - item.bonus.armorReduction);
+    if (item.bonus.attack)             hero.attack             = Math.max(1, hero.attack - item.bonus.attack);
+    if (item.bonus.maxHp)              { hero.maxHp = Math.max(1, hero.maxHp - item.bonus.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); }
+    if (item.bonus.armorReduction)     hero.armorReduction      = Math.max(0, (hero.armorReduction ?? 0) - item.bonus.armorReduction);
+    if (item.bonus.attackRangePercent) hero.attackRangePercent  = Math.max(0, (hero.attackRangePercent ?? 0) - item.bonus.attackRangePercent);
   },
 };

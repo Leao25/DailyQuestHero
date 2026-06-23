@@ -442,7 +442,7 @@
     document.getElementById('volume-ctrl').classList.remove('hidden');
     document.getElementById('menu-btns').style.visibility = 'visible';
     Bag._gameActive = true;
-    Audio.startMusic();
+    Audio.startMusic(currentPhase);
     scheduleNextSpawn(Date.now());
     // inicializa relógio de jogo no período atual do BG
     DayCycle.initForPeriod('Manhã');
@@ -857,6 +857,7 @@
       BG_STATE.offset = 0;
       const PHASE_LABELS = { village: 'VILA — FASE 1', forest: 'FLORESTA — FASE 2' };
       document.getElementById('zone-label').textContent = PHASE_LABELS[currentPhase] ?? 'VILA — FASE 1';
+      Audio.startMusic(currentPhase);
       SaveSystem.save(hero, currentPhase);
       tr.state = 'fadeIn';
       tr.t = 0;

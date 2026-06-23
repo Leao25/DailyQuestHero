@@ -9,7 +9,9 @@ const Combat = {
     if (!mob || mob.state === 'dead' || hero.state === 'dead') return;
 
     const distance    = hero.distanceTo(mob);
-    const heroInRange = distance <= hero.attackRange;
+    const rangePct    = hero.attackRangePercent ? Math.min(20, hero.attackRangePercent * hero.level) / 100 : 0;
+    const effectiveRange = hero.attackRange * (1 + rangePct);
+    const heroInRange = distance <= effectiveRange;
     const mobInRange  = distance <= mob.attackRange;
 
     // ── Herói ataca mob ──────────────────────────────────────

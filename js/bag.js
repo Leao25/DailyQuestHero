@@ -550,8 +550,10 @@ var Bag = {
     const bonusEl = document.getElementById('ip-bonus');
     if (item.bonus) {
       const parts = [];
-      if (item.bonus.attack) parts.push(`+${item.bonus.attack} ATK`);
-      if (item.bonus.maxHp)  parts.push(`+${item.bonus.maxHp} HP`);
+      if (item.bonus.attack)             parts.push(`+${item.bonus.attack} ATK`);
+      if (item.bonus.maxHp)              parts.push(`+${item.bonus.maxHp} HP`);
+      if (item.bonus.armorReduction)     parts.push(`DEF 1–${item.bonus.armorReduction}`);
+      if (item.bonus.attackRangePercent) parts.push(`+${item.bonus.attackRangePercent}% Atq. Dist./LVL`);
       bonusEl.textContent = parts.join('  ');
     } else if (item.effect) {
       bonusEl.textContent = item.effect.type === 'heal'
@@ -709,6 +711,13 @@ var Bag = {
     const def = hero.armorReduction ?? 0;
     defEl.textContent = def > 0 ? `1–${def}` : '0';
     defEl.classList.toggle('stat-boosted', def > 0);
+
+    const rangeEl  = document.getElementById('equip-range-val');
+    const rangePct = hero.attackRangePercent
+      ? Math.min(20, hero.attackRangePercent * hero.level)
+      : 0;
+    rangeEl.textContent = `${rangePct}%`;
+    rangeEl.classList.toggle('stat-boosted', rangePct > 0);
 
     // desenha sprite do hero no canvas central
     this._drawHeroCanvas(hero);
