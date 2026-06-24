@@ -694,30 +694,31 @@ var Bag = {
       }
     });
 
-    // stats — destaca em dourado se há bônus de equipamento ativo
-    const baseAtk = CONFIG.hero.baseAttack;
-    const baseHp  = CONFIG.hero.baseMaxHp;
-
-    const atkEl = document.getElementById('equip-atk-val');
-    const hpEl  = document.getElementById('equip-hp-val');
-    const defEl = document.getElementById('equip-def-val');
-
-    atkEl.textContent = hero.attack ?? '—';
-    atkEl.classList.toggle('stat-boosted', (hero.attack ?? 0) > baseAtk);
-
-    hpEl.textContent = hero.maxHp ?? '—';
-    hpEl.classList.toggle('stat-boosted', (hero.maxHp ?? 0) > baseHp);
-
-    const def = hero.armorReduction ?? 0;
-    defEl.textContent = def > 0 ? `1–${def}` : '0';
-    defEl.classList.toggle('stat-boosted', def > 0);
-
-    const rangeEl  = document.getElementById('equip-range-val');
-    const rangePct = hero.attackRangePercent
-      ? Math.min(20, hero.attackRangePercent * hero.level)
+    // calcula bônus direto dos itens equipados (fonte da verdade)
+    const equipped = Object.values(hero.equipment ?? {}).filter(Boolean);
+    let bonusAtk   = 0, bonusHp = 0, bonusDef = 0, bonusRangePct = 0;
+    for (const item of equipped) {
+      if (!item.bonus) continue;
+      bonusAtk      += item.bonus.attack             ?? 0;
+      bonusHp       += item.bonus.maxHp              ?? 0;
+      bonusDef      += item.bonus.armorReduction     ?? 0;
+      bonusRangePct += item.bonus.attackRangePercent ?? 0;
+    }
+    const effectiveRangePct = bonusRangePct
+      ? Math.min(20, bonusRangePct * hero.level)
       : 0;
-    rangeEl.textContent = `${rangePct}%`;
-    rangeEl.classList.toggle('stat-boosted', rangePct > 0);
+
+    const _setStat = (id, text, color, active) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.style.color = active ? color : '#a0a0e0';
+    };
+
+    _setStat('equip-atk-val',   bonusAtk   > 0 ? `+${bonusAtk}`          : '0',  '#ffd97d', bonusAtk   > 0);
+    _setStat('equip-hp-val',    bonusHp    > 0 ? `+${bonusHp}`           : '0',  '#80ffb4', bonusHp    > 0);
+    _setStat('equip-def-val',   bonusDef   > 0 ? `1–${bonusDef}`         : '0',  '#80d4ff', bonusDef   > 0);
+    _setStat('equip-range-val', effectiveRangePct > 0 ? `+${effectiveRangePct}%` : '0%', '#ffb3f0', effectiveRangePct > 0);
 
     // desenha sprite do hero no canvas central
     this._drawHeroCanvas(hero);
