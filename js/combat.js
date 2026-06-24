@@ -9,14 +9,13 @@ const Combat = {
     if (!mob || mob.state === 'dead' || hero.state === 'dead') return;
 
     const distance    = hero.distanceTo(mob);
-    const rangePct    = hero.attackRangePercent ? Math.min(20, hero.attackRangePercent * hero.level) / 100 : 0;
-    const effectiveRange = hero.attackRange * (1 + rangePct);
-    const heroInRange = distance <= effectiveRange;
+    const heroInRange = distance <= hero.attackRange;
     const mobInRange  = distance <= mob.attackRange;
 
     // ── Herói ataca mob ──────────────────────────────────────
     if (heroInRange && hero.canAttack(now)) {
-      let isCrit = Math.random() < hero.critChance;
+      const bonusCrit = hero.critChancePercent ? Math.min(2, hero.critChancePercent * hero.level) / 100 : 0;
+      let isCrit = Math.random() < (hero.critChance + bonusCrit);
 
       let damage = hero.performAttack(now);
       if (isCrit) damage = Math.round(damage * hero.critMultiplier);

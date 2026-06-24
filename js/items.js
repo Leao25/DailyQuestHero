@@ -196,9 +196,9 @@ const ITEM_CATALOG = {
   fang_necklace: {
     id: 'fang_necklace', name: 'Colar de Presas',
     type: 'accessory', rarity: 'raro', slot: 'accessory',
-    desc: 'Colar feito de presas de lobo. Aumenta o alcance de ataque com a experiência.',
+    desc: 'Colar feito de presas de lobo. Aumenta a chance de crítico com a experiência.',
     value: 75, tradable: true, icon: '📿', img: 'itm_fangs_necklace.png',
-    bonus: { attackRangePercent: 1 },
+    bonus: { critChancePercent: 1 },
   },
   forest_key: {
     id: 'forest_key', name: 'Chave do Portão da Floresta',
@@ -314,7 +314,7 @@ const Items = {
     if (item.bonus.attack)             hero.attack             += item.bonus.attack;
     if (item.bonus.maxHp)              { hero.maxHp += item.bonus.maxHp; hero.hp += item.bonus.maxHp; }
     if (item.bonus.armorReduction)     hero.armorReduction      = (hero.armorReduction ?? 0) + item.bonus.armorReduction;
-    if (item.bonus.attackRangePercent) hero.attackRangePercent  = (hero.attackRangePercent ?? 0) + item.bonus.attackRangePercent;
+    if (item.bonus.critChancePercent)  hero.critChancePercent   = (hero.critChancePercent ?? 0) + item.bonus.critChancePercent;
   },
 
   removeBonus(hero, item) {
@@ -322,6 +322,6 @@ const Items = {
     if (item.bonus.attack)             hero.attack             = Math.max(1, hero.attack - item.bonus.attack);
     if (item.bonus.maxHp)              { hero.maxHp = Math.max(1, hero.maxHp - item.bonus.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); }
     if (item.bonus.armorReduction)     hero.armorReduction      = Math.max(0, (hero.armorReduction ?? 0) - item.bonus.armorReduction);
-    if (item.bonus.attackRangePercent) hero.attackRangePercent  = Math.max(0, (hero.attackRangePercent ?? 0) - item.bonus.attackRangePercent);
+    if (item.bonus.critChancePercent)  hero.critChancePercent   = Math.max(0, (hero.critChancePercent ?? 0) - item.bonus.critChancePercent);
   },
 };

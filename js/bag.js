@@ -553,7 +553,7 @@ var Bag = {
       if (item.bonus.attack)             parts.push(`+${item.bonus.attack} ATK`);
       if (item.bonus.maxHp)              parts.push(`+${item.bonus.maxHp} HP`);
       if (item.bonus.armorReduction)     parts.push(`DEF 1–${item.bonus.armorReduction}`);
-      if (item.bonus.attackRangePercent) parts.push(`+${item.bonus.attackRangePercent}% Atq. Dist./LVL`);
+      if (item.bonus.critChancePercent)  parts.push(`+${item.bonus.critChancePercent}% Atq. Crit./LVL (máx 2%)`);
       bonusEl.textContent = parts.join('  ');
     } else if (item.effect) {
       bonusEl.textContent = item.effect.type === 'heal'
@@ -696,16 +696,16 @@ var Bag = {
 
     // calcula bônus direto dos itens equipados (fonte da verdade)
     const equipped = Object.values(hero.equipment ?? {}).filter(Boolean);
-    let bonusAtk   = 0, bonusHp = 0, bonusDef = 0, bonusRangePct = 0;
+    let bonusAtk   = 0, bonusHp = 0, bonusDef = 0, bonusCritPct = 0;
     for (const item of equipped) {
       if (!item.bonus) continue;
       bonusAtk      += item.bonus.attack             ?? 0;
       bonusHp       += item.bonus.maxHp              ?? 0;
       bonusDef      += item.bonus.armorReduction     ?? 0;
-      bonusRangePct += item.bonus.attackRangePercent ?? 0;
+      bonusCritPct  += item.bonus.critChancePercent  ?? 0;
     }
-    const effectiveRangePct = bonusRangePct
-      ? Math.min(20, bonusRangePct * hero.level)
+    const effectiveCritPct = bonusCritPct
+      ? Math.min(2, bonusCritPct * hero.level)
       : 0;
 
     const _setStat = (id, text, color, active) => {
@@ -715,10 +715,10 @@ var Bag = {
       el.style.color = active ? color : '#a0a0e0';
     };
 
-    _setStat('equip-atk-val',   bonusAtk   > 0 ? `+${bonusAtk}`          : '0',  '#ffd97d', bonusAtk   > 0);
-    _setStat('equip-hp-val',    bonusHp    > 0 ? `+${bonusHp}`           : '0',  '#80ffb4', bonusHp    > 0);
-    _setStat('equip-def-val',   bonusDef   > 0 ? `1–${bonusDef}`         : '0',  '#80d4ff', bonusDef   > 0);
-    _setStat('equip-range-val', effectiveRangePct > 0 ? `+${effectiveRangePct}%` : '0%', '#ffb3f0', effectiveRangePct > 0);
+    _setStat('equip-atk-val',   bonusAtk   > 0 ? `+${bonusAtk}`          : '0',   '#ffd97d', bonusAtk   > 0);
+    _setStat('equip-hp-val',    bonusHp    > 0 ? `+${bonusHp}`           : '0',   '#80ffb4', bonusHp    > 0);
+    _setStat('equip-def-val',   bonusDef   > 0 ? `1–${bonusDef}`         : '0',   '#80d4ff', bonusDef   > 0);
+    _setStat('equip-range-val', effectiveCritPct > 0 ? `+${effectiveCritPct}%` : '0%', '#ffb3f0', effectiveCritPct > 0);
 
     // desenha sprite do hero no canvas central
     this._drawHeroCanvas(hero);
