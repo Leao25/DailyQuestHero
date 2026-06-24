@@ -33,7 +33,7 @@ const Sprites = {
   ANIM_DEFS: {
     hunter: {
       walk:   { file: 'hero_hunter_walk',   count: 6, frameW: 362, frameH: 724, fps: [150, 150, 150, 150, 150, 150], groundOffset: 120, heightScale: 1.5 },
-      attack: { file: 'hero_hunter_attack', count: 4, frameH: 887, frameOffsets: [0, 417, 858, 1331], frameWidths: [417, 441, 473, 443], fps: [180, 180, 180, 180], groundOffset: 150, heightScale: 1.8 },
+      attack: { file: 'hero_hunter_attack', count: 4, frameH: 887, frameOffsets: [0, 417, 858, 1331], frameWidths: [417, 441, 473, 443], fps: [150, 150, 150, 150], groundOffset: 150, heightScale: 1.8 },
       // block:  { file: 'hero_hunter_block',  count: 2, frameW: 353, frameH: 353, fps: [100, 180], groundOffset: 30 },
       dodge:  { file: 'hero_hunter_dodge',  count: 1, frameW: 500, frameH: 500, fps: [200],       groundOffset: 110 },
       // death:  { file: 'hero_hunter_death',  count: 2, frameW: 353, frameH: 353, fps: [150, 400], groundOffset: 30 },
