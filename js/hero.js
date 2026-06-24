@@ -121,7 +121,6 @@ class Hero {
       this.animFrame = 0;
       this.animTimer = 0;
       this._lastAnim = anim;
-      return;
     }
 
     if (!defs) return;
