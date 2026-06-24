@@ -15,7 +15,6 @@ class Hero {
     this.gold           = 0;
 
     this.lastAttackTime = 0;
-    this._firstAttack   = true;
     this.inventory      = [];
 
     // alcance, cadência e dano base por classe
@@ -122,6 +121,7 @@ class Hero {
       this.animFrame = 0;
       this.animTimer = 0;
       this._lastAnim = anim;
+      return;
     }
 
     if (!defs) return;
@@ -142,14 +142,7 @@ class Hero {
   }
 
   distanceTo(entity) { return Math.abs(this.worldX - entity.worldX); }
-  canAttack(now) {
-    if (this._firstAttack) {
-      this.lastAttackTime = now - this.attackCooldownMs + 400;
-      this._firstAttack = false;
-      return false;
-    }
-    return now - this.lastAttackTime >= this.attackCooldownMs;
-  }
+  canAttack(now)     { return now - this.lastAttackTime >= this.attackCooldownMs; }
   performAttack(now) { this.lastAttackTime = now; return this.attack; }
 
   takeDamage(amount) {
