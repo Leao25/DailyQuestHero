@@ -14,7 +14,7 @@ class Hero {
     this.xpToNextLevel  = CONFIG.hero.xpToLevelBase;
     this.gold           = 0;
 
-    this.lastAttackTime = 0;
+    this.lastAttackTime = Date.now() - this.attackCooldownMs + 400; // pequeno delay antes do primeiro ataque
     this.inventory      = [];
 
     // alcance, cadência e dano base por classe
